@@ -1,3 +1,5 @@
+# Copyright (c) Microsoft Corporation. All rights reserved.
+# Licensed under the MIT License.
 from azure_monitor import AzureMonitorSpanExporter
 from opentelemetry import trace
 from opentelemetry.sdk.trace import Tracer

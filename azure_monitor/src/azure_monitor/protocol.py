@@ -1,3 +1,5 @@
+# Copyright (c) Microsoft Corporation. All rights reserved.
+# Licensed under the MIT License.
 class BaseObject(dict):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
