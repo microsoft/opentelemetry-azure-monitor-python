@@ -13,7 +13,9 @@ from opentelemetry.sdk.trace.export import BatchExportSpanProcessor
 trace.set_preferred_tracer_implementation(lambda T: Tracer())
 
 http_requests.enable(trace.tracer())
-span_processor = BatchExportSpanProcessor(AzureMonitorSpanExporter())
+span_processor = BatchExportSpanProcessor(
+    AzureMonitorSpanExporter(instrumentation_key="<INSTRUMENTATION KEY HERE>")
+)
 trace.tracer().add_span_processor(span_processor)
 
 app = flask.Flask(__name__)
@@ -28,5 +30,5 @@ def hello():
 
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(host='localhost', port=8080, threaded=True)
     span_processor.shutdown()
