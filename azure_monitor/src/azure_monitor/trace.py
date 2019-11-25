@@ -131,7 +131,9 @@ class AzureMonitorSpanExporter(SpanExporter):
                 baseData=data, baseType="RemoteDependencyData"
             )
             if span.kind in (SpanKind.CLIENT, SpanKind.PRODUCER):
-                data.type = "HTTP"  # TODO
+                if "component" in span.attributes and \
+                    span.attributes["component"] == "http":
+                    data.type = "HTTP"
                 if "http.url" in span.attributes:
                     url = span.attributes["http.url"]
                     # data is the url
