@@ -131,11 +131,21 @@ class AzureMonitorSpanExporter(SpanExporter):
                 baseData=data, baseType="RemoteDependencyData"
             )
             if span.kind in (SpanKind.CLIENT, SpanKind.PRODUCER):
-                data.type = "HTTP"  # TODO
+                if "component" in span.attributes and \
+                    span.attributes["component"] == "http":
+                    data.type = "HTTP"
                 if "http.url" in span.attributes:
                     url = span.attributes["http.url"]
+                    # data is the url
+                    data.data = url
+                    parse_url = urlparse(url)
                     # TODO: error handling, probably put scheme as well
-                    data.name = urlparse(url).netloc
+                    # target matches authority (host:port)
+                    data.target = parse_url.netloc
+                    if "http.method" in span.attributes:
+                        # name is METHOD/path
+                        data.name = span.attributes["http.method"] \
+                            + "/" + parse_url.path
                 if "http.status_code" in span.attributes:
                     data.resultCode = str(span.attributes["http.status_code"])
             else:  # SpanKind.INTERNAL
