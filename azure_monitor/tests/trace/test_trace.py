@@ -15,7 +15,7 @@ class TestAzureExporter(unittest.TestCase):
         self.assertRaises(ValueError, lambda: AzureMonitorSpanExporter())
         Options._default.instrumentation_key = instrumentation_key
 
-    def test_span_data_to_envelope(self):
+    def test_span_to_envelope(self):
         from opentelemetry.trace import SpanKind
         from opentelemetry.sdk.trace import Span
         from opentelemetry.trace import SpanContext
