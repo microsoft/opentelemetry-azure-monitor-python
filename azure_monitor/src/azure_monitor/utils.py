@@ -21,6 +21,16 @@ azure_monitor_context = {
     ),
 }
 
+def ns_to_duration(nanoseconds):
+    value = (nanoseconds + 500000) // 1000000  # duration in milliseconds
+    value, microseconds = divmod(value, 1000)
+    value, seconds = divmod(value, 60)
+    value, minutes = divmod(value, 60)
+    days, hours = divmod(value, 24)
+    return "{:d}.{:02d}:{:02d}:{:02d}.{:03d}".format(
+        days, hours, minutes, seconds, microseconds
+    )
+
 
 class Options(BaseObject):
     _default = BaseObject(
