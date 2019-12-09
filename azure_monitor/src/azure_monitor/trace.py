@@ -6,7 +6,7 @@ from urllib.parse import urlparse
 
 import requests
 
-from azure_monitor import protocol, util
+from azure_monitor import protocol, utils
 from opentelemetry.sdk.trace.export import SpanExporter, SpanExportResult
 from opentelemetry.sdk.util import ns_to_iso_str
 from opentelemetry.trace import Span, SpanKind
@@ -16,7 +16,7 @@ logger = logging.getLogger(__name__)
 
 class AzureMonitorSpanExporter(SpanExporter):
     def __init__(self, **options):
-        self.options = util.Options(**options)
+        self.options = utils.Options(**options)
         if not self.options.instrumentation_key:
             raise ValueError("The instrumentation_key is not provided.")
 
@@ -63,21 +63,10 @@ class AzureMonitorSpanExporter(SpanExporter):
 
         return SpanExportResult.FAILED_NOT_RETRYABLE
 
-    @staticmethod
-    def ns_to_duration(nanoseconds):
-        value = (nanoseconds + 500000) // 1000000  # duration in milliseconds
-        value, microseconds = divmod(value, 1000)
-        value, seconds = divmod(value, 60)
-        value, minutes = divmod(value, 60)
-        days, hours = divmod(value, 24)
-        return "{:d}.{:02d}:{:02d}:{:02d}.{:03d}".format(
-            days, hours, minutes, seconds, microseconds
-        )
-
     def span_to_envelope(self, span):  # noqa pylint: disable=too-many-branches
         envelope = protocol.Envelope(
             iKey=self.options.instrumentation_key,
-            tags=dict(util.azure_monitor_context),
+            tags=dict(utils.azure_monitor_context),
             time=ns_to_iso_str(span.start_time),
         )
         envelope.tags["ai.operation.id"] = "{:032x}".format(
@@ -96,7 +85,7 @@ class AzureMonitorSpanExporter(SpanExporter):
                 id="|{:032x}.{:016x}.".format(
                     span.context.trace_id, span.context.span_id
                 ),
-                duration=self.ns_to_duration(span.end_time - span.start_time),
+                duration=utils.ns_to_duration(span.end_time - span.start_time),
                 responseCode="0",
                 success=False,
                 properties={},
@@ -123,7 +112,7 @@ class AzureMonitorSpanExporter(SpanExporter):
                     span.context.trace_id, span.context.span_id
                 ),
                 resultCode="0",  # TODO
-                duration=self.ns_to_duration(span.end_time - span.start_time),
+                duration=utils.ns_to_duration(span.end_time - span.start_time),
                 success=True,  # TODO
                 properties={},
             )
