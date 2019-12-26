@@ -78,12 +78,12 @@ class AzureMonitorSpanExporter(SpanExporter):
         if parent:
             envelope.tags[
                 "ai.operation.parentId"
-            ] = "|{:032x}.{:016x}.".format(parent.trace_id, parent.span_id)
+            ] = "{:016x}".format(parent.span_id)
         if span.kind in (SpanKind.CONSUMER, SpanKind.SERVER):
             envelope.name = "Microsoft.ApplicationInsights.Request"
             data = protocol.Request(
-                id="|{:032x}.{:016x}.".format(
-                    span.context.trace_id, span.context.span_id
+                id="{:016x}".format(
+                    span.context.span_id
                 ),
                 duration=utils.ns_to_duration(span.end_time - span.start_time),
                 responseCode="0",
@@ -108,8 +108,8 @@ class AzureMonitorSpanExporter(SpanExporter):
             envelope.name = "Microsoft.ApplicationInsights.RemoteDependency"
             data = protocol.RemoteDependency(
                 name=span.name,
-                id="|{:032x}.{:016x}.".format(
-                    span.context.trace_id, span.context.span_id
+                id="{:016x}".format(
+                    span.context.span_id
                 ),
                 resultCode="0",  # TODO
                 duration=utils.ns_to_duration(span.end_time - span.start_time),
@@ -140,6 +140,9 @@ class AzureMonitorSpanExporter(SpanExporter):
             else:  # SpanKind.INTERNAL
                 data.type = "InProc"
         for key in span.attributes:
+            # This removes redundant data from ApplicationInsights
+            if key.startswith('http.'):
+                continue
             data.properties[key] = span.attributes[key]
         if span.links:
             links = []
@@ -149,8 +152,8 @@ class AzureMonitorSpanExporter(SpanExporter):
                         "operation_Id": "{:032x}".format(
                             link.context.trace_id
                         ),
-                        "id": "|{:032x}.{:016x}.".format(
-                            link.context.trace_id, link.context.span_id
+                        "id": "{:016x}".format(
+                            link.context.span_id
                         ),
                     }
                 )
