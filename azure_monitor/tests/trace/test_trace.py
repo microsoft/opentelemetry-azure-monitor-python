@@ -17,6 +17,7 @@ class TestAzureExporter(unittest.TestCase):
 
     def test_span_to_envelope(self):
         from opentelemetry.trace import Link, SpanContext, SpanKind
+        from opentelemetry.trace.status import StatusCanonicalCode
         from opentelemetry.sdk.trace import Span
 
         exporter = AzureMonitorSpanExporter(
@@ -511,3 +512,165 @@ class TestAzureExporter(unittest.TestCase):
         self.assertEqual(envelope.data.baseData.properties['_MS.links'], links_json)
 
         
+        # Status
+        span = Span(
+            name='test',
+            context=SpanContext(
+                trace_id=36873507687745823477771305566750195431,
+                span_id=12030755672171557337,
+            ),
+            parent=parent_span,
+            sampler=None,
+            trace_config=None,
+            resource=None,
+            attributes={
+                'component': 'http',
+                'http.method': 'GET',
+                'http.url': 'https://www.wikipedia.org/wiki/Rabbit',
+                'http.status_code': 500,
+            },
+            events=None,
+            links=None,
+            kind=SpanKind.SERVER
+        )
+        span.start_time = start_time
+        span.end_time = end_time
+        envelope = exporter.span_to_envelope(span)
+        self.assertEqual(
+            envelope.data.baseData.responseCode, '500')
+        self.assertFalse(envelope.data.baseData.success)
+
+        span = Span(
+            name='test',
+            context=SpanContext(
+                trace_id=36873507687745823477771305566750195431,
+                span_id=12030755672171557337,
+            ),
+            parent=parent_span,
+            sampler=None,
+            trace_config=None,
+            resource=None,
+            attributes={
+                'component': 'http',
+                'http.method': 'GET',
+                'http.url': 'https://www.wikipedia.org/wiki/Rabbit',
+                'http.status_code': 500,
+            },
+            events=None,
+            links=None,
+            kind=SpanKind.CLIENT
+        )
+        span.start_time = start_time
+        span.end_time = end_time
+        envelope = exporter.span_to_envelope(span)
+        self.assertEqual(
+            envelope.data.baseData.resultCode, '500')
+        self.assertFalse(envelope.data.baseData.success)
+
+        span = Span(
+            name='test',
+            context=SpanContext(
+                trace_id=36873507687745823477771305566750195431,
+                span_id=12030755672171557337,
+            ),
+            parent=parent_span,
+            sampler=None,
+            trace_config=None,
+            resource=None,
+            attributes={
+                'component': 'http',
+                'http.method': 'GET',
+                'http.url': 'https://www.wikipedia.org/wiki/Rabbit',
+            },
+            events=None,
+            links=None,
+            kind=SpanKind.SERVER
+        )
+        span.start_time = start_time
+        span.end_time = end_time
+        span.status = StatusCanonicalCode.OK
+        envelope = exporter.span_to_envelope(span)
+        self.assertEqual(
+            envelope.data.baseData.responseCode, '0')
+        self.assertTrue(envelope.data.baseData.success)
+
+        span = Span(
+            name='test',
+            context=SpanContext(
+                trace_id=36873507687745823477771305566750195431,
+                span_id=12030755672171557337,
+            ),
+            parent=parent_span,
+            sampler=None,
+            trace_config=None,
+            resource=None,
+            attributes={
+                'component': 'http',
+                'http.method': 'GET',
+                'http.url': 'https://www.wikipedia.org/wiki/Rabbit',
+            },
+            events=None,
+            links=None,
+            kind=SpanKind.CLIENT
+        )
+        span.start_time = start_time
+        span.end_time = end_time
+        span.status = StatusCanonicalCode.OK
+        envelope = exporter.span_to_envelope(span)
+        self.assertEqual(
+            envelope.data.baseData.resultCode, '0')
+        self.assertTrue(envelope.data.baseData.success)
+
+        span = Span(
+            name='test',
+            context=SpanContext(
+                trace_id=36873507687745823477771305566750195431,
+                span_id=12030755672171557337,
+            ),
+            parent=parent_span,
+            sampler=None,
+            trace_config=None,
+            resource=None,
+            attributes={
+                'component': 'http',
+                'http.method': 'GET',
+                'http.url': 'https://www.wikipedia.org/wiki/Rabbit',
+            },
+            events=None,
+            links=None,
+            kind=SpanKind.SERVER
+        )
+        span.start_time = start_time
+        span.end_time = end_time
+        span.status = StatusCanonicalCode.UNKNOWN
+        envelope = exporter.span_to_envelope(span)
+        self.assertEqual(
+            envelope.data.baseData.responseCode, '0')
+        self.assertFalse(envelope.data.baseData.success)
+
+        span = Span(
+            name='test',
+            context=SpanContext(
+                trace_id=36873507687745823477771305566750195431,
+                span_id=12030755672171557337,
+            ),
+            parent=parent_span,
+            sampler=None,
+            trace_config=None,
+            resource=None,
+            attributes={
+                'component': 'http',
+                'http.method': 'GET',
+                'http.url': 'https://www.wikipedia.org/wiki/Rabbit',
+            },
+            events=None,
+            links=None,
+            kind=SpanKind.CLIENT
+        )
+        span.start_time = start_time
+        span.end_time = end_time
+        span.status = StatusCanonicalCode.UNKNOWN
+        envelope = exporter.span_to_envelope(span)
+        self.assertEqual(
+            envelope.data.baseData.resultCode, '0')
+        self.assertFalse(envelope.data.baseData.success)

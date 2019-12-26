@@ -10,6 +10,7 @@ from azure_monitor import protocol, utils
 from opentelemetry.sdk.trace.export import SpanExporter, SpanExportResult
 from opentelemetry.sdk.util import ns_to_iso_str
 from opentelemetry.trace import Span, SpanKind
+from opentelemetry.trace.status import StatusCanonicalCode
 
 logger = logging.getLogger(__name__)
 
@@ -87,7 +88,7 @@ class AzureMonitorSpanExporter(SpanExporter):
                 ),
                 duration=utils.ns_to_duration(span.end_time - span.start_time),
                 responseCode="0",
-                success=False,
+                success=False, # Modify based off attributes or Status
                 properties={},
             )
             envelope.data = protocol.Data(
@@ -104,6 +105,8 @@ class AzureMonitorSpanExporter(SpanExporter):
                 status_code = span.attributes["http.status_code"]
                 data.responseCode = str(status_code)
                 data.success = 200 <= status_code < 400
+            elif span.status == StatusCanonicalCode.OK:
+                data.success = True
         else:
             envelope.name = "Microsoft.ApplicationInsights.RemoteDependency"
             data = protocol.RemoteDependency(
@@ -111,9 +114,9 @@ class AzureMonitorSpanExporter(SpanExporter):
                 id="{:016x}".format(
                     span.context.span_id
                 ),
-                resultCode="0",  # TODO
+                resultCode="0",
                 duration=utils.ns_to_duration(span.end_time - span.start_time),
-                success=True,  # TODO
+                success=False, # Modify based off attributes or Status
                 properties={},
             )
             envelope.data = protocol.Data(
@@ -136,7 +139,11 @@ class AzureMonitorSpanExporter(SpanExporter):
                         data.name = span.attributes["http.method"] \
                             + "/" + parse_url.path
                 if "http.status_code" in span.attributes:
-                    data.resultCode = str(span.attributes["http.status_code"])
+                    status_code = span.attributes["http.status_code"]
+                    data.resultCode = str(status_code)
+                    data.success = 200 <= status_code < 400
+                elif span.status == StatusCanonicalCode.OK:
+                    data.success = True
             else:  # SpanKind.INTERNAL
                 data.type = "InProc"
         for key in span.attributes:
