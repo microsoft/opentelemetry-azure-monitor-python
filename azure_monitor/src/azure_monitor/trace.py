@@ -87,7 +87,7 @@ class AzureMonitorSpanExporter(SpanExporter):
                     span.context.span_id
                 ),
                 duration=utils.ns_to_duration(span.end_time - span.start_time),
-                responseCode=str(StatusCanonicalCode.OK.value),
+                responseCode=str(span.status.value),
                 success=False, # Modify based off attributes or Status
                 properties={},
             )
@@ -114,7 +114,7 @@ class AzureMonitorSpanExporter(SpanExporter):
                 id="{:016x}".format(
                     span.context.span_id
                 ),
-                resultCode=str(StatusCanonicalCode.OK.value),
+                resultCode=str(span.status.value),
                 duration=utils.ns_to_duration(span.end_time - span.start_time),
                 success=False, # Modify based off attributes or Status
                 properties={},

@@ -56,6 +56,7 @@ class TestAzureExporter(unittest.TestCase):
             links=None,
             kind=SpanKind.CLIENT
         )
+        span.status = StatusCanonicalCode.OK
         span.start_time = start_time
         span.end_time = end_time
         envelope = exporter.span_to_envelope(span)
@@ -115,6 +116,7 @@ class TestAzureExporter(unittest.TestCase):
             links=None,
             kind=SpanKind.CLIENT
         )
+        span.status = StatusCanonicalCode.OK
         span.start_time = start_time
         span.end_time = end_time
         envelope = exporter.span_to_envelope(span)
@@ -169,6 +171,7 @@ class TestAzureExporter(unittest.TestCase):
             links=None,
             kind=SpanKind.CLIENT
         )
+        span.status = StatusCanonicalCode.OK
         span.start_time = start_time
         span.end_time = end_time
         envelope = exporter.span_to_envelope(span)
@@ -235,6 +238,7 @@ class TestAzureExporter(unittest.TestCase):
             links=None,
             kind=SpanKind.SERVER
         )
+        span.status = StatusCanonicalCode.OK
         span.start_time = start_time
         span.end_time = end_time
         envelope = exporter.span_to_envelope(span)
@@ -301,6 +305,7 @@ class TestAzureExporter(unittest.TestCase):
             links=None,
             kind=SpanKind.SERVER
         )
+        span.status = StatusCanonicalCode.OK
         span.start_time = start_time
         span.end_time = end_time
         envelope = exporter.span_to_envelope(span)
@@ -367,6 +372,7 @@ class TestAzureExporter(unittest.TestCase):
             links=None,
             kind=SpanKind.SERVER
         )
+        span.status = StatusCanonicalCode.OK
         span.start_time = start_time
         span.end_time = end_time
         envelope = exporter.span_to_envelope(span)
@@ -411,6 +417,7 @@ class TestAzureExporter(unittest.TestCase):
             links=None,
             kind=SpanKind.INTERNAL
         )
+        span.status = StatusCanonicalCode.OK
         span.start_time = start_time
         span.end_time = end_time
         envelope = exporter.span_to_envelope(span)
@@ -467,6 +474,7 @@ class TestAzureExporter(unittest.TestCase):
             links=None,
             kind=SpanKind.CLIENT
         )
+        span.status = StatusCanonicalCode.OK
         span.start_time = start_time
         span.end_time = end_time
         envelope = exporter.span_to_envelope(span)
@@ -502,6 +510,7 @@ class TestAzureExporter(unittest.TestCase):
             links=links,
             kind=SpanKind.CLIENT
         )
+        span.status = StatusCanonicalCode.OK
         span.start_time = start_time
         span.end_time = end_time
         envelope = exporter.span_to_envelope(span)
@@ -533,6 +542,7 @@ class TestAzureExporter(unittest.TestCase):
             links=None,
             kind=SpanKind.SERVER
         )
+        span.status = StatusCanonicalCode.OK
         span.start_time = start_time
         span.end_time = end_time
         envelope = exporter.span_to_envelope(span)
@@ -560,6 +570,7 @@ class TestAzureExporter(unittest.TestCase):
             links=None,
             kind=SpanKind.CLIENT
         )
+        span.status = StatusCanonicalCode.OK
         span.start_time = start_time
         span.end_time = end_time
         envelope = exporter.span_to_envelope(span)
@@ -586,6 +597,7 @@ class TestAzureExporter(unittest.TestCase):
             links=None,
             kind=SpanKind.SERVER
         )
+        span.status = StatusCanonicalCode.OK
         span.start_time = start_time
         span.end_time = end_time
         span.status = StatusCanonicalCode.OK
@@ -613,6 +625,7 @@ class TestAzureExporter(unittest.TestCase):
             links=None,
             kind=SpanKind.CLIENT
         )
+        span.status = StatusCanonicalCode.OK
         span.start_time = start_time
         span.end_time = end_time
         span.status = StatusCanonicalCode.OK
@@ -645,7 +658,7 @@ class TestAzureExporter(unittest.TestCase):
         span.status = StatusCanonicalCode.UNKNOWN
         envelope = exporter.span_to_envelope(span)
         self.assertEqual(
-            envelope.data.baseData.responseCode, '0')
+            envelope.data.baseData.responseCode, '2')
         self.assertFalse(envelope.data.baseData.success)
 
         span = Span(
@@ -672,5 +685,5 @@ class TestAzureExporter(unittest.TestCase):
         span.status = StatusCanonicalCode.UNKNOWN
         envelope = exporter.span_to_envelope(span)
         self.assertEqual(
-            envelope.data.baseData.resultCode, '0')
+            envelope.data.baseData.resultCode, '2')
         self.assertFalse(envelope.data.baseData.success)
