@@ -5,18 +5,19 @@ import unittest
 
 from azure_monitor import protocol
 
+
 class TestProtocol(unittest.TestCase):
-    def test_object(self):
-        data = protocol.BaseObject()
-        self.assertEqual(repr(data), '{}')
-        data.foo = 1
-        self.assertEqual(data.foo, 1)
-        self.assertEqual(data['foo'], 1)
-        data['bar'] = 2
-        self.assertEqual(data.bar, 2)
-        self.assertEqual(data['bar'], 2)
-        self.assertRaises(KeyError, lambda: data['baz'])
-        self.assertRaises(AttributeError, lambda: data.baz)
+    # def test_object(self):
+    #     data = protocol.BaseObject()
+    #     self.assertEqual(repr(data), '{}')
+    #     data.foo = 1
+    #     self.assertEqual(data.foo, 1)
+    #     self.assertEqual(data['foo'], 1)
+    #     data['bar'] = 2
+    #     self.assertEqual(data.bar, 2)
+    #     self.assertEqual(data['bar'], 2)
+    #     self.assertRaises(KeyError, lambda: data['baz'])
+    #     self.assertRaises(AttributeError, lambda: data.baz)
 
     def test_data(self):
         data = protocol.Data()

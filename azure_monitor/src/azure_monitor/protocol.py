@@ -1,61 +1,29 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
-class BaseObject(dict):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        for key in kwargs:
-            self[key] = kwargs[key]
-
-    def __repr__(self):
-        tmp = {}
-        current = self
-        while True:
-            for item in current.items():
-                if item[0] not in tmp:
-                    tmp[item[0]] = item[1]
-            if (
-                current._default  # noqa pylint: disable=protected-access
-                == current
-            ):
-                break
-            current = current._default  # noqa pylint: disable=protected-access
-        return repr(tmp)
-
-    def __setattr__(self, name, value):
-        self[name] = value
-
-    def __getattr__(self, name):
-        try:
-            return self[name]
-        except KeyError:
-            raise AttributeError(
-                "'{}' object has no attribute {}".format(
-                    type(self).__name__, name
-                )
-            )
-
-    def __getitem__(self, key):
-        if self._default is self:
-            return super().__getitem__(key)
-        if key in self:
-            return super().__getitem__(key)
-        return self._default[key]
 
 
-BaseObject._default = BaseObject()  # noqa pylint: disable=protected-access
+class Data:
+    __slots__ = ("baseData", "baseType")
+
+    def __init__(self, baseData=None, baseType=None) -> None:
+        self.baseData = baseData
+        self.baseType = baseType
 
 
-class Data(BaseObject):
-    _default = BaseObject(baseData=None, baseType=None)
+class DataPoint:
+    __slots__ = (
+        "ns",
+        "name",
+        "kind",
+        "value",
+        "count",
+        "min",
+        "max",
+        "std_dev",
+    )
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.baseData = self.baseData  # noqa pylint: disable=invalid-name
-        self.baseType = self.baseType  # noqa pylint: disable=invalid-name
-
-
-class DataPoint(BaseObject):
-    _default = BaseObject(
+    def __init__(
+        self,
         ns="",
         name="",
         kind=None,
@@ -63,17 +31,33 @@ class DataPoint(BaseObject):
         count=None,
         min=None,
         max=None,
-        stdDev=None,
+        std_dev=None,
+    ) -> None:
+        self.ns = ns
+        self.name = name
+        self.kind = kind
+        self.value = value
+        self.count = count
+        self.min = min
+        self.max = max
+        self.std_dev = std_dev
+
+
+class Envelope:
+    __slots__ = (
+        "ver",
+        "name",
+        "time",
+        "sampleRate",
+        "seq",
+        "iKey",
+        "flags",
+        "tags",
+        "data",
     )
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.name = self.name
-        self.value = self.value
-
-
-class Envelope(BaseObject):
-    _default = BaseObject(
+    def __init__(
+        self,
         ver=1,
         name="",
         time="",
@@ -83,65 +67,109 @@ class Envelope(BaseObject):
         flags=None,
         tags=None,
         data=None,
+    ) -> None:
+        self.ver = ver
+        self.name = name
+        self.time = time
+        self.sampleRate = sampleRate
+        self.seq = seq
+        self.iKey = iKey
+        self.flags = flags
+        self.tags = tags
+        self.data = data
+
+
+class Event:
+    __slots__ = ("ver", "name", "properties", "measurements")
+
+    def __init__(self, ver=2, name="", properties=None, measurements=None):
+        self.ver = ver
+        self.name = name
+        self.properties = properties
+        self.measurements = measurements
+
+
+class ExceptionData:
+    __slots__ = (
+        "ver",
+        "exceptions",
+        "severityLevel",
+        "problemId",
+        "properties",
+        "measurements",
     )
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.name = self.name
-        self.time = self.time
-
-
-class Event(BaseObject):
-    _default = BaseObject(ver=2, name="", properties=None, measurements=None)
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.ver = self.ver
-        self.name = self.name
-
-
-class ExceptionData(BaseObject):
-    _default = BaseObject(
+    def __init__(
+        self,
         ver=2,
-        exceptions=[],
+        exceptions=None,
         severityLevel=None,
         problemId=None,
         properties=None,
         measurements=None,
+    ) -> None:
+        if exceptions is None:
+            exceptions = []
+        self.ver = ver
+        self.exceptions = exceptions
+        self.severityLevel = severityLevel
+        self.problemId = problemId
+        self.properties = properties
+        self.measurements = measurements
+
+
+class Message:
+    __slots__ = (
+        "ver",
+        "message",
+        "severityLevel",
+        "properties",
+        "measurements",
     )
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.ver = self.ver
-        self.exceptions = self.exceptions
-
-
-class Message(BaseObject):
-    _default = BaseObject(
+    def __init__(
+        self,
         ver=2,
         message="",
         severityLevel=None,
         properties=None,
         measurements=None,
+    ) -> None:
+        self.ver = ver
+        self.message = message
+        self.severityLevel = severityLevel
+        self.properties = properties
+        self.measurements = measurements
+
+
+class MetricData:
+    __slots__ = ("ver", "metrics", "properties")
+
+    def __init__(self, ver=2, metrics=None, properties=None) -> None:
+        if metrics is None:
+            metrics = []
+        self.ver = ver
+        self.metrics = metrics
+        self.properties = properties
+
+
+class RemoteDependency:
+    __slots__ = (
+        "ver",
+        "name",
+        "id",
+        "resultCode",
+        "duration",
+        "success",
+        "data",
+        "type",
+        "target",
+        "properties",
+        "measurements",
     )
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.ver = self.ver
-        self.message = self.message
-
-
-class MetricData(BaseObject):
-    _default = BaseObject(ver=2, metrics=[], properties=None)
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.ver = self.ver
-        self.metrics = self.metrics
-
-
-class RemoteDependency(BaseObject):
-    _default = BaseObject(
+    def __init__(
+        self,
         ver=2,
         name="",
         id="",
@@ -153,18 +181,36 @@ class RemoteDependency(BaseObject):
         target=None,
         properties=None,
         measurements=None,
+    ) -> None:
+        self.ver = ver
+        self.name = name
+        self.id = id
+        self.resultCode = resultCode
+        self.duration = duration
+        self.success = success
+        self.data = data
+        self.type = type
+        self.target = target
+        self.properties = properties
+        self.measurements = measurements
+
+
+class Request:
+    __slots__ = (
+        "ver",
+        "id",
+        "duration",
+        "responseCode",
+        "success",
+        "source",
+        "name",
+        "url",
+        "properties",
+        "measurements",
     )
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.ver = self.ver
-        self.name = self.name
-        self.resultCode = self.resultCode  # noqa pylint: disable=invalid-name
-        self.duration = self.duration
-
-
-class Request(BaseObject):
-    _default = BaseObject(
+    def __init__(
+        self,
         ver=2,
         id="",
         duration="",
@@ -175,14 +221,15 @@ class Request(BaseObject):
         url=None,
         properties=None,
         measurements=None,
-    )
+    ) -> None:
+        self.ver = ver
+        self.id = id
+        self.duration = duration
+        self.responseCode = responseCode
+        self.success = success
+        self.source = source
+        self.name = name
+        self.url = url
+        self.properties = properties
+        self.measurements = measurements
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.ver = self.ver
-        self.id = self.id  # noqa pylint: disable=invalid-name
-        self.duration = self.duration
-        self.responseCode = (  # noqa pylint: disable=invalid-name
-            self.responseCode
-        )
-        self.success = self.success

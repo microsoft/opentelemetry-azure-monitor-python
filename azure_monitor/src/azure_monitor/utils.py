@@ -5,7 +5,6 @@ import os
 import platform
 import sys
 
-from azure_monitor.protocol import BaseObject
 from azure_monitor.version import __version__ as ext_version
 from opentelemetry.sdk.version import __version__ as opentelemetry_version
 
@@ -21,6 +20,7 @@ azure_monitor_context = {
     ),
 }
 
+
 def ns_to_duration(nanoseconds):
     value = (nanoseconds + 500000) // 1000000  # duration in milliseconds
     value, microseconds = divmod(value, 1000)
@@ -32,9 +32,15 @@ def ns_to_duration(nanoseconds):
     )
 
 
-class Options(BaseObject):
-    _default = BaseObject(
+class Options:
+    __slots__ = ("endpoint", "instrumentation_key", "timeout")
+
+    def __init__(
+        self,
         endpoint="https://dc.services.visualstudio.com/v2/track",
         instrumentation_key=os.getenv("APPINSIGHTS_INSTRUMENTATIONKEY", None),
         timeout=10.0,  # networking timeout in seconds
-    )
+    ) -> None:
+        self.endpoint = endpoint
+        self.instrumentation_key = instrumentation_key
+        self.timeout = timeout

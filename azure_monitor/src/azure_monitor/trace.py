@@ -16,8 +16,8 @@ logger = logging.getLogger(__name__)
 
 
 class AzureMonitorSpanExporter(SpanExporter):
-    def __init__(self, **options):
-        self.options = utils.Options(**options)
+    def __init__(self, options: utils.Options):
+        self.options = options
         if not self.options.instrumentation_key:
             raise ValueError("The instrumentation_key is not provided.")
 
@@ -88,7 +88,7 @@ class AzureMonitorSpanExporter(SpanExporter):
                 ),
                 duration=utils.ns_to_duration(span.end_time - span.start_time),
                 responseCode=str(span.status.value),
-                success=False, # Modify based off attributes or Status
+                success=False,  # Modify based off attributes or Status
                 properties={},
             )
             envelope.data = protocol.Data(
@@ -116,7 +116,7 @@ class AzureMonitorSpanExporter(SpanExporter):
                 ),
                 resultCode=str(span.status.value),
                 duration=utils.ns_to_duration(span.end_time - span.start_time),
-                success=False, # Modify based off attributes or Status
+                success=False,  # Modify based off attributes or Status
                 properties={},
             )
             envelope.data = protocol.Data(
@@ -124,7 +124,7 @@ class AzureMonitorSpanExporter(SpanExporter):
             )
             if span.kind in (SpanKind.CLIENT, SpanKind.PRODUCER):
                 if "component" in span.attributes and \
-                    span.attributes["component"] == "http":
+                        span.attributes["component"] == "http":
                     data.type = "HTTP"
                 if "http.url" in span.attributes:
                     url = span.attributes["http.url"]
@@ -165,6 +165,5 @@ class AzureMonitorSpanExporter(SpanExporter):
                     }
                 )
             data.properties["_MS.links"] = json.dumps(links)
-            print(data.properties["_MS.links"])
         # TODO: tracestate, tags
         return envelope
