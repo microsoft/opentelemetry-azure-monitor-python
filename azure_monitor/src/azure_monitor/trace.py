@@ -99,8 +99,13 @@ class AzureMonitorSpanExporter(SpanExporter):
             if "http.route" in span.attributes:
                 data.name = data.name + " " + span.attributes["http.route"]
                 envelope.tags["ai.operation.name"] = data.name
+                data.properties["request.name"] = data.name
+            elif 'http.path' in span.attributes:
+                data.properties['request.name'] = data.name + \
+                    ' ' + span.attributes['http.path']
             if "http.url" in span.attributes:
                 data.url = span.attributes["http.url"]
+                data.properties['request.url'] = span.attributes['http.url']
             if "http.status_code" in span.attributes:
                 status_code = span.attributes["http.status_code"]
                 data.responseCode = str(status_code)
@@ -146,6 +151,7 @@ class AzureMonitorSpanExporter(SpanExporter):
                     data.success = True
             else:  # SpanKind.INTERNAL
                 data.type = "InProc"
+                data.success = True
         for key in span.attributes:
             # This removes redundant data from ApplicationInsights
             if key.startswith('http.'):
