@@ -5,7 +5,6 @@ import unittest
 
 from azure_monitor.trace import AzureMonitorSpanExporter
 from azure_monitor.utils import Options
-from azure_monitor.protocol import Data
 
 
 class TestAzureExporter(unittest.TestCase):
@@ -60,7 +59,7 @@ class TestAzureExporter(unittest.TestCase):
         span.start_time = start_time
         span.end_time = end_time
         envelope = exporter.span_to_envelope(span)
-        self.assertEqual(envelope.iKey, "12345678-1234-5678-abcd-12345678abcd")
+        self.assertEqual(envelope.ikey, "12345678-1234-5678-abcd-12345678abcd")
         self.assertEqual(
             envelope.name, "Microsoft.ApplicationInsights.RemoteDependency"
         )
@@ -69,16 +68,16 @@ class TestAzureExporter(unittest.TestCase):
             envelope.tags["ai.operation.id"], "1bbd944a73a05d89eab5d3740a213ee7"
         )
         self.assertEqual(envelope.time, "2019-12-04T21:18:36.027613Z")
-        self.assertEqual(envelope.data.baseData.name, "GET//wiki/Rabbit")
+        self.assertEqual(envelope.data.base_data.name, "GET//wiki/Rabbit")
         self.assertEqual(
-            envelope.data.baseData.data, "https://www.wikipedia.org/wiki/Rabbit"
+            envelope.data.base_data.data, "https://www.wikipedia.org/wiki/Rabbit"
         )
-        self.assertEqual(envelope.data.baseData.target, "www.wikipedia.org")
-        self.assertEqual(envelope.data.baseData.id, "a6f5d48acb4d31d9")
-        self.assertEqual(envelope.data.baseData.resultCode, "200")
-        self.assertEqual(envelope.data.baseData.duration, "0.00:00:01.001")
-        self.assertEqual(envelope.data.baseData.type, "HTTP")
-        self.assertEqual(envelope.data.baseType, "RemoteDependencyData")
+        self.assertEqual(envelope.data.base_data.target, "www.wikipedia.org")
+        self.assertEqual(envelope.data.base_data.id, "a6f5d48acb4d31d9")
+        self.assertEqual(envelope.data.base_data.result_code, "200")
+        self.assertEqual(envelope.data.base_data.duration, "0.00:00:01.001")
+        self.assertEqual(envelope.data.base_data.type, "HTTP")
+        self.assertEqual(envelope.data.base_type, "RemoteDependencyData")
 
         # SpanKind.CLIENT unknown type
         span = Span(
@@ -100,7 +99,7 @@ class TestAzureExporter(unittest.TestCase):
         span.start_time = start_time
         span.end_time = end_time
         envelope = exporter.span_to_envelope(span)
-        self.assertEqual(envelope.iKey, "12345678-1234-5678-abcd-12345678abcd")
+        self.assertEqual(envelope.ikey, "12345678-1234-5678-abcd-12345678abcd")
         self.assertEqual(
             envelope.name, "Microsoft.ApplicationInsights.RemoteDependency"
         )
@@ -109,11 +108,11 @@ class TestAzureExporter(unittest.TestCase):
             envelope.tags["ai.operation.id"], "1bbd944a73a05d89eab5d3740a213ee7"
         )
         self.assertEqual(envelope.time, "2019-12-04T21:18:36.027613Z")
-        self.assertEqual(envelope.data.baseData.name, "test")
-        self.assertEqual(envelope.data.baseData.id, "a6f5d48acb4d31d9")
-        self.assertEqual(envelope.data.baseData.duration, "0.00:00:01.001")
-        self.assertEqual(envelope.data.baseData.type, None)
-        self.assertEqual(envelope.data.baseType, "RemoteDependencyData")
+        self.assertEqual(envelope.data.base_data.name, "test")
+        self.assertEqual(envelope.data.base_data.id, "a6f5d48acb4d31d9")
+        self.assertEqual(envelope.data.base_data.duration, "0.00:00:01.001")
+        self.assertEqual(envelope.data.base_data.type, None)
+        self.assertEqual(envelope.data.base_type, "RemoteDependencyData")
 
         # SpanKind.CLIENT missing method
         span = Span(
@@ -139,7 +138,7 @@ class TestAzureExporter(unittest.TestCase):
         span.start_time = start_time
         span.end_time = end_time
         envelope = exporter.span_to_envelope(span)
-        self.assertEqual(envelope.iKey, "12345678-1234-5678-abcd-12345678abcd")
+        self.assertEqual(envelope.ikey, "12345678-1234-5678-abcd-12345678abcd")
         self.assertEqual(
             envelope.name, "Microsoft.ApplicationInsights.RemoteDependency"
         )
@@ -148,16 +147,16 @@ class TestAzureExporter(unittest.TestCase):
             envelope.tags["ai.operation.id"], "1bbd944a73a05d89eab5d3740a213ee7"
         )
         self.assertEqual(envelope.time, "2019-12-04T21:18:36.027613Z")
-        self.assertEqual(envelope.data.baseData.name, "test")
+        self.assertEqual(envelope.data.base_data.name, "test")
         self.assertEqual(
-            envelope.data.baseData.data, "https://www.wikipedia.org/wiki/Rabbit"
+            envelope.data.base_data.data, "https://www.wikipedia.org/wiki/Rabbit"
         )
-        self.assertEqual(envelope.data.baseData.target, "www.wikipedia.org")
-        self.assertEqual(envelope.data.baseData.id, "a6f5d48acb4d31d9")
-        self.assertEqual(envelope.data.baseData.resultCode, "200")
-        self.assertEqual(envelope.data.baseData.duration, "0.00:00:01.001")
-        self.assertEqual(envelope.data.baseData.type, "HTTP")
-        self.assertEqual(envelope.data.baseType, "RemoteDependencyData")
+        self.assertEqual(envelope.data.base_data.target, "www.wikipedia.org")
+        self.assertEqual(envelope.data.base_data.id, "a6f5d48acb4d31d9")
+        self.assertEqual(envelope.data.base_data.result_code, "200")
+        self.assertEqual(envelope.data.base_data.duration, "0.00:00:01.001")
+        self.assertEqual(envelope.data.base_data.type, "HTTP")
+        self.assertEqual(envelope.data.base_type, "RemoteDependencyData")
 
         # SpanKind.SERVER HTTP - 200 request
         span = Span(
@@ -186,7 +185,7 @@ class TestAzureExporter(unittest.TestCase):
         span.start_time = start_time
         span.end_time = end_time
         envelope = exporter.span_to_envelope(span)
-        self.assertEqual(envelope.iKey, "12345678-1234-5678-abcd-12345678abcd")
+        self.assertEqual(envelope.ikey, "12345678-1234-5678-abcd-12345678abcd")
         self.assertEqual(envelope.name, "Microsoft.ApplicationInsights.Request")
         self.assertEqual(envelope.tags["ai.operation.parentId"], "a6f5d48acb4d31da")
         self.assertEqual(
@@ -194,15 +193,15 @@ class TestAzureExporter(unittest.TestCase):
         )
         self.assertEqual(envelope.tags["ai.operation.name"], "GET /wiki/Rabbit")
         self.assertEqual(envelope.time, "2019-12-04T21:18:36.027613Z")
-        self.assertEqual(envelope.data.baseData.id, "a6f5d48acb4d31d9")
-        self.assertEqual(envelope.data.baseData.duration, "0.00:00:01.001")
-        self.assertEqual(envelope.data.baseData.responseCode, "200")
-        self.assertEqual(envelope.data.baseData.name, "GET /wiki/Rabbit")
-        self.assertEqual(envelope.data.baseData.success, True)
+        self.assertEqual(envelope.data.base_data.id, "a6f5d48acb4d31d9")
+        self.assertEqual(envelope.data.base_data.duration, "0.00:00:01.001")
+        self.assertEqual(envelope.data.base_data.response_code, "200")
+        self.assertEqual(envelope.data.base_data.name, "GET /wiki/Rabbit")
+        self.assertEqual(envelope.data.base_data.success, True)
         self.assertEqual(
-            envelope.data.baseData.url, "https://www.wikipedia.org/wiki/Rabbit"
+            envelope.data.base_data.url, "https://www.wikipedia.org/wiki/Rabbit"
         )
-        self.assertEqual(envelope.data.baseType, "RequestData")
+        self.assertEqual(envelope.data.base_type, "RequestData")
 
         # SpanKind.SERVER HTTP - Failed request
         span = Span(
@@ -231,7 +230,7 @@ class TestAzureExporter(unittest.TestCase):
         span.start_time = start_time
         span.end_time = end_time
         envelope = exporter.span_to_envelope(span)
-        self.assertEqual(envelope.iKey, "12345678-1234-5678-abcd-12345678abcd")
+        self.assertEqual(envelope.ikey, "12345678-1234-5678-abcd-12345678abcd")
         self.assertEqual(envelope.name, "Microsoft.ApplicationInsights.Request")
         self.assertEqual(envelope.tags["ai.operation.parentId"], "a6f5d48acb4d31da")
         self.assertEqual(
@@ -239,15 +238,15 @@ class TestAzureExporter(unittest.TestCase):
         )
         self.assertEqual(envelope.tags["ai.operation.name"], "GET /wiki/Rabbit")
         self.assertEqual(envelope.time, "2019-12-04T21:18:36.027613Z")
-        self.assertEqual(envelope.data.baseData.id, "a6f5d48acb4d31d9")
-        self.assertEqual(envelope.data.baseData.duration, "0.00:00:01.001")
-        self.assertEqual(envelope.data.baseData.responseCode, "400")
-        self.assertEqual(envelope.data.baseData.name, "GET /wiki/Rabbit")
-        self.assertEqual(envelope.data.baseData.success, False)
+        self.assertEqual(envelope.data.base_data.id, "a6f5d48acb4d31d9")
+        self.assertEqual(envelope.data.base_data.duration, "0.00:00:01.001")
+        self.assertEqual(envelope.data.base_data.response_code, "400")
+        self.assertEqual(envelope.data.base_data.name, "GET /wiki/Rabbit")
+        self.assertEqual(envelope.data.base_data.success, False)
         self.assertEqual(
-            envelope.data.baseData.url, "https://www.wikipedia.org/wiki/Rabbit"
+            envelope.data.base_data.url, "https://www.wikipedia.org/wiki/Rabbit"
         )
-        self.assertEqual(envelope.data.baseType, "RequestData")
+        self.assertEqual(envelope.data.base_type, "RequestData")
 
         # SpanKind.SERVER unknown type
         span = Span(
@@ -276,16 +275,16 @@ class TestAzureExporter(unittest.TestCase):
         span.start_time = start_time
         span.end_time = end_time
         envelope = exporter.span_to_envelope(span)
-        self.assertEqual(envelope.iKey, "12345678-1234-5678-abcd-12345678abcd")
+        self.assertEqual(envelope.ikey, "12345678-1234-5678-abcd-12345678abcd")
         self.assertEqual(envelope.name, "Microsoft.ApplicationInsights.Request")
         self.assertEqual(envelope.tags["ai.operation.parentId"], "a6f5d48acb4d31da")
         self.assertEqual(
             envelope.tags["ai.operation.id"], "1bbd944a73a05d89eab5d3740a213ee7"
         )
         self.assertEqual(envelope.time, "2019-12-04T21:18:36.027613Z")
-        self.assertEqual(envelope.data.baseData.id, "a6f5d48acb4d31d9")
-        self.assertEqual(envelope.data.baseData.duration, "0.00:00:01.001")
-        self.assertEqual(envelope.data.baseType, "RequestData")
+        self.assertEqual(envelope.data.base_data.id, "a6f5d48acb4d31d9")
+        self.assertEqual(envelope.data.base_data.duration, "0.00:00:01.001")
+        self.assertEqual(envelope.data.base_type, "RequestData")
 
         # SpanKind.INTERNAL
         span = Span(
@@ -307,7 +306,7 @@ class TestAzureExporter(unittest.TestCase):
         span.start_time = start_time
         span.end_time = end_time
         envelope = exporter.span_to_envelope(span)
-        self.assertEqual(envelope.iKey, "12345678-1234-5678-abcd-12345678abcd")
+        self.assertEqual(envelope.ikey, "12345678-1234-5678-abcd-12345678abcd")
         self.assertEqual(
             envelope.name, "Microsoft.ApplicationInsights.RemoteDependency"
         )
@@ -316,11 +315,11 @@ class TestAzureExporter(unittest.TestCase):
             envelope.tags["ai.operation.id"], "1bbd944a73a05d89eab5d3740a213ee7"
         )
         self.assertEqual(envelope.time, "2019-12-04T21:18:36.027613Z")
-        self.assertEqual(envelope.data.baseData.name, "test")
-        self.assertEqual(envelope.data.baseData.duration, "0.00:00:01.001")
-        self.assertEqual(envelope.data.baseData.id, "a6f5d48acb4d31d9")
-        self.assertEqual(envelope.data.baseData.type, "InProc")
-        self.assertEqual(envelope.data.baseType, "RemoteDependencyData")
+        self.assertEqual(envelope.data.base_data.name, "test")
+        self.assertEqual(envelope.data.base_data.duration, "0.00:00:01.001")
+        self.assertEqual(envelope.data.base_data.id, "a6f5d48acb4d31d9")
+        self.assertEqual(envelope.data.base_data.type, "InProc")
+        self.assertEqual(envelope.data.base_type, "RemoteDependencyData")
 
         # Attributes
         span = Span(
@@ -348,9 +347,9 @@ class TestAzureExporter(unittest.TestCase):
         span.start_time = start_time
         span.end_time = end_time
         envelope = exporter.span_to_envelope(span)
-        self.assertEqual(len(envelope.data.baseData.properties), 2)
-        self.assertEqual(envelope.data.baseData.properties["component"], "http")
-        self.assertEqual(envelope.data.baseData.properties["test"], "asd")
+        self.assertEqual(len(envelope.data.base_data.properties), 2)
+        self.assertEqual(envelope.data.base_data.properties["component"], "http")
+        self.assertEqual(envelope.data.base_data.properties["test"], "asd")
 
         # Links
         links = []
@@ -386,12 +385,12 @@ class TestAzureExporter(unittest.TestCase):
         span.start_time = start_time
         span.end_time = end_time
         envelope = exporter.span_to_envelope(span)
-        self.assertEqual(len(envelope.data.baseData.properties), 2)
+        self.assertEqual(len(envelope.data.base_data.properties), 2)
         links_json = (
             '[{"operation_Id": '
             + '"1bbd944a73a05d89eab5d3740a213ee8", "id": "a6f5d48acb4d31da"}]'
         )
-        self.assertEqual(envelope.data.baseData.properties["_MS.links"], links_json)
+        self.assertEqual(envelope.data.base_data.properties["_MS.links"], links_json)
 
         # Status
         span = Span(
@@ -418,8 +417,8 @@ class TestAzureExporter(unittest.TestCase):
         span.start_time = start_time
         span.end_time = end_time
         envelope = exporter.span_to_envelope(span)
-        self.assertEqual(envelope.data.baseData.responseCode, "500")
-        self.assertFalse(envelope.data.baseData.success)
+        self.assertEqual(envelope.data.base_data.response_code, "500")
+        self.assertFalse(envelope.data.base_data.success)
 
         span = Span(
             name="test",
@@ -445,8 +444,8 @@ class TestAzureExporter(unittest.TestCase):
         span.start_time = start_time
         span.end_time = end_time
         envelope = exporter.span_to_envelope(span)
-        self.assertEqual(envelope.data.baseData.resultCode, "500")
-        self.assertFalse(envelope.data.baseData.success)
+        self.assertEqual(envelope.data.base_data.result_code, "500")
+        self.assertFalse(envelope.data.base_data.success)
 
         span = Span(
             name="test",
@@ -472,8 +471,8 @@ class TestAzureExporter(unittest.TestCase):
         span.end_time = end_time
         span.status = StatusCanonicalCode.OK
         envelope = exporter.span_to_envelope(span)
-        self.assertEqual(envelope.data.baseData.responseCode, "0")
-        self.assertTrue(envelope.data.baseData.success)
+        self.assertEqual(envelope.data.base_data.response_code, "0")
+        self.assertTrue(envelope.data.base_data.success)
 
         span = Span(
             name="test",
@@ -499,8 +498,8 @@ class TestAzureExporter(unittest.TestCase):
         span.end_time = end_time
         span.status = StatusCanonicalCode.OK
         envelope = exporter.span_to_envelope(span)
-        self.assertEqual(envelope.data.baseData.resultCode, "0")
-        self.assertTrue(envelope.data.baseData.success)
+        self.assertEqual(envelope.data.base_data.result_code, "0")
+        self.assertTrue(envelope.data.base_data.success)
 
         span = Span(
             name="test",
@@ -525,8 +524,8 @@ class TestAzureExporter(unittest.TestCase):
         span.end_time = end_time
         span.status = StatusCanonicalCode.UNKNOWN
         envelope = exporter.span_to_envelope(span)
-        self.assertEqual(envelope.data.baseData.responseCode, "2")
-        self.assertFalse(envelope.data.baseData.success)
+        self.assertEqual(envelope.data.base_data.response_code, "2")
+        self.assertFalse(envelope.data.base_data.success)
 
         span = Span(
             name="test",
@@ -551,5 +550,5 @@ class TestAzureExporter(unittest.TestCase):
         span.end_time = end_time
         span.status = StatusCanonicalCode.UNKNOWN
         envelope = exporter.span_to_envelope(span)
-        self.assertEqual(envelope.data.baseData.resultCode, "2")
-        self.assertFalse(envelope.data.baseData.success)
+        self.assertEqual(envelope.data.base_data.result_code, "2")
+        self.assertFalse(envelope.data.base_data.success)

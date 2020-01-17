@@ -16,7 +16,7 @@ logger = logging.getLogger(__name__)
 
 
 class AzureMonitorSpanExporter(SpanExporter):
-    def __init__(self, options: utils.Options):
+    def __init__(self, options: "utils.Options"):
         self.options = options
         if not self.options.instrumentation_key:
             raise ValueError("The instrumentation_key is not provided.")
@@ -66,7 +66,7 @@ class AzureMonitorSpanExporter(SpanExporter):
 
     def span_to_envelope(self, span):  # noqa pylint: disable=too-many-branches
         envelope = protocol.Envelope(
-            iKey=self.options.instrumentation_key,
+            ikey=self.options.instrumentation_key,
             tags=dict(utils.azure_monitor_context),
             time=ns_to_iso_str(span.start_time),
         )
@@ -87,12 +87,12 @@ class AzureMonitorSpanExporter(SpanExporter):
                     span.context.span_id
                 ),
                 duration=utils.ns_to_duration(span.end_time - span.start_time),
-                responseCode=str(span.status.value),
+                response_code=str(span.status.value),
                 success=False,  # Modify based off attributes or Status
                 properties={},
             )
             envelope.data = protocol.Data(
-                baseData=data, baseType="RequestData"
+                base_data=data, base_type="RequestData"
             )
             if "http.method" in span.attributes:
                 data.name = span.attributes["http.method"]
@@ -103,7 +103,7 @@ class AzureMonitorSpanExporter(SpanExporter):
                 data.url = span.attributes["http.url"]
             if "http.status_code" in span.attributes:
                 status_code = span.attributes["http.status_code"]
-                data.responseCode = str(status_code)
+                data.response_code = str(status_code)
                 data.success = 200 <= status_code < 400
             elif span.status == StatusCanonicalCode.OK:
                 data.success = True
@@ -114,13 +114,13 @@ class AzureMonitorSpanExporter(SpanExporter):
                 id="{:016x}".format(
                     span.context.span_id
                 ),
-                resultCode=str(span.status.value),
+                result_code=str(span.status.value),
                 duration=utils.ns_to_duration(span.end_time - span.start_time),
                 success=False,  # Modify based off attributes or Status
                 properties={},
             )
             envelope.data = protocol.Data(
-                baseData=data, baseType="RemoteDependencyData"
+                base_data=data, base_type="RemoteDependencyData"
             )
             if span.kind in (SpanKind.CLIENT, SpanKind.PRODUCER):
                 if "component" in span.attributes and \
@@ -140,7 +140,7 @@ class AzureMonitorSpanExporter(SpanExporter):
                             + "/" + parse_url.path
                 if "http.status_code" in span.attributes:
                     status_code = span.attributes["http.status_code"]
-                    data.resultCode = str(status_code)
+                    data.result_code = str(status_code)
                     data.success = 200 <= status_code < 400
                 elif span.status == StatusCanonicalCode.OK:
                     data.success = True

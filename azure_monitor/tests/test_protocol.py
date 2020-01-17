@@ -21,8 +21,8 @@ class TestProtocol(unittest.TestCase):
 
     def test_data(self):
         data = protocol.Data()
-        self.assertIsNone(data.baseData)
-        self.assertIsNone(data.baseType)
+        self.assertIsNone(data.base_data)
+        self.assertIsNone(data.base_type)
 
     def test_envelope(self):
         data = protocol.Envelope()

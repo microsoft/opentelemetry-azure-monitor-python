@@ -3,11 +3,17 @@
 
 
 class Data:
-    __slots__ = ("baseData", "baseType")
+    __slots__ = ("base_data", "base_type")
 
-    def __init__(self, baseData=None, baseType=None) -> None:
-        self.baseData = baseData
-        self.baseType = baseType
+    def __init__(self, base_data=None, base_type=None) -> None:
+        self.base_data = base_data
+        self.base_type = base_type
+
+    def to_dict(self):
+        return {
+            "baseData": self.base_data.to_dict(),
+            "baseType": self.base_type,
+        }
 
 
 class DataPoint:
@@ -42,15 +48,27 @@ class DataPoint:
         self.max = max
         self.std_dev = std_dev
 
+    def to_dict(self):
+        return {
+            "ns": self.ns,
+            "name": self.name,
+            "kind": self.kind,
+            "value": self.value,
+            "count": self.count,
+            "min": self.min,
+            "max": self.max,
+            "stdDev": self.std_dev,
+        }
+
 
 class Envelope:
     __slots__ = (
         "ver",
         "name",
         "time",
-        "sampleRate",
+        "sample_rate",
         "seq",
-        "iKey",
+        "ikey",
         "flags",
         "tags",
         "data",
@@ -61,9 +79,9 @@ class Envelope:
         ver=1,
         name="",
         time="",
-        sampleRate=None,
+        sample_rate=None,
         seq=None,
-        iKey=None,
+        ikey=None,
         flags=None,
         tags=None,
         data=None,
@@ -71,12 +89,25 @@ class Envelope:
         self.ver = ver
         self.name = name
         self.time = time
-        self.sampleRate = sampleRate
+        self.sample_rate = sample_rate
         self.seq = seq
-        self.iKey = iKey
+        self.ikey = ikey
         self.flags = flags
         self.tags = tags
         self.data = data
+
+    def to_dict(self):
+        return {
+            "ver": self.ver,
+            "name": self.name,
+            "time": self.time,
+            "sampleRate": self.sample_rate,
+            "seq": self.seq,
+            "iKey": self.ikey,
+            "flags": self.flags,
+            "tags": self.tags,
+            "data": self.data.to_dict(),
+        }
 
 
 class Event:
@@ -88,13 +119,21 @@ class Event:
         self.properties = properties
         self.measurements = measurements
 
+    def to_dict(self):
+        return {
+            "ver": self.ver,
+            "name": self.name,
+            "properties": self.properties,
+            "measurements": self.measurements,
+        }
+
 
 class ExceptionData:
     __slots__ = (
         "ver",
         "exceptions",
-        "severityLevel",
-        "problemId",
+        "severity_level",
+        "problem_id",
         "properties",
         "measurements",
     )
@@ -103,8 +142,8 @@ class ExceptionData:
         self,
         ver=2,
         exceptions=None,
-        severityLevel=None,
-        problemId=None,
+        severity_level=None,
+        problem_id=None,
         properties=None,
         measurements=None,
     ) -> None:
@@ -112,17 +151,27 @@ class ExceptionData:
             exceptions = []
         self.ver = ver
         self.exceptions = exceptions
-        self.severityLevel = severityLevel
-        self.problemId = problemId
+        self.severity_level = severity_level
+        self.problem_id = problem_id
         self.properties = properties
         self.measurements = measurements
+
+    def to_dict(self):
+        return {
+            "ver": self.ver,
+            "exceptions": self.exceptions,
+            "severityLevel": self.severity_level,
+            "problemId": self.problem_id,
+            "properties": self.properties,
+            "measurements": self.measurements,
+        }
 
 
 class Message:
     __slots__ = (
         "ver",
         "message",
-        "severityLevel",
+        "severity_level",
         "properties",
         "measurements",
     )
@@ -131,15 +180,24 @@ class Message:
         self,
         ver=2,
         message="",
-        severityLevel=None,
+        severity_level=None,
         properties=None,
         measurements=None,
     ) -> None:
         self.ver = ver
         self.message = message
-        self.severityLevel = severityLevel
+        self.severity_level = severity_level
         self.properties = properties
         self.measurements = measurements
+
+    def to_dict(self):
+        return {
+            "ver": self.ver,
+            "message": self.message,
+            "severityLevel": self.severity_level,
+            "properties": self.properties,
+            "measurements": self.measurements,
+        }
 
 
 class MetricData:
@@ -152,13 +210,20 @@ class MetricData:
         self.metrics = metrics
         self.properties = properties
 
+    def to_dict(self):
+        return {
+            "ver": self.ver,
+            "metrics": self.metrics,
+            "properties": self.properties,
+        }
+
 
 class RemoteDependency:
     __slots__ = (
         "ver",
         "name",
         "id",
-        "resultCode",
+        "result_code",
         "duration",
         "success",
         "data",
@@ -173,7 +238,7 @@ class RemoteDependency:
         ver=2,
         name="",
         id="",
-        resultCode="",
+        result_code="",
         duration="",
         success=True,
         data=None,
@@ -185,7 +250,7 @@ class RemoteDependency:
         self.ver = ver
         self.name = name
         self.id = id
-        self.resultCode = resultCode
+        self.result_code = result_code
         self.duration = duration
         self.success = success
         self.data = data
@@ -194,13 +259,28 @@ class RemoteDependency:
         self.properties = properties
         self.measurements = measurements
 
+    def to_dict(self):
+        return {
+            "ver": self.ver,
+            "name": self.name,
+            "id": self.id,
+            "resultCode": self.result_code,
+            "duration": self.duration,
+            "success": self.success,
+            "data": self.data,
+            "type": self.type,
+            "target": self.target,
+            "properties": self.properties,
+            "measurements": self.measurements,
+        }
+
 
 class Request:
     __slots__ = (
         "ver",
         "id",
         "duration",
-        "responseCode",
+        "response_code",
         "success",
         "source",
         "name",
@@ -214,7 +294,7 @@ class Request:
         ver=2,
         id="",
         duration="",
-        responseCode="",
+        response_code="",
         success=True,
         source=None,
         name=None,
@@ -225,7 +305,7 @@ class Request:
         self.ver = ver
         self.id = id
         self.duration = duration
-        self.responseCode = responseCode
+        self.response_code = response_code
         self.success = success
         self.source = source
         self.name = name
@@ -233,3 +313,16 @@ class Request:
         self.properties = properties
         self.measurements = measurements
 
+    def to_dict(self):
+        return {
+            "ver": self.ver,
+            "id": self.id,
+            "duration": self.duration,
+            "responseCode": self.response_code,
+            "success": self.success,
+            "source": self.source,
+            "name": self.name,
+            "url": self.url,
+            "properties": self.properties,
+            "measurements": self.measurements,
+        }
