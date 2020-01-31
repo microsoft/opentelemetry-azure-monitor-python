@@ -5,23 +5,28 @@ import unittest
 
 from azure_monitor import protocol
 
+
 class TestProtocol(unittest.TestCase):
     def test_object(self):
         data = protocol.BaseObject()
-        self.assertEqual(repr(data), '{}')
+        self.assertEqual(repr(data), "{}")
         data.foo = 1
         self.assertEqual(data.foo, 1)
-        self.assertEqual(data['foo'], 1)
-        data['bar'] = 2
+        self.assertEqual(data["foo"], 1)
+        data["bar"] = 2
         self.assertEqual(data.bar, 2)
-        self.assertEqual(data['bar'], 2)
-        self.assertRaises(KeyError, lambda: data['baz'])
+        self.assertEqual(data["bar"], 2)
+        self.assertRaises(KeyError, lambda: data["baz"])
         self.assertRaises(AttributeError, lambda: data.baz)
 
     def test_data(self):
         data = protocol.Data()
         self.assertIsNone(data.baseData)
         self.assertIsNone(data.baseType)
+
+    def test_data_point(self):
+        data = protocol.DataPoint()
+        self.assertEqual(data.ns, "")
 
     def test_envelope(self):
         data = protocol.Envelope()
@@ -37,6 +42,10 @@ class TestProtocol(unittest.TestCase):
 
     def test_message(self):
         data = protocol.Message()
+        self.assertEqual(data.ver, 2)
+
+    def test_metric_data(self):
+        data = protocol.MetricData()
         self.assertEqual(data.ver, 2)
 
     def test_remote_dependency(self):

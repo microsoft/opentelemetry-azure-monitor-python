@@ -5,9 +5,11 @@ import os
 import platform
 import sys
 
+# pylint: disable=import-error
+from opentelemetry.sdk.version import __version__ as opentelemetry_version
+
 from azure_monitor.protocol import BaseObject
 from azure_monitor.version import __version__ as ext_version
-from opentelemetry.sdk.version import __version__ as opentelemetry_version
 
 azure_monitor_context = {
     "ai.cloud.role": os.path.basename(sys.argv[0]) or "Python Application",
@@ -20,6 +22,7 @@ azure_monitor_context = {
         platform.python_version(), opentelemetry_version, ext_version
     ),
 }
+
 
 def ns_to_duration(nanoseconds):
     value = (nanoseconds + 500000) // 1000000  # duration in milliseconds

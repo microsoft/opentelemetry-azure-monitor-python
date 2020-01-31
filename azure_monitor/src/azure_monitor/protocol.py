@@ -1,5 +1,7 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
+
+
 class BaseObject(dict):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -14,9 +16,8 @@ class BaseObject(dict):
                 if item[0] not in tmp:
                     tmp[item[0]] = item[1]
             if (
-                current._default  # noqa pylint: disable=protected-access
-                == current
-            ):
+                current._default == current
+            ):  # noqa pylint: disable=protected-access
                 break
             current = current._default  # noqa pylint: disable=protected-access
         return repr(tmp)
@@ -183,6 +184,6 @@ class Request(BaseObject):
         self.id = self.id  # noqa pylint: disable=invalid-name
         self.duration = self.duration
         self.responseCode = (  # noqa pylint: disable=invalid-name
-            self.responseCode
+            self.responseCode  # noqa pylint: disable=invalid-name
         )
         self.success = self.success

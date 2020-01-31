@@ -1,12 +1,15 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
+# pylint: disable=import-error
+# pylint: disable=no-member
+# pylint: disable=no-name-in-module
 import requests
-
-from azure_monitor import AzureMonitorSpanExporter
 from opentelemetry import trace
 from opentelemetry.ext import http_requests
 from opentelemetry.sdk.trace import TracerSource
 from opentelemetry.sdk.trace.export import BatchExportSpanProcessor
+
+from azure_monitor import AzureMonitorSpanExporter
 
 trace.set_preferred_tracer_source_implementation(lambda T: TracerSource())
 tracer = trace.tracer_source().get_tracer(__name__)
