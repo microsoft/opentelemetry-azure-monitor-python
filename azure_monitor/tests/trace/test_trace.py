@@ -11,6 +11,7 @@ from opentelemetry.trace.status import StatusCanonicalCode
 from azure_monitor.trace import AzureMonitorSpanExporter
 from azure_monitor.utils import Options
 
+
 # pylint: disable=import-error
 class TestAzureExporter(unittest.TestCase):
     def test_ctor(self):

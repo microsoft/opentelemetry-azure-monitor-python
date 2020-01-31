@@ -14,6 +14,7 @@ from azure_monitor import protocol, utils
 
 logger = logging.getLogger(__name__)
 
+
 # pylint: disable=import-error
 class AzureMonitorSpanExporter(SpanExporter):
     def __init__(self, **options):
