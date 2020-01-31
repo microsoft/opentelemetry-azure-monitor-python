@@ -5,6 +5,7 @@ import os
 import platform
 import sys
 
+# pylint: disable=import-error
 from opentelemetry.sdk.version import __version__ as opentelemetry_version
 
 from azure_monitor.protocol import BaseObject

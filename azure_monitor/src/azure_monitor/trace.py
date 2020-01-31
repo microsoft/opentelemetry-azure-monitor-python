@@ -4,6 +4,7 @@ import json
 import logging
 from urllib.parse import urlparse
 
+# pylint: disable=import-error
 import requests
 from opentelemetry.sdk.trace.export import SpanExporter, SpanExportResult
 from opentelemetry.sdk.util import ns_to_iso_str
@@ -15,7 +16,6 @@ from azure_monitor import protocol, utils
 logger = logging.getLogger(__name__)
 
 
-# pylint: disable=import-error
 class AzureMonitorSpanExporter(SpanExporter):
     def __init__(self, **options):
         self.options = utils.Options(**options)

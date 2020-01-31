@@ -4,6 +4,7 @@
 import json
 import unittest
 
+# pylint: disable=import-error
 from opentelemetry.sdk.trace import Span
 from opentelemetry.trace import Link, SpanContext, SpanKind
 from opentelemetry.trace.status import StatusCanonicalCode
