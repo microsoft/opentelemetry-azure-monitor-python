@@ -3,7 +3,6 @@
 # pylint: disable=import-error
 # pylint: disable=no-member
 # pylint: disable=no-name-in-module
-import flask
 import requests
 from opentelemetry import trace
 from opentelemetry.ext import http_requests
@@ -11,6 +10,7 @@ from opentelemetry.ext.wsgi import OpenTelemetryMiddleware
 from opentelemetry.sdk.trace import TracerSource
 from opentelemetry.sdk.trace.export import BatchExportSpanProcessor
 
+import flask
 from azure_monitor import AzureMonitorSpanExporter
 
 # The preferred tracer implementation must be set, as the opentelemetry-api

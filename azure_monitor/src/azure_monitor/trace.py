@@ -71,14 +71,16 @@ class AzureMonitorSpanExporter(SpanExporter):
             tags=dict(utils.azure_monitor_context),
             time=ns_to_iso_str(span.start_time),
         )
-        envelope.tags["ai.operation.id"] = \
-            "{:032x}".format(span.context.trace_id)
+        envelope.tags["ai.operation.id"] = "{:032x}".format(
+            span.context.trace_id
+        )
         parent = span.parent
         if isinstance(parent, Span):
             parent = parent.context
         if parent:
-            envelope.tags["ai.operation.parentId"] = \
-                "{:016x}".format(parent.span_id)
+            envelope.tags["ai.operation.parentId"] = "{:016x}".format(
+                parent.span_id
+            )
         if span.kind in (SpanKind.CONSUMER, SpanKind.SERVER):
             envelope.name = "Microsoft.ApplicationInsights.Request"
             data = protocol.Request(
@@ -89,8 +91,7 @@ class AzureMonitorSpanExporter(SpanExporter):
                 properties={},
             )
             envelope.data = protocol.Data(
-                baseData=data,
-                baseType="RequestData"
+                baseData=data, baseType="RequestData"
             )
             if "http.method" in span.attributes:
                 data.name = span.attributes["http.method"]
@@ -141,8 +142,9 @@ class AzureMonitorSpanExporter(SpanExporter):
                     if "http.method" in span.attributes:
                         # name is METHOD/path
                         data.name = (
-                            span.attributes["http.method"] + "/" +
-                            parse_url.path
+                            span.attributes["http.method"]
+                            + "/"
+                            + parse_url.path
                         )
                 if "http.status_code" in span.attributes:
                     status_code = span.attributes["http.status_code"]
@@ -163,12 +165,7 @@ class AzureMonitorSpanExporter(SpanExporter):
             for link in span.links:
                 operation_id = "{:032x}".format(link.context.trace_id)
                 span_id = "{:016x}".format(link.context.span_id)
-                links.append(
-                    {
-                        "operation_Id": operation_id,
-                        "id": span_id,
-                    }
-                )
+                links.append({"operation_Id": operation_id, "id": span_id})
             data.properties["_MS.links"] = json.dumps(links)
         # TODO: tracestate, tags
         return envelope
