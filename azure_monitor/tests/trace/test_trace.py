@@ -17,7 +17,8 @@ class TestAzureExporter(unittest.TestCase):
         # pylint: disable=W0212
         instrumentation_key = Options._default.instrumentation_key
         Options._default.instrumentation_key = None
-        self.assertRaises(ValueError, AzureMonitorSpanExporter())
+        with self.assertRaises(ValueError):
+            AzureMonitorSpanExporter()
         Options._default.instrumentation_key = instrumentation_key
 
     def test_span_to_envelope(self):
