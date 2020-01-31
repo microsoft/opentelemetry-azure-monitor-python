@@ -1,9 +1,12 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
-from azure_monitor import AzureMonitorSpanExporter
+# pylint: disable=import-error
+# pylint: disable=no-member
 from opentelemetry import trace
 from opentelemetry.sdk.trace import TracerSource
 from opentelemetry.sdk.trace.export import SimpleExportSpanProcessor
+
+from azure_monitor import AzureMonitorSpanExporter
 
 trace.set_preferred_tracer_source_implementation(lambda T: TracerSource())
 span_processor = SimpleExportSpanProcessor(
