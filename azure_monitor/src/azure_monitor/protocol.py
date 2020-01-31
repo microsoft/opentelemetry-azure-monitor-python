@@ -183,7 +183,7 @@ class Request(BaseObject):
         self.ver = self.ver
         self.id = self.id  # noqa pylint: disable=invalid-name
         self.duration = self.duration
-        self.responseCode = (
+        self.responseCode = ( # noqa pylint: disable=invalid-name
             self.responseCode  # noqa pylint: disable=invalid-name
         )
         self.success = self.success
