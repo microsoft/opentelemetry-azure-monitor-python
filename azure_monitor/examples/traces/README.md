@@ -1,9 +1,4 @@
 
-
-# Overview
-
-* Azure Monitor examples require opentelemetry packages version 0.4a0
-
 ## Installation
 
 ```sh
