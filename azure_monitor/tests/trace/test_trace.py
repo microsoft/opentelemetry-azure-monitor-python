@@ -2,6 +2,7 @@
 # Licensed under the MIT License.
 
 import json
+import os
 import unittest
 
 # pylint: disable=import-error
@@ -15,6 +16,9 @@ from azure_monitor.utils import Options
 
 # pylint: disable=import-error
 class TestAzureExporter(unittest.TestCase):
+    def setUp(self):
+        os.environ.clear()
+
     def test_ctor(self):
         # pylint: disable=W0212
         instrumentation_key = Options._default.instrumentation_key
