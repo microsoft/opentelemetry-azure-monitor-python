@@ -1,21 +1,26 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
-import flask
+# pylint: disable=import-error
+# pylint: disable=no-member
+# pylint: disable=no-name-in-module
 import requests
-
-from azure_monitor import AzureMonitorSpanExporter
 from opentelemetry import trace
 from opentelemetry.ext import http_requests
 from opentelemetry.ext.wsgi import OpenTelemetryMiddleware
 from opentelemetry.sdk.trace import TracerSource
 from opentelemetry.sdk.trace.export import BatchExportSpanProcessor
 
+import flask
+from azure_monitor import AzureMonitorSpanExporter
+
 # The preferred tracer implementation must be set, as the opentelemetry-api
 # defines the interface with a no-op implementation.
 trace.set_preferred_tracer_source_implementation(lambda T: TracerSource())
 tracer = trace.tracer_source().get_tracer(__name__)
 
-exporter = AzureMonitorSpanExporter(instrumentation_key="<INSTRUMENTATION KEY HERE>")
+exporter = AzureMonitorSpanExporter(
+    instrumentation_key="<INSTRUMENTATION KEY HERE>"
+)
 
 # SpanExporter receives the spans and send them to the target location.
 span_processor = BatchExportSpanProcessor(exporter)
@@ -37,5 +42,5 @@ def hello():
 
 
 if __name__ == "__main__":
-    app.run(host='localhost', port=8080, threaded=True)
+    app.run(host="localhost", port=8080, threaded=True)
     span_processor.shutdown()

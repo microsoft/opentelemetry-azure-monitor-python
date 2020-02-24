@@ -2,7 +2,23 @@
 # Licensed under the MIT License.
 
 
-class Data:
+class BaseObject:
+    __slots__ = ()
+
+    def __repr__(self):
+        tmp = {}
+
+        for key in self.__slots__:
+            data = getattr(self, key, None)
+            if isinstance(data, BaseObject):
+                tmp[key] = repr(data)
+            else:
+                tmp[key] = data
+
+        return repr(tmp)
+
+
+class Data(BaseObject):
     __slots__ = ("base_data", "base_type")
 
     def __init__(self, base_data=None, base_type=None) -> None:
@@ -16,7 +32,7 @@ class Data:
         }
 
 
-class DataPoint:
+class DataPoint(BaseObject):
     __slots__ = (
         "ns",
         "name",
@@ -61,7 +77,7 @@ class DataPoint:
         }
 
 
-class Envelope:
+class Envelope(BaseObject):
     __slots__ = (
         "ver",
         "name",
@@ -110,7 +126,7 @@ class Envelope:
         }
 
 
-class Event:
+class Event(BaseObject):
     __slots__ = ("ver", "name", "properties", "measurements")
 
     def __init__(self, ver=2, name="", properties=None, measurements=None):
@@ -128,7 +144,7 @@ class Event:
         }
 
 
-class ExceptionData:
+class ExceptionData(BaseObject):
     __slots__ = (
         "ver",
         "exceptions",
@@ -167,7 +183,7 @@ class ExceptionData:
         }
 
 
-class Message:
+class Message(BaseObject):
     __slots__ = (
         "ver",
         "message",
@@ -200,7 +216,7 @@ class Message:
         }
 
 
-class MetricData:
+class MetricData(BaseObject):
     __slots__ = ("ver", "metrics", "properties")
 
     def __init__(self, ver=2, metrics=None, properties=None) -> None:
@@ -218,7 +234,7 @@ class MetricData:
         }
 
 
-class RemoteDependency:
+class RemoteDependency(BaseObject):
     __slots__ = (
         "ver",
         "name",
@@ -275,7 +291,7 @@ class RemoteDependency:
         }
 
 
-class Request:
+class Request(BaseObject):
     __slots__ = (
         "ver",
         "id",

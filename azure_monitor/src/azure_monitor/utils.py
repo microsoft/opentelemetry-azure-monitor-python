@@ -5,8 +5,9 @@ import os
 import platform
 import sys
 
-from azure_monitor.version import __version__ as ext_version
+
 from opentelemetry.sdk.version import __version__ as opentelemetry_version
+from azure_monitor.version import __version__ as ext_version
 
 azure_monitor_context = {
     "ai.cloud.role": os.path.basename(sys.argv[0]) or "Python Application",

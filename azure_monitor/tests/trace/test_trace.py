@@ -1,12 +1,20 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 
+
+import json
 import unittest
+
+# pylint: disable=import-error
+from opentelemetry.sdk.trace import Span
+from opentelemetry.trace import Link, SpanContext, SpanKind
+from opentelemetry.trace.status import StatusCanonicalCode
 
 from azure_monitor.trace import AzureMonitorSpanExporter
 from azure_monitor.utils import Options
 
 
+# pylint: disable=import-error
 class TestAzureExporter(unittest.TestCase):
     def test_ctor(self):
         options = Options()
@@ -386,11 +394,10 @@ class TestAzureExporter(unittest.TestCase):
         span.end_time = end_time
         envelope = exporter.span_to_envelope(span)
         self.assertEqual(len(envelope.data.base_data.properties), 2)
-        links_json = (
-            '[{"operation_Id": '
-            + '"1bbd944a73a05d89eab5d3740a213ee8", "id": "a6f5d48acb4d31da"}]'
-        )
-        self.assertEqual(envelope.data.base_data.properties["_MS.links"], links_json)
+        json_dict = json.loads(envelope.data.base_data.properties["_MS.links"])[
+            0
+        ]
+        self.assertEqual(json_dict["id"], "a6f5d48acb4d31da")
 
         # Status
         span = Span(
@@ -552,3 +559,164 @@ class TestAzureExporter(unittest.TestCase):
         envelope = exporter.span_to_envelope(span)
         self.assertEqual(envelope.data.base_data.result_code, "2")
         self.assertFalse(envelope.data.base_data.success)
+
+        # Server route attribute
+        span = Span(
+            name="test",
+            context=SpanContext(
+                trace_id=36873507687745823477771305566750195431,
+                span_id=12030755672171557337,
+            ),
+            parent=parent_span,
+            sampler=None,
+            trace_config=None,
+            resource=None,
+            attributes={
+                "component": "HTTP",
+                "http.method": "GET",
+                "http.route": "/wiki/Rabbit",
+                "http.path": "/wiki/Rabbitz",
+                "http.url": "https://www.wikipedia.org/wiki/Rabbit",
+                "http.status_code": 400,
+            },
+            events=None,
+            links=[],
+            kind=SpanKind.SERVER,
+        )
+        span.start_time = start_time
+        span.end_time = end_time
+        span.status = StatusCanonicalCode.OK
+        envelope = exporter.span_to_envelope(span)
+        self.assertEqual(
+            envelope.data.base_data.properties["request.name"],
+            "GET /wiki/Rabbit",
+        )
+        self.assertEqual(
+            envelope.data.base_data.properties["request.url"],
+            "https://www.wikipedia.org/wiki/Rabbit",
+        )
+
+        # Server method attribute missing
+        span = Span(
+            name="test",
+            context=SpanContext(
+                trace_id=36873507687745823477771305566750195431,
+                span_id=12030755672171557337,
+            ),
+            parent=parent_span,
+            sampler=None,
+            trace_config=None,
+            resource=None,
+            attributes={
+                "component": "HTTP",
+                "http.path": "/wiki/Rabbitz",
+                "http.url": "https://www.wikipedia.org/wiki/Rabbit",
+                "http.status_code": 400,
+            },
+            events=None,
+            links=[],
+            kind=SpanKind.SERVER,
+        )
+        span.start_time = start_time
+        span.end_time = end_time
+        span.status = StatusCanonicalCode.OK
+        envelope = exporter.span_to_envelope(span)
+        self.assertIsNone(envelope.data.base_data.name)
+
+        # Server route attribute missing
+        span = Span(
+            name="test",
+            context=SpanContext(
+                trace_id=36873507687745823477771305566750195431,
+                span_id=12030755672171557337,
+            ),
+            parent=parent_span,
+            sampler=None,
+            trace_config=None,
+            resource=None,
+            attributes={
+                "component": "HTTP",
+                "http.method": "GET",
+                "http.path": "/wiki/Rabbitz",
+                "http.url": "https://www.wikipedia.org/wiki/Rabbit",
+                "http.status_code": 400,
+            },
+            events=None,
+            links=[],
+            kind=SpanKind.SERVER,
+        )
+        span.start_time = start_time
+        span.end_time = end_time
+        span.status = StatusCanonicalCode.OK
+        envelope = exporter.span_to_envelope(span)
+        self.assertEqual(envelope.data.base_data.name, "GET")
+        self.assertEqual(
+            envelope.data.base_data.properties["request.name"],
+            "GET /wiki/Rabbitz",
+        )
+        self.assertEqual(
+            envelope.data.base_data.properties["request.url"],
+            "https://www.wikipedia.org/wiki/Rabbit",
+        )
+
+        # Server route and path attribute missing
+        span = Span(
+            name="test",
+            context=SpanContext(
+                trace_id=36873507687745823477771305566750195431,
+                span_id=12030755672171557337,
+            ),
+            parent=parent_span,
+            sampler=None,
+            trace_config=None,
+            resource=None,
+            attributes={
+                "component": "HTTP",
+                "http.method": "GET",
+                "http.url": "https://www.wikipedia.org/wiki/Rabbit",
+                "http.status_code": 400,
+            },
+            events=None,
+            links=[],
+            kind=SpanKind.SERVER,
+        )
+        span.start_time = start_time
+        span.end_time = end_time
+        span.status = StatusCanonicalCode.OK
+        envelope = exporter.span_to_envelope(span)
+        self.assertIsNone(
+            envelope.data.base_data.properties.get("request.name")
+        )
+        self.assertEqual(
+            envelope.data.base_data.properties["request.url"],
+            "https://www.wikipedia.org/wiki/Rabbit",
+        )
+
+        # Server http.url missing
+        span = Span(
+            name="test",
+            context=SpanContext(
+                trace_id=36873507687745823477771305566750195431,
+                span_id=12030755672171557337,
+            ),
+            parent=parent_span,
+            sampler=None,
+            trace_config=None,
+            resource=None,
+            attributes={
+                "component": "HTTP",
+                "http.method": "GET",
+                "http.route": "/wiki/Rabbit",
+                "http.path": "/wiki/Rabbitz",
+                "http.status_code": 400,
+            },
+            events=None,
+            links=[],
+            kind=SpanKind.SERVER,
+        )
+        span.start_time = start_time
+        span.end_time = end_time
+        span.status = StatusCanonicalCode.OK
+        envelope = exporter.span_to_envelope(span)
+        self.assertIsNone(envelope.data.base_data.url)
+        self.assertIsNone(envelope.data.base_data.properties.get("request.url"))
