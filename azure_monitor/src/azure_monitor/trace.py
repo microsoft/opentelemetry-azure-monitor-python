@@ -23,7 +23,7 @@ class AzureMonitorSpanExporter(SpanExporter):
             raise ValueError("The instrumentation_key is not provided.")
 
     def export(self, spans):
-        envelopes = tuple(map(self.span_to_envelope, spans))
+        envelopes = self.span_to_envelopes(spans)
 
         try:
             response = requests.post(
@@ -64,6 +64,13 @@ class AzureMonitorSpanExporter(SpanExporter):
             return SpanExportResult.FAILED_RETRYABLE
 
         return SpanExportResult.FAILED_NOT_RETRYABLE
+
+    def span_to_envelopes(self, spans):
+        envelopes = []
+        for span in spans:
+            envelopes.append(self.span_to_envelope(span).to_dict())
+
+        return envelopes
 
     def span_to_envelope(self, span):  # noqa pylint: disable=too-many-branches
         # pylint: disable=too-many-statements
