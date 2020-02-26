@@ -12,56 +12,62 @@ from opentelemetry.trace import Span, SpanKind
 from opentelemetry.trace.status import StatusCanonicalCode
 
 from azure_monitor import protocol, utils
+from azure_monitor.exporter import BaseExporter
 
 logger = logging.getLogger(__name__)
 
 
-class AzureMonitorSpanExporter(SpanExporter):
+class AzureMonitorSpanExporter(BaseExporter, SpanExporter):
     def __init__(self, **options):
-        self.options = utils.Options(**options)
+        super(AzureMonitorSpanExporter, self).__init__(**options)
 
     def export(self, spans):
-        envelopes = tuple(map(self.span_to_envelope, spans))
-
-        try:
-            response = requests.post(
-                url=self.options.endpoint,
-                data=json.dumps(envelopes),
-                headers={
-                    "Accept": "application/json",
-                    "Content-Type": "application/json; charset=utf-8",
-                },
-                timeout=self.options.timeout,
-            )
-        except requests.RequestException as ex:
-            logger.warning("Transient client side error %s.", ex)
-            return SpanExportResult.FAILED_RETRYABLE
-
-        text = "N/A"
-        data = None  # noqa pylint: disable=unused-variable
-        try:
-            text = response.text
-        except Exception as ex:  # noqa pylint: disable=broad-except
-            logger.warning("Error while reading response body %s.", ex)
-        else:
+        envelopes = map(self.span_to_envelope, spans)
+        envelopes_to_export = tuple(self.apply_telemetry_processors(envelopes))
+        if envelopes_to_export:
             try:
-                data = json.loads(text)  # noqa pylint: disable=unused-variable
-            except Exception:  # noqa pylint: disable=broad-except
-                pass
+                response = requests.post(
+                    url=self.options.endpoint,
+                    data=json.dumps(envelopes_to_export),
+                    headers={
+                        "Accept": "application/json",
+                        "Content-Type": "application/json; charset=utf-8",
+                    },
+                    timeout=self.options.timeout,
+                )
+            except requests.RequestException as ex:
+                logger.warning("Transient client side error %s.", ex)
+                return SpanExportResult.FAILED_RETRYABLE
 
-        if response.status_code == 200:
-            logger.info("Transmission succeeded: %s.", text)
-            return SpanExportResult.SUCCESS
+            text = "N/A"
+            data = None  # noqa pylint: disable=unused-variable
+            try:
+                text = response.text
+            except Exception as ex:  # noqa pylint: disable=broad-except
+                logger.warning("Error while reading response body %s.", ex)
+            else:
+                try:
+                    data = json.loads(
+                        text
+                    )  # noqa pylint: disable=unused-variable
+                except Exception:  # noqa pylint: disable=broad-except
+                    pass
 
-        if response.status_code in (
-            206,  # Partial Content
-            429,  # Too Many Requests
-            500,  # Internal Server Error
-            503,  # Service Unavailable
-        ):
-            return SpanExportResult.FAILED_RETRYABLE
+            if response.status_code == 200:
+                logger.info("Transmission succeeded: %s.", text)
+                return SpanExportResult.SUCCESS
 
-        return SpanExportResult.FAILED_NOT_RETRYABLE
+            if response.status_code in (
+                206,  # Partial Content
+                429,  # Too Many Requests
+                500,  # Internal Server Error
+                503,  # Service Unavailable
+            ):
+                return SpanExportResult.FAILED_RETRYABLE
+
+            return SpanExportResult.FAILED_NOT_RETRYABLE
+        # No spans to export
+        return SpanExportResult.SUCCESS
 
     def span_to_envelope(self, span):  # noqa pylint: disable=too-many-branches
         # pylint: disable=too-many-statements
@@ -85,7 +91,7 @@ class AzureMonitorSpanExporter(SpanExporter):
             data = protocol.Request(
                 id="{:016x}".format(span.context.span_id),
                 duration=utils.ns_to_duration(span.end_time - span.start_time),
-                responseCode=str(span.status.value),
+                responseCode=str(span.status.canonical_code),
                 success=False,  # Modify based off attributes or Status
                 properties={},
             )
@@ -116,7 +122,7 @@ class AzureMonitorSpanExporter(SpanExporter):
             data = protocol.RemoteDependency(
                 name=span.name,
                 id="{:016x}".format(span.context.span_id),
-                resultCode=str(span.status.value),
+                resultCode=str(span.status.canonical_code),
                 duration=utils.ns_to_duration(span.end_time - span.start_time),
                 success=False,  # Modify based off attributes or Status
                 properties={},
