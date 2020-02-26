@@ -2,61 +2,50 @@
 # Licensed under the MIT License.
 
 
-class BaseObject(dict):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        for key in kwargs:
-            self[key] = kwargs[key]
+class BaseObject:
+    __slots__ = ()
 
     def __repr__(self):
         tmp = {}
-        current = self
-        while True:
-            for item in current.items():
-                if item[0] not in tmp:
-                    tmp[item[0]] = item[1]
-            if (
-                current._default == current
-            ):  # noqa pylint: disable=protected-access
-                break
-            current = current._default  # noqa pylint: disable=protected-access
+
+        for key in self.__slots__:
+            data = getattr(self, key, None)
+            if isinstance(data, BaseObject):
+                tmp[key] = repr(data)
+            else:
+                tmp[key] = data
+
         return repr(tmp)
-
-    def __setattr__(self, name, value):
-        self[name] = value
-
-    def __getattr__(self, name):
-        try:
-            return self[name]
-        except KeyError:
-            raise AttributeError(
-                "'{}' object has no attribute {}".format(
-                    type(self).__name__, name
-                )
-            )
-
-    def __getitem__(self, key):
-        if self._default is self:
-            return super().__getitem__(key)
-        if key in self:
-            return super().__getitem__(key)
-        return self._default[key]
-
-
-BaseObject._default = BaseObject()  # noqa pylint: disable=protected-access
 
 
 class Data(BaseObject):
-    _default = BaseObject(baseData=None, baseType=None)
+    __slots__ = ("base_data", "base_type")
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.baseData = self.baseData  # noqa pylint: disable=invalid-name
-        self.baseType = self.baseType  # noqa pylint: disable=invalid-name
+    def __init__(self, base_data=None, base_type=None) -> None:
+        self.base_data = base_data
+        self.base_type = base_type
+
+    def to_dict(self):
+        return {
+            "baseData": self.base_data.to_dict(),
+            "baseType": self.base_type,
+        }
 
 
 class DataPoint(BaseObject):
-    _default = BaseObject(
+    __slots__ = (
+        "ns",
+        "name",
+        "kind",
+        "value",
+        "count",
+        "min",
+        "max",
+        "std_dev",
+    )
+
+    def __init__(
+        self,
         ns="",
         name="",
         kind=None,
@@ -64,89 +53,209 @@ class DataPoint(BaseObject):
         count=None,
         min=None,
         max=None,
-        stdDev=None,
-    )
+        std_dev=None,
+    ) -> None:
+        self.ns = ns
+        self.name = name
+        self.kind = kind
+        self.value = value
+        self.count = count
+        self.min = min
+        self.max = max
+        self.std_dev = std_dev
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.name = self.name
-        self.value = self.value
+    def to_dict(self):
+        return {
+            "ns": self.ns,
+            "name": self.name,
+            "kind": self.kind,
+            "value": self.value,
+            "count": self.count,
+            "min": self.min,
+            "max": self.max,
+            "stdDev": self.std_dev,
+        }
 
 
 class Envelope(BaseObject):
-    _default = BaseObject(
+    __slots__ = (
+        "ver",
+        "name",
+        "time",
+        "sample_rate",
+        "seq",
+        "ikey",
+        "flags",
+        "tags",
+        "data"
+    )
+
+    def __init__(
+        self,
         ver=1,
         name="",
         time="",
-        sampleRate=None,
+        sample_rate=None,
         seq=None,
-        iKey=None,
+        ikey=None,
         flags=None,
         tags=None,
-        data=None,
-    )
+        data=None
+    ) -> None:
+        self.ver = ver
+        self.name = name
+        self.time = time
+        self.sample_rate = sample_rate
+        self.seq = seq
+        self.ikey = ikey
+        self.flags = flags
+        self.tags = tags
+        self.data = data
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.name = self.name
-        self.time = self.time
+    def to_dict(self):
+        return {
+            "ver": self.ver,
+            "name": self.name,
+            "time": self.time,
+            "sampleRate": self.sample_rate,
+            "seq": self.seq,
+            "iKey": self.ikey,
+            "flags": self.flags,
+            "tags": self.tags,
+            "data": self.data.to_dict(),
+            "baseType": self.base_type,
+        }
 
 
 class Event(BaseObject):
-    _default = BaseObject(ver=2, name="", properties=None, measurements=None)
+    __slots__ = ("ver", "name", "properties", "measurements")
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.ver = self.ver
-        self.name = self.name
+    def __init__(self, ver=2, name="", properties=None, measurements=None):
+        self.ver = ver
+        self.name = name
+        self.properties = properties
+        self.measurements = measurements
+
+    def to_dict(self):
+        return {
+            "ver": self.ver,
+            "name": self.name,
+            "properties": self.properties,
+            "measurements": self.measurements,
+        }
 
 
 class ExceptionData(BaseObject):
-    _default = BaseObject(
-        ver=2,
-        exceptions=[],
-        severityLevel=None,
-        problemId=None,
-        properties=None,
-        measurements=None,
+    __slots__ = (
+        "ver",
+        "exceptions",
+        "severity_level",
+        "problem_id",
+        "properties",
+        "measurements",
     )
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.ver = self.ver
-        self.exceptions = self.exceptions
+    def __init__(
+        self,
+        ver=2,
+        exceptions=None,
+        severity_level=None,
+        problem_id=None,
+        properties=None,
+        measurements=None,
+    ) -> None:
+        if exceptions is None:
+            exceptions = []
+        self.ver = ver
+        self.exceptions = exceptions
+        self.severity_level = severity_level
+        self.problem_id = problem_id
+        self.properties = properties
+        self.measurements = measurements
+
+    def to_dict(self):
+        return {
+            "ver": self.ver,
+            "exceptions": self.exceptions,
+            "severityLevel": self.severity_level,
+            "problemId": self.problem_id,
+            "properties": self.properties,
+            "measurements": self.measurements,
+        }
 
 
 class Message(BaseObject):
-    _default = BaseObject(
-        ver=2,
-        message="",
-        severityLevel=None,
-        properties=None,
-        measurements=None,
+    __slots__ = (
+        "ver",
+        "message",
+        "severity_level",
+        "properties",
+        "measurements",
     )
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.ver = self.ver
-        self.message = self.message
+    def __init__(
+        self,
+        ver=2,
+        message="",
+        severity_level=None,
+        properties=None,
+        measurements=None,
+    ) -> None:
+        self.ver = ver
+        self.message = message
+        self.severity_level = severity_level
+        self.properties = properties
+        self.measurements = measurements
+
+    def to_dict(self):
+        return {
+            "ver": self.ver,
+            "message": self.message,
+            "severityLevel": self.severity_level,
+            "properties": self.properties,
+            "measurements": self.measurements,
+        }
 
 
 class MetricData(BaseObject):
-    _default = BaseObject(ver=2, metrics=[], properties=None)
+    __slots__ = ("ver", "metrics", "properties")
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.ver = self.ver
-        self.metrics = self.metrics
+    def __init__(self, ver=2, metrics=None, properties=None) -> None:
+        if metrics is None:
+            metrics = []
+        self.ver = ver
+        self.metrics = metrics
+        self.properties = properties
+
+    def to_dict(self):
+        return {
+            "ver": self.ver,
+            "metrics": self.metrics,
+            "properties": self.properties,
+        }
 
 
 class RemoteDependency(BaseObject):
-    _default = BaseObject(
+    __slots__ = (
+        "ver",
+        "name",
+        "id",
+        "result_code",
+        "duration",
+        "success",
+        "data",
+        "type",
+        "target",
+        "properties",
+        "measurements",
+    )
+
+    def __init__(
+        self,
         ver=2,
         name="",
         id="",
-        resultCode="",
+        result_code="",
         duration="",
         success=True,
         data=None,
@@ -154,36 +263,83 @@ class RemoteDependency(BaseObject):
         target=None,
         properties=None,
         measurements=None,
-    )
+    ) -> None:
+        self.ver = ver
+        self.name = name
+        self.id = id
+        self.result_code = result_code
+        self.duration = duration
+        self.success = success
+        self.data = data
+        self.type = type
+        self.target = target
+        self.properties = properties
+        self.measurements = measurements
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.ver = self.ver
-        self.name = self.name
-        self.resultCode = self.resultCode  # noqa pylint: disable=invalid-name
-        self.duration = self.duration
+    def to_dict(self):
+        return {
+            "ver": self.ver,
+            "name": self.name,
+            "id": self.id,
+            "resultCode": self.result_code,
+            "duration": self.duration,
+            "success": self.success,
+            "data": self.data,
+            "type": self.type,
+            "target": self.target,
+            "properties": self.properties,
+            "measurements": self.measurements,
+        }
 
 
 class Request(BaseObject):
-    _default = BaseObject(
+    __slots__ = (
+        "ver",
+        "id",
+        "duration",
+        "response_code",
+        "success",
+        "source",
+        "name",
+        "url",
+        "properties",
+        "measurements",
+    )
+
+    def __init__(
+        self,
         ver=2,
         id="",
         duration="",
-        responseCode="",
+        response_code="",
         success=True,
         source=None,
         name=None,
         url=None,
         properties=None,
         measurements=None,
-    )
+    ) -> None:
+        self.ver = ver
+        self.id = id
+        self.duration = duration
+        self.response_code = response_code
+        self.success = success
+        self.source = source
+        self.name = name
+        self.url = url
+        self.properties = properties
+        self.measurements = measurements
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.ver = self.ver
-        self.id = self.id  # noqa pylint: disable=invalid-name
-        self.duration = self.duration
-        self.responseCode = (  # noqa pylint: disable=invalid-name
-            self.responseCode  # noqa pylint: disable=invalid-name
-        )
-        self.success = self.success
+    def to_dict(self):
+        return {
+            "ver": self.ver,
+            "id": self.id,
+            "duration": self.duration,
+            "responseCode": self.response_code,
+            "success": self.success,
+            "source": self.source,
+            "name": self.name,
+            "url": self.url,
+            "properties": self.properties,
+            "measurements": self.measurements,
+        }
