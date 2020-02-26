@@ -17,17 +17,16 @@ from azure_monitor.exporter import BaseExporter
 logger = logging.getLogger(__name__)
 
 
-class AzureMonitorSpanExporter(SpanExporter, BaseExporter):
+class AzureMonitorSpanExporter(BaseExporter, SpanExporter):
     def __init__(self, **options):
-        self.options = utils.Options(**options)
-        super(AzureMonitorSpanExporter, self).__init__()
+        super(AzureMonitorSpanExporter, self).__init__(**options)
         if not self.options.instrumentation_key:
             raise ValueError("The instrumentation_key is not provided.")
 
     def export(self, spans):
         envelopes = map(self.span_to_envelope, spans)
         envelopes_to_export = tuple(self.apply_telemetry_processors(envelopes))
-        if len(envelopes_to_export) > 1:
+        if envelopes_to_export:
             try:
                 response = requests.post(
                     url=self.options.endpoint,

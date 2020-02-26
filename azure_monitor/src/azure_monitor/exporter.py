@@ -3,16 +3,21 @@
 
 import logging
 
+from azure_monitor import utils
+
 logger = logging.getLogger(__name__)
 
-class BaseExporter(object):
-    def __init__(self):
+
+class BaseExporter:
+    def __init__(self, **options):
         self._telemetry_processors = []
+        self.options = utils.Options(**options)
 
     def add_telemetry_processor(self, processor):
-        """Adds telemetry processor to the collection. Telemetry processors
-        will be called one by one before telemetry item is pushed for sending
-        and in the order they were added.
+        """Adds telemetry processor to the collection. 
+        
+        Telemetry processors will be called one by one before telemetry
+        item is pushed for sending and in the order they were added.
         :param processor: The processor to add.
         """
         self._telemetry_processors.append(processor)
@@ -23,6 +28,7 @@ class BaseExporter(object):
 
     def apply_telemetry_processors(self, envelopes):
         """Applies all telemetry processors in the order they were added.
+
         This function will return the list of envelopes to be exported after
         each processor has been run sequentially. Individual processors can
         throw exceptions and fail, but the applying of all telemetry processors
