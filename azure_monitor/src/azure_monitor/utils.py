@@ -131,8 +131,8 @@ class Options(BaseObject):
                 prefix = result.get("location")
                 if prefix is not None:
                     location_prefix = prefix + "."
-                endpoint = (
-                    "https://" + location_prefix + "dc." + endpoint_suffix
+                endpoint = "https://{0}dc.{1}".format(
+                    location_prefix, endpoint_suffix
                 )
                 result[INGESTION_ENDPOINT] = endpoint
             else:
