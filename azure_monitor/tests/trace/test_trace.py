@@ -8,7 +8,7 @@ import unittest
 # pylint: disable=import-error
 from opentelemetry.sdk.trace import Span
 from opentelemetry.trace import Link, SpanContext, SpanKind
-from opentelemetry.trace.status import StatusCanonicalCode
+from opentelemetry.trace.status import Status, StatusCanonicalCode
 
 from azure_monitor.trace import AzureMonitorSpanExporter
 from azure_monitor.utils import Options
@@ -17,19 +17,15 @@ from azure_monitor.utils import Options
 # pylint: disable=import-error
 class TestAzureExporter(unittest.TestCase):
     def test_ctor(self):
-        options = Options()
-        instrumentation_key = options.instrumentation_key
-        options.instrumentation_key = None
-        self.assertRaises(ValueError, lambda: AzureMonitorSpanExporter(options=options))
-        options.instrumentation_key = instrumentation_key
+        self.assertRaises(ValueError, lambda: AzureMonitorSpanExporter())
 
     def test_span_to_envelope(self):
         from opentelemetry.trace import Link, SpanContext, SpanKind
         from opentelemetry.trace.status import StatusCanonicalCode
         from opentelemetry.sdk.trace import Span
 
-        options = Options(instrumentation_key="12345678-1234-5678-abcd-12345678abcd")
-        exporter = AzureMonitorSpanExporter(options)
+        options = {"instrumentation_key": "12345678-1234-5678-abcd-12345678abcd"}
+        exporter = AzureMonitorSpanExporter(**options)
 
         parent_span = Span(
             name="test",
@@ -63,7 +59,7 @@ class TestAzureExporter(unittest.TestCase):
             links=[],
             kind=SpanKind.CLIENT,
         )
-        span.status = StatusCanonicalCode.OK
+        span.status = Status(canonical_code=StatusCanonicalCode.OK)
         span.start_time = start_time
         span.end_time = end_time
         envelope = exporter.span_to_envelope(span)
@@ -103,7 +99,7 @@ class TestAzureExporter(unittest.TestCase):
             links=[],
             kind=SpanKind.CLIENT,
         )
-        span.status = StatusCanonicalCode.OK
+        span.status = Status(canonical_code=StatusCanonicalCode.OK)
         span.start_time = start_time
         span.end_time = end_time
         envelope = exporter.span_to_envelope(span)
@@ -142,7 +138,7 @@ class TestAzureExporter(unittest.TestCase):
             links=[],
             kind=SpanKind.CLIENT,
         )
-        span.status = StatusCanonicalCode.OK
+        span.status = Status(canonical_code=StatusCanonicalCode.OK)
         span.start_time = start_time
         span.end_time = end_time
         envelope = exporter.span_to_envelope(span)
@@ -189,7 +185,7 @@ class TestAzureExporter(unittest.TestCase):
             links=[],
             kind=SpanKind.SERVER,
         )
-        span.status = StatusCanonicalCode.OK
+        span.status = Status(canonical_code=StatusCanonicalCode.OK)
         span.start_time = start_time
         span.end_time = end_time
         envelope = exporter.span_to_envelope(span)
@@ -234,7 +230,7 @@ class TestAzureExporter(unittest.TestCase):
             links=[],
             kind=SpanKind.SERVER,
         )
-        span.status = StatusCanonicalCode.OK
+        span.status = Status(canonical_code=StatusCanonicalCode.OK)
         span.start_time = start_time
         span.end_time = end_time
         envelope = exporter.span_to_envelope(span)
@@ -279,7 +275,7 @@ class TestAzureExporter(unittest.TestCase):
             links=[],
             kind=SpanKind.SERVER,
         )
-        span.status = StatusCanonicalCode.OK
+        span.status = Status(canonical_code=StatusCanonicalCode.OK)
         span.start_time = start_time
         span.end_time = end_time
         envelope = exporter.span_to_envelope(span)
@@ -310,7 +306,7 @@ class TestAzureExporter(unittest.TestCase):
             links=[],
             kind=SpanKind.INTERNAL,
         )
-        span.status = StatusCanonicalCode.OK
+        span.status = Status(canonical_code=StatusCanonicalCode.OK)
         span.start_time = start_time
         span.end_time = end_time
         envelope = exporter.span_to_envelope(span)
@@ -351,7 +347,7 @@ class TestAzureExporter(unittest.TestCase):
             links=[],
             kind=SpanKind.CLIENT,
         )
-        span.status = StatusCanonicalCode.OK
+        span.status = Status(canonical_code=StatusCanonicalCode.OK)
         span.start_time = start_time
         span.end_time = end_time
         envelope = exporter.span_to_envelope(span)
@@ -389,7 +385,7 @@ class TestAzureExporter(unittest.TestCase):
             links=links,
             kind=SpanKind.CLIENT,
         )
-        span.status = StatusCanonicalCode.OK
+        span.status = Status(canonical_code=StatusCanonicalCode.OK)
         span.start_time = start_time
         span.end_time = end_time
         envelope = exporter.span_to_envelope(span)
@@ -420,7 +416,7 @@ class TestAzureExporter(unittest.TestCase):
             links=[],
             kind=SpanKind.SERVER,
         )
-        span.status = StatusCanonicalCode.OK
+        span.status = Status(canonical_code=StatusCanonicalCode.OK)
         span.start_time = start_time
         span.end_time = end_time
         envelope = exporter.span_to_envelope(span)
@@ -447,7 +443,7 @@ class TestAzureExporter(unittest.TestCase):
             links=[],
             kind=SpanKind.CLIENT,
         )
-        span.status = StatusCanonicalCode.OK
+        span.status = Status(canonical_code=StatusCanonicalCode.OK)
         span.start_time = start_time
         span.end_time = end_time
         envelope = exporter.span_to_envelope(span)
@@ -473,10 +469,9 @@ class TestAzureExporter(unittest.TestCase):
             links=[],
             kind=SpanKind.SERVER,
         )
-        span.status = StatusCanonicalCode.OK
+        span.status = Status(canonical_code=StatusCanonicalCode.OK)
         span.start_time = start_time
         span.end_time = end_time
-        span.status = StatusCanonicalCode.OK
         envelope = exporter.span_to_envelope(span)
         self.assertEqual(envelope.data.base_data.response_code, "0")
         self.assertTrue(envelope.data.base_data.success)
@@ -500,10 +495,9 @@ class TestAzureExporter(unittest.TestCase):
             links=[],
             kind=SpanKind.CLIENT,
         )
-        span.status = StatusCanonicalCode.OK
+        span.status = Status(canonical_code=StatusCanonicalCode.OK)
         span.start_time = start_time
         span.end_time = end_time
-        span.status = StatusCanonicalCode.OK
         envelope = exporter.span_to_envelope(span)
         self.assertEqual(envelope.data.base_data.result_code, "0")
         self.assertTrue(envelope.data.base_data.success)
@@ -529,7 +523,7 @@ class TestAzureExporter(unittest.TestCase):
         )
         span.start_time = start_time
         span.end_time = end_time
-        span.status = StatusCanonicalCode.UNKNOWN
+        span.status = Status(canonical_code=StatusCanonicalCode.UNKNOWN)
         envelope = exporter.span_to_envelope(span)
         self.assertEqual(envelope.data.base_data.response_code, "2")
         self.assertFalse(envelope.data.base_data.success)
@@ -555,7 +549,7 @@ class TestAzureExporter(unittest.TestCase):
         )
         span.start_time = start_time
         span.end_time = end_time
-        span.status = StatusCanonicalCode.UNKNOWN
+        span.status = Status(canonical_code=StatusCanonicalCode.UNKNOWN)
         envelope = exporter.span_to_envelope(span)
         self.assertEqual(envelope.data.base_data.result_code, "2")
         self.assertFalse(envelope.data.base_data.success)
@@ -585,7 +579,7 @@ class TestAzureExporter(unittest.TestCase):
         )
         span.start_time = start_time
         span.end_time = end_time
-        span.status = StatusCanonicalCode.OK
+        span.status = Status(canonical_code=StatusCanonicalCode.OK)
         envelope = exporter.span_to_envelope(span)
         self.assertEqual(
             envelope.data.base_data.properties["request.name"],
@@ -619,7 +613,7 @@ class TestAzureExporter(unittest.TestCase):
         )
         span.start_time = start_time
         span.end_time = end_time
-        span.status = StatusCanonicalCode.OK
+        span.status = Status(canonical_code=StatusCanonicalCode.OK)
         envelope = exporter.span_to_envelope(span)
         self.assertIsNone(envelope.data.base_data.name)
 
@@ -647,7 +641,7 @@ class TestAzureExporter(unittest.TestCase):
         )
         span.start_time = start_time
         span.end_time = end_time
-        span.status = StatusCanonicalCode.OK
+        span.status = Status(canonical_code=StatusCanonicalCode.OK)
         envelope = exporter.span_to_envelope(span)
         self.assertEqual(envelope.data.base_data.name, "GET")
         self.assertEqual(
@@ -682,7 +676,7 @@ class TestAzureExporter(unittest.TestCase):
         )
         span.start_time = start_time
         span.end_time = end_time
-        span.status = StatusCanonicalCode.OK
+        span.status = Status(canonical_code=StatusCanonicalCode.OK)
         envelope = exporter.span_to_envelope(span)
         self.assertIsNone(
             envelope.data.base_data.properties.get("request.name")
@@ -716,7 +710,7 @@ class TestAzureExporter(unittest.TestCase):
         )
         span.start_time = start_time
         span.end_time = end_time
-        span.status = StatusCanonicalCode.OK
+        span.status = Status(canonical_code=StatusCanonicalCode.OK)
         envelope = exporter.span_to_envelope(span)
         self.assertIsNone(envelope.data.base_data.url)
         self.assertIsNone(envelope.data.base_data.properties.get("request.url"))
