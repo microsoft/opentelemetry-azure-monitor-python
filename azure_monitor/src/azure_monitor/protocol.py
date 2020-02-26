@@ -87,8 +87,7 @@ class Envelope(BaseObject):
         "ikey",
         "flags",
         "tags",
-        "data",
-        "base_type"
+        "data"
     )
 
     def __init__(
@@ -101,8 +100,7 @@ class Envelope(BaseObject):
         ikey=None,
         flags=None,
         tags=None,
-        data=None,
-        base_type=None
+        data=None
     ) -> None:
         self.ver = ver
         self.name = name
@@ -113,7 +111,6 @@ class Envelope(BaseObject):
         self.flags = flags
         self.tags = tags
         self.data = data
-        self.base_type = base_type
 
     def to_dict(self):
         return {
