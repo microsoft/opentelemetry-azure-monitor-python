@@ -121,8 +121,6 @@ class AzureMonitorSpanExporter(BaseExporter, SpanExporter):
                 status_code = span.attributes["http.status_code"]
                 data.response_code = str(status_code)
                 data.success = 200 <= status_code < 400
-            elif span.status.canonical_code == StatusCanonicalCode.OK:
-                data.success = True
         else:
             envelope.name = "Microsoft.ApplicationInsights.RemoteDependency"
             data = protocol.RemoteDependency(
@@ -161,8 +159,6 @@ class AzureMonitorSpanExporter(BaseExporter, SpanExporter):
                     status_code = span.attributes["http.status_code"]
                     data.result_code = str(status_code)
                     data.success = 200 <= status_code < 400
-                elif span.status.canonical_code == StatusCanonicalCode.OK:
-                    data.success = True
             else:  # SpanKind.INTERNAL
                 data.type = "InProc"
                 data.success = True
