@@ -9,7 +9,7 @@ $ pip install opentelemetry-azure-monitor-exporter
 
 ### Trace
 
-* Update the code in trace.py to use your INSTRUMENTATION_KEY
+* Update the code in trace.py to use your `INSTRUMENTATION_KEY`
 
 * Run the sample
 
@@ -20,7 +20,7 @@ $ python trace.py
 
 ### Request
 
-* Update the code in request.py to use your INSTRUMENTATION_KEY
+* Update the code in request.py to use your `INSTRUMENTATION_KEY`
 
 * Run the sample
 
@@ -32,7 +32,7 @@ $ python request.py
 
 ### Server
 
-* Update the code in server.py to use your INSTRUMENTATION_KEY
+* Update the code in server.py to use your `INSTRUMENTATION_KEY`
 
 * Run the sample
 
