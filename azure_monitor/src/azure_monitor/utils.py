@@ -5,11 +5,10 @@ import os
 import platform
 import sys
 
-# pylint: disable=import-error
-from opentelemetry.sdk.version import __version__ as opentelemetry_version
 
-from azure_monitor.protocol import BaseObject
+from opentelemetry.sdk.version import __version__ as opentelemetry_version
 from azure_monitor.version import __version__ as ext_version
+from .protocol import BaseObject
 
 azure_monitor_context = {
     "ai.cloud.role": os.path.basename(sys.argv[0]) or "Python Application",
@@ -36,8 +35,14 @@ def ns_to_duration(nanoseconds):
 
 
 class Options(BaseObject):
-    _default = BaseObject(
+    __slots__ = ("endpoint", "instrumentation_key", "timeout")
+
+    def __init__(
+        self,
         endpoint="https://dc.services.visualstudio.com/v2/track",
         instrumentation_key=os.getenv("APPINSIGHTS_INSTRUMENTATIONKEY", None),
         timeout=10.0,  # networking timeout in seconds
-    )
+    ) -> None:
+        self.endpoint = endpoint
+        self.instrumentation_key = instrumentation_key
+        self.timeout = timeout
