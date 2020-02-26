@@ -8,6 +8,7 @@ import sys
 
 from opentelemetry.sdk.version import __version__ as opentelemetry_version
 from azure_monitor.version import __version__ as ext_version
+from .protocol import BaseObject
 
 azure_monitor_context = {
     "ai.cloud.role": os.path.basename(sys.argv[0]) or "Python Application",
@@ -33,7 +34,7 @@ def ns_to_duration(nanoseconds):
     )
 
 
-class Options:
+class Options(BaseObject):
     __slots__ = ("endpoint", "instrumentation_key", "timeout")
 
     def __init__(
