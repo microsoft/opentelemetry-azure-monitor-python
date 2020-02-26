@@ -23,7 +23,11 @@ class AzureMonitorSpanExporter(BaseExporter, SpanExporter):
 
     def export(self, spans):
         envelopes = map(self.span_to_envelope, spans)
-        envelopes_to_export = tuple(self.apply_telemetry_processors(envelopes))
+        envelopes_to_export = map(
+            lambda x: x.to_dict(),
+            tuple(self.apply_telemetry_processors(envelopes)),
+        )
+
         if envelopes_to_export:
             try:
                 response = requests.post(
@@ -72,7 +76,7 @@ class AzureMonitorSpanExporter(BaseExporter, SpanExporter):
     def span_to_envelope(self, span):  # noqa pylint: disable=too-many-branches
         # pylint: disable=too-many-statements
         envelope = protocol.Envelope(
-            iKey=self.options.instrumentation_key,
+            ikey=self.options.instrumentation_key,
             tags=dict(utils.azure_monitor_context),
             time=ns_to_iso_str(span.start_time),
         )
@@ -91,12 +95,12 @@ class AzureMonitorSpanExporter(BaseExporter, SpanExporter):
             data = protocol.Request(
                 id="{:016x}".format(span.context.span_id),
                 duration=utils.ns_to_duration(span.end_time - span.start_time),
-                responseCode=str(span.status.canonical_code),
-                success=False,  # Modify based off attributes or Status
+                response_code=str(span.status.canonical_code.value),
+                success=span.status.canonical_code == StatusCanonicalCode.OK,  # Modify based off attributes or Status
                 properties={},
             )
             envelope.data = protocol.Data(
-                baseData=data, baseType="RequestData"
+                base_data=data, base_type="RequestData"
             )
             if "http.method" in span.attributes:
                 data.name = span.attributes["http.method"]
@@ -113,22 +117,20 @@ class AzureMonitorSpanExporter(BaseExporter, SpanExporter):
                 data.properties["request.url"] = span.attributes["http.url"]
             if "http.status_code" in span.attributes:
                 status_code = span.attributes["http.status_code"]
-                data.responseCode = str(status_code)
+                data.response_code = str(status_code)
                 data.success = 200 <= status_code < 400
-            elif span.status == StatusCanonicalCode.OK:
-                data.success = True
         else:
             envelope.name = "Microsoft.ApplicationInsights.RemoteDependency"
             data = protocol.RemoteDependency(
                 name=span.name,
                 id="{:016x}".format(span.context.span_id),
-                resultCode=str(span.status.canonical_code),
+                result_code=str(span.status.canonical_code.value),
                 duration=utils.ns_to_duration(span.end_time - span.start_time),
-                success=False,  # Modify based off attributes or Status
+                success=span.status.canonical_code == StatusCanonicalCode.OK,  # Modify based off attributes or Status
                 properties={},
             )
             envelope.data = protocol.Data(
-                baseData=data, baseType="RemoteDependencyData"
+                base_data=data, base_type="RemoteDependencyData"
             )
             if span.kind in (SpanKind.CLIENT, SpanKind.PRODUCER):
                 if (
@@ -153,10 +155,8 @@ class AzureMonitorSpanExporter(BaseExporter, SpanExporter):
                         )
                 if "http.status_code" in span.attributes:
                     status_code = span.attributes["http.status_code"]
-                    data.resultCode = str(status_code)
+                    data.result_code = str(status_code)
                     data.success = 200 <= status_code < 400
-                elif span.status == StatusCanonicalCode.OK:
-                    data.success = True
             else:  # SpanKind.INTERNAL
                 data.type = "InProc"
                 data.success = True

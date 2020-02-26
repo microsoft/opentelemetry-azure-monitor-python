@@ -6,11 +6,10 @@ import platform
 import re
 import sys
 
-# pylint: disable=import-error
-from opentelemetry.sdk.version import __version__ as opentelemetry_version
 
-from azure_monitor.protocol import BaseObject
+from opentelemetry.sdk.version import __version__ as opentelemetry_version
 from azure_monitor.version import __version__ as ext_version
+from .protocol import BaseObject
 
 
 azure_monitor_context = {
@@ -52,18 +51,20 @@ uuid_regex_pattern = re.compile(
 
 
 class Options(BaseObject):
-    def __init__(self, *args, **kwargs):
-        super(Options, self).__init__(*args, **kwargs)
-        self._initialize()
-        self._validate_instrumentation_key()
+  
+    __slots__ = ("connection_string","endpoint", "instrumentation_key", "timeout")
 
-    _default = BaseObject(
+    def __init__(
+        self,
         connection_string=None,
-        instrumentation_key=None,
         endpoint="https://dc.services.visualstudio.com/v2/track",
-        timeout=10.0,
-    )
-
+        instrumentation_key=None,
+        timeout=10.0,  # networking timeout in seconds
+    ) -> None:
+        self.endpoint = endpoint
+        self.instrumentation_key = instrumentation_key
+        self.timeout = timeout
+        
     def _initialize(self):
         code_cs = self._parse_connection_string(self.connection_string)
         code_ikey = self.instrumentation_key
@@ -93,7 +94,7 @@ class Options(BaseObject):
             or "https://dc.services.visualstudio.com"
         )
         self.endpoint = endpoint + "/v2/track"
-
+        
     def _validate_instrumentation_key(self):
         """Validates the instrumentation key used for Azure Monitor.
         An instrumentation key cannot be null or empty. An instrumentation key
@@ -139,3 +140,4 @@ class Options(BaseObject):
                 # Default to None if cannot construct
                 result[INGESTION_ENDPOINT] = None
         return result
+

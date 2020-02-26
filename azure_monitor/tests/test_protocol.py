@@ -9,20 +9,12 @@ from azure_monitor import protocol
 class TestProtocol(unittest.TestCase):
     def test_object(self):
         data = protocol.BaseObject()
-        self.assertEqual(repr(data), "{}")
-        data.foo = 1
-        self.assertEqual(data.foo, 1)
-        self.assertEqual(data["foo"], 1)
-        data["bar"] = 2
-        self.assertEqual(data.bar, 2)
-        self.assertEqual(data["bar"], 2)
-        self.assertRaises(KeyError, lambda: data["baz"])
-        self.assertRaises(AttributeError, lambda: data.baz)
+        self.assertEqual(repr(data), '{}')
 
     def test_data(self):
         data = protocol.Data()
-        self.assertIsNone(data.baseData)
-        self.assertIsNone(data.baseType)
+        self.assertIsNone(data.base_data)
+        self.assertIsNone(data.base_type)
 
     def test_data_point(self):
         data = protocol.DataPoint()
