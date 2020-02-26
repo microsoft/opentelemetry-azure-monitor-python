@@ -93,7 +93,7 @@ class AzureMonitorSpanExporter(BaseExporter, SpanExporter):
             data = protocol.Request(
                 id="{:016x}".format(span.context.span_id),
                 duration=utils.ns_to_duration(span.end_time - span.start_time),
-                responseCode=str(span.status.value),
+                responseCode=str(span.status.canonical_code),
                 success=False,  # Modify based off attributes or Status
                 properties={},
             )
@@ -124,7 +124,7 @@ class AzureMonitorSpanExporter(BaseExporter, SpanExporter):
             data = protocol.RemoteDependency(
                 name=span.name,
                 id="{:016x}".format(span.context.span_id),
-                resultCode=str(span.status.value),
+                resultCode=str(span.status.canonical_code),
                 duration=utils.ns_to_duration(span.end_time - span.start_time),
                 success=False,  # Modify based off attributes or Status
                 properties={},
