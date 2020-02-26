@@ -10,9 +10,7 @@ from azure_monitor import AzureMonitorSpanExporter
 
 trace.set_preferred_tracer_source_implementation(lambda T: TracerSource())
 span_processor = SimpleExportSpanProcessor(
-    AzureMonitorSpanExporter(
-        instrumentation_key="<INSTRUMENTATION KEY HERE>"
-    )
+    AzureMonitorSpanExporter(instrumentation_key="<INSTRUMENTATION KEY HERE>")
 )
 trace.tracer_source().add_span_processor(span_processor)
 tracer = trace.tracer_source().get_tracer(__name__)

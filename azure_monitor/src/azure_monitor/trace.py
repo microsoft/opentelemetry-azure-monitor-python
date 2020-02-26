@@ -20,8 +20,6 @@ logger = logging.getLogger(__name__)
 class AzureMonitorSpanExporter(BaseExporter, SpanExporter):
     def __init__(self, **options):
         super(AzureMonitorSpanExporter, self).__init__(**options)
-        if not self.options.instrumentation_key:
-            raise ValueError("The instrumentation_key is not provided.")
 
     def export(self, spans):
         envelopes = map(self.span_to_envelope, spans)

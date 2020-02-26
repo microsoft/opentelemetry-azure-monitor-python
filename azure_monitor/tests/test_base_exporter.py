@@ -1,6 +1,7 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 
+import os
 import unittest
 
 from azure_monitor.exporter import BaseExporter
@@ -8,6 +9,10 @@ from azure_monitor.protocol import Data, Envelope
 
 # pylint: disable=W0212
 class TestBaseExporter(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        os.environ["APPINSIGHTS_INSTRUMENTATIONKEY"] = "1234abcd-5678-4efa-8abc-1234567890ab"
+
     def test_telemetry_processor_add(self):
         base = BaseExporter()
         base.add_telemetry_processor(lambda: True)
