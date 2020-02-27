@@ -96,7 +96,8 @@ class AzureMonitorSpanExporter(BaseExporter, SpanExporter):
                 id="{:016x}".format(span.context.span_id),
                 duration=utils.ns_to_duration(span.end_time - span.start_time),
                 response_code=str(span.status.canonical_code.value),
-                success=span.status.canonical_code == StatusCanonicalCode.OK,  # Modify based off attributes or Status
+                success=span.status.canonical_code
+                == StatusCanonicalCode.OK,  # Modify based off attributes or Status
                 properties={},
             )
             envelope.data = protocol.Data(
@@ -126,7 +127,8 @@ class AzureMonitorSpanExporter(BaseExporter, SpanExporter):
                 id="{:016x}".format(span.context.span_id),
                 result_code=str(span.status.canonical_code.value),
                 duration=utils.ns_to_duration(span.end_time - span.start_time),
-                success=span.status.canonical_code == StatusCanonicalCode.OK,  # Modify based off attributes or Status
+                success=span.status.canonical_code
+                == StatusCanonicalCode.OK,  # Modify based off attributes or Status
                 properties={},
             )
             envelope.data = protocol.Data(

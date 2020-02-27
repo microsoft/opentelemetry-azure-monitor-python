@@ -87,7 +87,7 @@ class Envelope(BaseObject):
         "ikey",
         "flags",
         "tags",
-        "data"
+        "data",
     )
 
     def __init__(
@@ -100,7 +100,7 @@ class Envelope(BaseObject):
         ikey=None,
         flags=None,
         tags=None,
-        data=None
+        data=None,
     ) -> None:
         self.ver = ver
         self.name = name
