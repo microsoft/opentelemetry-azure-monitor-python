@@ -7,11 +7,14 @@ import unittest
 from azure_monitor.exporter import BaseExporter
 from azure_monitor.protocol import Data, Envelope
 
+
 # pylint: disable=W0212
 class TestBaseExporter(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        os.environ["APPINSIGHTS_INSTRUMENTATIONKEY"] = "1234abcd-5678-4efa-8abc-1234567890ab"
+        os.environ[
+            "APPINSIGHTS_INSTRUMENTATIONKEY"
+        ] = "1234abcd-5678-4efa-8abc-1234567890ab"
 
     def test_telemetry_processor_add(self):
         base = BaseExporter()
@@ -32,11 +35,7 @@ class TestBaseExporter(unittest.TestCase):
             envelope.data.base_type += "_world"
 
         base.add_telemetry_processor(callback_function)
-        envelope = Envelope(
-            data=Data(
-                base_type="type1"
-            )
-        )
+        envelope = Envelope(data=Data(base_type="type1"))
         base.apply_telemetry_processors([envelope])
         self.assertEqual(envelope.data.base_type, "type1_world")
 
@@ -52,11 +51,7 @@ class TestBaseExporter(unittest.TestCase):
 
         base.add_telemetry_processor(callback_function)
         base.add_telemetry_processor(callback_function2)
-        envelope = Envelope(
-            data=Data(
-                base_type="type1"
-            )
-        )
+        envelope = Envelope(data=Data(base_type="type1"))
         base.apply_telemetry_processors([envelope])
         self.assertEqual(envelope.data.base_type, "type1_world_world2")
 
@@ -71,11 +66,7 @@ class TestBaseExporter(unittest.TestCase):
 
         base.add_telemetry_processor(callback_function)
         base.add_telemetry_processor(callback_function2)
-        envelope = Envelope(
-            data=Data(
-                base_type="type1"
-            )
-        )
+        envelope = Envelope(data=Data(base_type="type1"))
         base.apply_telemetry_processors([envelope])
         self.assertEqual(envelope.data.base_type, "type1_world2")
 
@@ -86,16 +77,8 @@ class TestBaseExporter(unittest.TestCase):
             return envelope.data.base_type == "type2"
 
         base.add_telemetry_processor(callback_function)
-        envelope = Envelope(
-            data=Data(
-                base_type="type1"
-            )
-        )
-        envelope2 = Envelope(
-            data=Data(
-                base_type="type2"
-            )
-        )
+        envelope = Envelope(data=Data(base_type="type1"))
+        envelope2 = Envelope(data=Data(base_type="type2"))
         envelopes = base.apply_telemetry_processors([envelope, envelope2])
         self.assertEqual(len(envelopes), 1)
         self.assertEqual(envelopes[0].data.base_type, "type2")

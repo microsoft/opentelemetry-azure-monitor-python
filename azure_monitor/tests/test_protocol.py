@@ -9,7 +9,7 @@ from azure_monitor import protocol
 class TestProtocol(unittest.TestCase):
     def test_object(self):
         data = protocol.BaseObject()
-        self.assertEqual(repr(data), '{}')
+        self.assertEqual(repr(data), "{}")
 
     def test_data(self):
         data = protocol.Data()

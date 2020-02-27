@@ -14,8 +14,8 @@ class BaseExporter:
         self.options = utils.Options(**options)
 
     def add_telemetry_processor(self, processor):
-        """Adds telemetry processor to the collection. 
-        
+        """Adds telemetry processor to the collection.
+
         Telemetry processors will be called one by one before telemetry
         item is pushed for sending and in the order they were added.
         :param processor: The processor to add.

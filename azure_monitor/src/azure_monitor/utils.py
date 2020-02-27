@@ -6,11 +6,10 @@ import platform
 import re
 import sys
 
-
 from opentelemetry.sdk.version import __version__ as opentelemetry_version
-from azure_monitor.version import __version__ as ext_version
-from .protocol import BaseObject
 
+from azure_monitor.protocol import BaseObject
+from azure_monitor.version import __version__ as ext_version
 
 azure_monitor_context = {
     "ai.cloud.role": os.path.basename(sys.argv[0]) or "Python Application",
@@ -51,8 +50,13 @@ uuid_regex_pattern = re.compile(
 
 
 class Options(BaseObject):
-  
-    __slots__ = ("connection_string","endpoint", "instrumentation_key", "timeout")
+
+    __slots__ = (
+        "connection_string",
+        "endpoint",
+        "instrumentation_key",
+        "timeout",
+    )
 
     def __init__(
         self,
@@ -67,7 +71,7 @@ class Options(BaseObject):
         self.timeout = timeout
         self._initialize()
         self._validate_instrumentation_key()
-        
+
     def _initialize(self):
         code_cs = self._parse_connection_string(self.connection_string)
         code_ikey = self.instrumentation_key
@@ -97,7 +101,7 @@ class Options(BaseObject):
             or "https://dc.services.visualstudio.com"
         )
         self.endpoint = endpoint + "/v2/track"
-        
+
     def _validate_instrumentation_key(self):
         """Validates the instrumentation key used for Azure Monitor.
         An instrumentation key cannot be null or empty. An instrumentation key
@@ -143,4 +147,3 @@ class Options(BaseObject):
                 # Default to None if cannot construct
                 result[INGESTION_ENDPOINT] = None
         return result
-
