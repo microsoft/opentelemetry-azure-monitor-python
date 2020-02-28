@@ -5,8 +5,13 @@ import os
 import platform
 import re
 import sys
+import threading
+import time
+from enum import Enum
 
+from opentelemetry.sdk.trace.export import SpanExportResult
 from opentelemetry.sdk.version import __version__ as opentelemetry_version
+
 
 from azure_monitor.protocol import BaseObject
 from azure_monitor.version import __version__ as ext_version
@@ -49,12 +54,34 @@ uuid_regex_pattern = re.compile(
 )
 
 
+class ExportResult(Enum):
+    SUCCESS = 0
+    FAILED_RETRYABLE = 1
+    FAILED_NOT_RETRYABLE = 2
+
+
+def get_trace_export_result(result: ExportResult):
+    if result == ExportResult.SUCCESS:
+        return SpanExportResult.SUCCESS
+    elif result == ExportResult.FAILED_RETRYABLE:
+        return SpanExportResult.FAILED_RETRYABLE
+    elif result == ExportResult.FAILED_NOT_RETRYABLE:
+        return SpanExportResult.FAILED_NOT_RETRYABLE
+    else:
+        return None
+
+
 class Options(BaseObject):
 
     __slots__ = (
         "connection_string",
         "endpoint",
         "instrumentation_key",
+        "max_batch_size",
+        "storage_maintenance_period",
+        "storage_max_size",
+        "storage_path",
+        "storage_retention_period",
         "timeout",
     )
 
@@ -63,11 +90,26 @@ class Options(BaseObject):
         connection_string=None,
         endpoint="https://dc.services.visualstudio.com/v2/track",
         instrumentation_key=None,
+        max_batch_size=100,
+        storage_maintenance_period=60,
+        storage_max_size=100 * 1024 * 1024,
+        storage_path=os.path.join(
+            os.path.expanduser("~"),
+            ".opentelemetry",
+            ".azure",
+            os.path.basename(sys.argv[0]) or ".console",
+        ),
+        storage_retention_period=7 * 24 * 60 * 60,
         timeout=10.0,  # networking timeout in seconds
     ) -> None:
         self.connection_string = connection_string
         self.endpoint = endpoint
         self.instrumentation_key = instrumentation_key
+        self.max_batch_size = max_batch_size
+        self.storage_maintenance_period = storage_maintenance_period
+        self.storage_max_size = storage_max_size
+        self.storage_path = storage_path
+        self.storage_retention_period = storage_retention_period
         self.timeout = timeout
         self._initialize()
         self._validate_instrumentation_key()
@@ -147,3 +189,39 @@ class Options(BaseObject):
                 # Default to None if cannot construct
                 result[INGESTION_ENDPOINT] = None
         return result
+
+
+class PeriodicTask(threading.Thread):
+    """Thread that periodically calls a given function.
+
+    :type interval: int or float
+    :param interval: Seconds between calls to the function.
+
+    :type function: function
+    :param function: The function to call.
+
+    :type args: list
+    :param args: The args passed in while calling `function`.
+
+    :type kwargs: dict
+    :param args: The kwargs passed in while calling `function`.
+    """
+
+    def __init__(self, interval, function, args=None, kwargs=None):
+        super(PeriodicTask, self).__init__()
+        self.interval = interval
+        self.function = function
+        self.args = args or []
+        self.kwargs = kwargs or {}
+        self.finished = threading.Event()
+
+    def run(self):
+        wait_time = self.interval
+        while not self.finished.wait(wait_time):
+            start_time = time.time()
+            self.function(*self.args, **self.kwargs)
+            elapsed_time = time.time() - start_time
+            wait_time = max(self.interval - elapsed_time, 0)
+
+    def cancel(self):
+        self.finished.set()
