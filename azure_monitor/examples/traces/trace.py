@@ -1,19 +1,22 @@
-# Copyright (c) Microsoft Corporation. All rights reserved.
-# Licensed under the MIT License.
-# pylint: disable=import-error
-# pylint: disable=no-member
-from opentelemetry import trace
-from opentelemetry.sdk.trace import TracerSource
-from opentelemetry.sdk.trace.export import SimpleExportSpanProcessor
-
 from azure_monitor import AzureMonitorSpanExporter
+from opentelemetry import trace
+from opentelemetry.sdk.trace import TracerProvider
+from opentelemetry.sdk.trace.export import BatchExportSpanProcessor
 
-trace.set_preferred_tracer_source_implementation(lambda T: TracerSource())
-span_processor = SimpleExportSpanProcessor(
-    AzureMonitorSpanExporter(instrumentation_key="<INSTRUMENTATION KEY HERE>")
+# Callback function to add os_type: linux to span properties
+def callback_function(envelope):
+    envelope.data.baseData.properties['os_type'] = 'linux'
+    return True
+
+exporter = AzureMonitorSpanExporter(
+    connection_string='InstrumentationKey=99c42f65-1656-4c41-afde-bd86b709a4a7'
 )
-trace.tracer_source().add_span_processor(span_processor)
-tracer = trace.tracer_source().get_tracer(__name__)
+exporter.add_telemetry_processor(callback_function)
 
-with tracer.start_as_current_span("hello") as span:
-    print("Hello, World!")
+trace.set_preferred_tracer_provider_implementation(lambda T: TracerProvider())
+tracer = trace.get_tracer(__name__)
+span_processor = BatchExportSpanProcessor(exporter)
+trace.tracer_provider().add_span_processor(span_processor)
+
+with tracer.start_as_current_span('hello'):
+    print('Hello, World!')
