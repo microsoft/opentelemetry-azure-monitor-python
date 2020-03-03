@@ -4,8 +4,6 @@ import json
 import logging
 from urllib.parse import urlparse
 
-# pylint: disable=import-error
-import requests
 from opentelemetry.sdk.trace.export import SpanExporter, SpanExportResult
 from opentelemetry.sdk.util import ns_to_iso_str
 from opentelemetry.trace import Span, SpanKind
@@ -21,59 +19,28 @@ class AzureMonitorSpanExporter(BaseExporter, SpanExporter):
     def __init__(self, **options):
         super(AzureMonitorSpanExporter, self).__init__(**options)
 
-    def export(self, spans):
+    def export(self, spans) -> SpanExportResult:
         envelopes = map(self.span_to_envelope, spans)
         envelopes_to_export = map(
             lambda x: x.to_dict(),
             tuple(self.apply_telemetry_processors(envelopes)),
         )
+        try:
+            result = self._transmit(envelopes_to_export)
+            if result == SpanExportResult.FAILED_RETRYABLE:
+                self.storage.put(envelopes, result)
+            if len(envelopes_to_export) < self.options.max_batch_size:
+                self._transmit_from_storage()
+            return utils.get_trace_export_result(result)
+        except Exception:
+            logger.exception("Exception occurred while exporting the data.")
 
-        if envelopes_to_export:
-            try:
-                response = requests.post(
-                    url=self.options.endpoint,
-                    data=json.dumps(envelopes_to_export),
-                    headers={
-                        "Accept": "application/json",
-                        "Content-Type": "application/json; charset=utf-8",
-                    },
-                    timeout=self.options.timeout,
-                )
-            except requests.RequestException as ex:
-                logger.warning("Transient client side error %s.", ex)
-                return SpanExportResult.FAILED_RETRYABLE
+    def span_to_envelope(
+        self, span
+    ) -> protocol.Envelope:  # noqa pylint: disable=too-many-branches
 
-            text = "N/A"
-            data = None  # noqa pylint: disable=unused-variable
-            try:
-                text = response.text
-            except Exception as ex:  # noqa pylint: disable=broad-except
-                logger.warning("Error while reading response body %s.", ex)
-            else:
-                try:
-                    data = json.loads(
-                        text
-                    )  # noqa pylint: disable=unused-variable
-                except Exception:  # noqa pylint: disable=broad-except
-                    pass
-
-            if response.status_code == 200:
-                logger.info("Transmission succeeded: %s.", text)
-                return SpanExportResult.SUCCESS
-
-            if response.status_code in (
-                206,  # Partial Content
-                429,  # Too Many Requests
-                500,  # Internal Server Error
-                503,  # Service Unavailable
-            ):
-                return SpanExportResult.FAILED_RETRYABLE
-
-            return SpanExportResult.FAILED_NOT_RETRYABLE
-        # No spans to export
-        return SpanExportResult.SUCCESS
-
-    def span_to_envelope(self, span):  # noqa pylint: disable=too-many-branches
+        if not span:
+            return None
         # pylint: disable=too-many-statements
         envelope = protocol.Envelope(
             ikey=self.options.instrumentation_key,

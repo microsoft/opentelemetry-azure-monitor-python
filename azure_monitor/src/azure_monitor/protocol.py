@@ -27,8 +27,8 @@ class Data(BaseObject):
 
     def to_dict(self):
         return {
-            "baseData": self.base_data.to_dict(),
-            "baseType": self.base_type,
+            "baseData": self.base_data.to_dict() if self.base_data else None,
+            "baseType": self.base_type.to_dict() if self.base_type else None,
         }
 
 
@@ -122,8 +122,8 @@ class Envelope(BaseObject):
             "iKey": self.ikey,
             "flags": self.flags,
             "tags": self.tags,
-            "data": self.data.to_dict(),
-            "baseType": self.base_type,
+            "data": self.data.to_dict() if self.data else None,
+            "baseType": self.data.base_type if self.data else None,
         }
 
 
