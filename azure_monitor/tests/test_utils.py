@@ -4,6 +4,7 @@
 import os
 import unittest
 
+from opentelemetry.sdk.metrics.export import MetricsExportResult
 from opentelemetry.sdk.trace.export import SpanExportResult
 
 from azure_monitor import utils
@@ -281,3 +282,22 @@ class TestUtils(unittest.TestCase):
             SpanExportResult.FAILED_RETRYABLE,
         )
         self.assertEqual(utils.get_trace_export_result(None), None)
+
+    def test_get_metrics_export_result(self):
+        self.assertEqual(
+            utils.get_metrics_export_result(utils.ExportResult.SUCCESS),
+            MetricsExportResult.SUCCESS,
+        )
+        self.assertEqual(
+            utils.get_metrics_export_result(
+                utils.ExportResult.FAILED_NOT_RETRYABLE
+            ),
+            MetricsExportResult.FAILED_NOT_RETRYABLE,
+        )
+        self.assertEqual(
+            utils.get_metrics_export_result(
+                utils.ExportResult.FAILED_RETRYABLE
+            ),
+            MetricsExportResult.FAILED_RETRYABLE,
+        )
+        self.assertEqual(utils.get_metrics_export_result(None), None)

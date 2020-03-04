@@ -6,7 +6,6 @@ import logging
 # pylint: disable=import-error
 import requests
 
-
 from azure_monitor import utils
 from azure_monitor.storage import LocalFileStorage
 
@@ -73,7 +72,7 @@ class BaseExporter:
                 else:
                     blob.delete(silent=True)
 
-    def _transmit(self, envelopes_to_export):
+    def _transmit(self, envelopes_to_export) -> utils.ExportResult:
         """
         Transmit the data envelopes to the ingestion service.
 

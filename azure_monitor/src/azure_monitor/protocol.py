@@ -27,8 +27,8 @@ class Data(BaseObject):
 
     def to_dict(self):
         return {
-            "baseData": self.base_data.to_dict() if self.base_data else None,
-            "baseType": self.base_type.to_dict() if self.base_type else None,
+            "baseData": self.base_data,
+            "baseType": self.base_type,
         }
 
 
