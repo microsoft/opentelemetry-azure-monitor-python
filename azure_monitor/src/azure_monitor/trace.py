@@ -2,6 +2,7 @@
 # Licensed under the MIT License.
 import json
 import logging
+from typing import Sequence
 from urllib.parse import urlparse
 
 from opentelemetry.sdk.trace.export import SpanExporter, SpanExportResult
@@ -19,7 +20,7 @@ class AzureMonitorSpanExporter(BaseExporter, SpanExporter):
     def __init__(self, **options):
         super(AzureMonitorSpanExporter, self).__init__(**options)
 
-    def export(self, spans) -> SpanExportResult:
+    def export(self, spans: Sequence[Span]) -> SpanExportResult:
         envelopes = map(self.span_to_envelope, spans)
         envelopes_to_export = map(
             lambda x: x.to_dict(),
@@ -27,16 +28,16 @@ class AzureMonitorSpanExporter(BaseExporter, SpanExporter):
         )
         try:
             result = self._transmit(envelopes_to_export)
-            if result == SpanExportResult.FAILED_RETRYABLE:
+            if result == utils.ExportResult.FAILED_RETRYABLE:
                 self.storage.put(envelopes, result)
-            if len(envelopes_to_export) < self.options.max_batch_size:
+            if len(list(envelopes_to_export)) < self.options.max_batch_size:
                 self._transmit_from_storage()
             return utils.get_trace_export_result(result)
         except Exception:
             logger.exception("Exception occurred while exporting the data.")
 
     def span_to_envelope(
-        self, span
+        self, span: Span
     ) -> protocol.Envelope:  # noqa pylint: disable=too-many-branches
 
         if not span:

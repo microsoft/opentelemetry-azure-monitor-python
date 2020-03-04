@@ -9,9 +9,9 @@ import threading
 import time
 from enum import Enum
 
+from opentelemetry.sdk.metrics.export import MetricsExportResult
 from opentelemetry.sdk.trace.export import SpanExportResult
 from opentelemetry.sdk.version import __version__ as opentelemetry_version
-
 
 from azure_monitor.protocol import BaseObject
 from azure_monitor.version import __version__ as ext_version
@@ -60,13 +60,24 @@ class ExportResult(Enum):
     FAILED_NOT_RETRYABLE = 2
 
 
-def get_trace_export_result(result: ExportResult):
+def get_trace_export_result(result: ExportResult) -> SpanExportResult:
     if result == ExportResult.SUCCESS:
         return SpanExportResult.SUCCESS
     elif result == ExportResult.FAILED_RETRYABLE:
         return SpanExportResult.FAILED_RETRYABLE
     elif result == ExportResult.FAILED_NOT_RETRYABLE:
         return SpanExportResult.FAILED_NOT_RETRYABLE
+    else:
+        return None
+
+
+def get_metrics_export_result(result: ExportResult) -> MetricsExportResult:
+    if result == ExportResult.SUCCESS:
+        return MetricsExportResult.SUCCESS
+    elif result == ExportResult.FAILED_RETRYABLE:
+        return MetricsExportResult.FAILED_RETRYABLE
+    elif result == ExportResult.FAILED_NOT_RETRYABLE:
+        return MetricsExportResult.FAILED_NOT_RETRYABLE
     else:
         return None
 
@@ -88,7 +99,6 @@ class Options(BaseObject):
     def __init__(
         self,
         connection_string=None,
-        endpoint="https://dc.services.visualstudio.com/v2/track",
         instrumentation_key=None,
         max_batch_size=100,
         storage_maintenance_period=60,
@@ -101,9 +111,9 @@ class Options(BaseObject):
         ),
         storage_retention_period=7 * 24 * 60 * 60,
         timeout=10.0,  # networking timeout in seconds
+        **options,
     ) -> None:
         self.connection_string = connection_string
-        self.endpoint = endpoint
         self.instrumentation_key = instrumentation_key
         self.max_batch_size = max_batch_size
         self.storage_maintenance_period = storage_maintenance_period
@@ -111,6 +121,7 @@ class Options(BaseObject):
         self.storage_path = storage_path
         self.storage_retention_period = storage_retention_period
         self.timeout = timeout
+        self.endpoint = ""
         self._initialize()
         self._validate_instrumentation_key()
 
