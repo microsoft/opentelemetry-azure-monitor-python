@@ -35,7 +35,8 @@ class AzureMonitorMetricsExporter(BaseExporter, MetricsExporter):
             result = self._transmit(envelopes_to_export)
             if result == MetricsExportResult.FAILED_RETRYABLE:
                 self.storage.put(envelopes, result)
-            if len(list(envelopes_to_export)) < self.options.max_batch_size:
+            if result == utils.ExportResult.SUCCESS:
+                # Try to send any cached events
                 self._transmit_from_storage()
             return utils.get_metrics_export_result(result)
         except Exception:

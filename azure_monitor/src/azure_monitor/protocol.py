@@ -25,13 +25,14 @@ class Data(BaseObject):
     """Data
 
     Args:
-        base_data: Data base data.
-        base_type: Data base type.
+        base_data: Container for data item (B section).
+        base_type: Name of item (B section) if any. If telemetry data is
+        derived straight from this, this should be None.
     """
 
     __slots__ = ("base_data", "base_type")
 
-    def __init__(self, base_data=None, base_type=None) -> None:
+    def __init__(self, base_data: any = None, base_type: str = None) -> None:
         self.base_data = base_data
         self.base_type = base_type
 
@@ -192,7 +193,7 @@ class Event(BaseObject):
         ver: int = 2,
         name: str = "",
         properties: typing.Dict[str, any] = None,
-        measurements: any = None,
+        measurements: typing.Dict[str, int] = None,
     ):
         self.ver = ver
         self.name = name
@@ -208,6 +209,64 @@ class Event(BaseObject):
         }
 
 
+class ExceptionDetails(BaseObject):
+    """Exception details of the exception in a chain.
+
+    Args:
+        id: In case exception is nested (outer exception contains inner one),
+        the id and outerId properties are used to represent the nesting.
+        outer_id: The value of outerId is a reference to an element in
+        ExceptionDetails that represents the outer exception.
+        type_name: Exception type name.
+        message: Exception message.
+        has_full_stack: Indicates if full exception stack is provided in the exception.
+        The stack may be trimmed, such as in the case of a StackOverflow exception.
+        stack: Text describing the stack. Either stack or parsedStack should have a
+        value.
+        parsed_stack: List of stack frames. Either stack or parsedStack should have
+        a value.
+    """
+
+    __slots__ = (
+        "id",
+        "outer_id",
+        "type_name",
+        "message",
+        "has_full_stack",
+        "stack",
+        "parsed_stack",
+    )
+
+    def __init__(
+        self,
+        id: int = None,
+        outer_id: int = None,
+        type_name: str = None,
+        message: str = None,
+        has_full_stack: bool = None,
+        stack: str = None,
+        parsed_stack: any = None,
+    ) -> None:
+        self.id = id
+        self.outer_id = outer_id
+        self.type_name = type_name
+        self.message = message
+        self.has_full_stack = has_full_stack
+        self.stack = stack
+        self.parsed_stack = parsed_stack
+
+    def to_dict(self):
+        return {
+            "id": self.ver,
+            "outerId": self.outer_id,
+            "typeName": self.type_name,
+            "message": self.message,
+            "hasFullStack ": self.has_full_stack,
+            "stack": self.stack,
+            "parsedStack": self.parsed_stack,
+        }
+
+
 class ExceptionData(BaseObject):
     """An instance of Exception represents a handled or unhandled exception that
     occurred during execution of the monitored application.
@@ -217,6 +276,9 @@ class ExceptionData(BaseObject):
         exceptions: Exception chain - list of inner exceptions.
         severity_level: Severity level. Mostly used to indicate exception severity
         level when it is reported by logging library.
+        problem_id: Identifier of where the exception was thrown in code.
+        Used for exceptions grouping. Typically a combination of exception type
+        and a function from the call stack.
         properties: Collection of custom properties.
         measurements: Collection of custom measurements.
     """
@@ -225,6 +287,7 @@ class ExceptionData(BaseObject):
         "ver",
         "exceptions",
         "severity_level",
+        "problem_id",
         "properties",
         "measurements",
     )
@@ -232,16 +295,18 @@ class ExceptionData(BaseObject):
     def __init__(
         self,
         ver: int = 2,
-        exceptions: any = None,
+        exceptions: typing.List[ExceptionDetails] = None,
         severity_level: int = None,
+        problem_id: str = None,
         properties: typing.Dict[str, any] = None,
-        measurements: any = None,
+        measurements: typing.Dict[str, int] = None,
     ) -> None:
         if exceptions is None:
             exceptions = []
         self.ver = ver
         self.exceptions = exceptions
         self.severity_level = severity_level
+        self.problem_id = problem_id
         self.properties = properties
         self.measurements = measurements
 
@@ -256,6 +321,14 @@ class ExceptionData(BaseObject):
         }
 
 
+class DataPointType(Enum):
+    VERBOSE = 0
+    INFORMATION = 1
+    WARNING = 2
+    ERROR = 3
+    CRITICAL = 4
+
+
 class Message(BaseObject):
     """Instances of Message represent printf-like trace statements that are
     text-searched. The message does not have measurements.
@@ -267,19 +340,27 @@ class Message(BaseObject):
         properties: Collection of custom properties.
     """
 
-    __slots__ = ("ver", "message", "severity_level", "properties")
+    __slots__ = (
+        "ver",
+        "message",
+        "measurements",
+        "severity_level",
+        "properties",
+    )
 
     def __init__(
         self,
         ver: int = 2,
         message: str = "",
-        severity_level=None,
+        severity_level: DataPointType = None,
         properties: typing.Dict[str, any] = None,
+        measurements: typing.Dict[str, int] = None,
     ) -> None:
         self.ver = ver
         self.message = message
         self.severity_level = severity_level
         self.properties = properties
+        self.measurements = measurements
 
     def to_dict(self):
         return {
@@ -375,7 +456,7 @@ class RemoteDependency(BaseObject):
         type: str = None,
         target: str = None,
         properties: typing.Dict[str, any] = None,
-        measurements: any = None,
+        measurements: typing.Dict[str, int] = None,
     ) -> None:
         self.ver = ver
         self.name = name
@@ -452,7 +533,7 @@ class Request(BaseObject):
         name: str = None,
         url: str = None,
         properties: typing.Dict[str, any] = None,
-        measurements: any = None,
+        measurements: typing.Dict[str, int] = None,
     ) -> None:
         self.ver = ver
         self.id = id
