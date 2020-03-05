@@ -21,26 +21,27 @@ class TestBaseExporter(unittest.TestCase):
         """Test the constructor."""
         base = BaseExporter(
             instrumentation_key="4321abcd-5678-4efa-8abc-1234567890ab",
-            max_batch_size=1,
             storage_maintenance_period=2,
             storage_max_size=3,
             storage_path="testStoragePath",
             storage_retention_period=4,
             timeout=5,
-            something_else=6,
         )
         self.assertIsInstance(base.options, Options)
         self.assertEqual(
             base.options.instrumentation_key,
             "4321abcd-5678-4efa-8abc-1234567890ab",
         )
-        self.assertEqual(base.options.max_batch_size, 1)
         self.assertEqual(base.options.storage_maintenance_period, 2)
         self.assertEqual(base.options.storage_max_size, 3)
         self.assertEqual(base.options.storage_retention_period, 4)
         self.assertEqual(base.options.timeout, 5)
         self.assertEqual(base.options.storage_path, "testStoragePath")
-        self.assertEqual(getattr(base.options, "something_else", None), None)
+
+    def test_constructor_wrong_options(self):
+        """Test the constructor with wrong options."""
+        with self.assertRaises(TypeError):
+            base = BaseExporter(something_else=6)
 
     def test_telemetry_processor_add(self):
         base = BaseExporter()

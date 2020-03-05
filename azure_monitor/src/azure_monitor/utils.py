@@ -121,7 +121,6 @@ class Options(BaseObject):
         ),
         storage_retention_period: int = 7 * 24 * 60 * 60,
         timeout: int = 10.0,  # networking timeout in seconds
-        **options,
     ) -> None:
         self.connection_string = connection_string
         self.instrumentation_key = instrumentation_key

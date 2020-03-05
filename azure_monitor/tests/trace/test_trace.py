@@ -102,7 +102,7 @@ class TestAzureExporter(unittest.TestCase):
     def test_export_success(self, span_to_envelope_mock):
         span_to_envelope_mock.return_value = ["bar"]
         exporter = AzureMonitorSpanExporter(
-            max_batch_size=1, storage_path=os.path.join(TEST_FOLDER, self.id())
+            storage_path=os.path.join(TEST_FOLDER, self.id())
         )
         with mock.patch(
             "azure_monitor.trace.AzureMonitorSpanExporter._transmit"

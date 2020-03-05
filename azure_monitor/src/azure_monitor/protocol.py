@@ -321,7 +321,7 @@ class ExceptionData(BaseObject):
         }
 
 
-class DataPointType(Enum):
+class SeverityLevel(Enum):
     VERBOSE = 0
     INFORMATION = 1
     WARNING = 2
@@ -352,7 +352,7 @@ class Message(BaseObject):
         self,
         ver: int = 2,
         message: str = "",
-        severity_level: DataPointType = None,
+        severity_level: SeverityLevel = None,
         properties: typing.Dict[str, any] = None,
         measurements: typing.Dict[str, int] = None,
     ) -> None:
