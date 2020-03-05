@@ -11,7 +11,7 @@ def callback_function(envelope):
 
 
 exporter = AzureMonitorSpanExporter(
-    connection_string="InstrumentationKey=99c42f65-1656-4c41-afde-bd86b709a4a7"
+    connection_string="InstrumentationKey=<INSTRUMENTATION KEY HERE>"
 )
 exporter.add_telemetry_processor(callback_function)
 
