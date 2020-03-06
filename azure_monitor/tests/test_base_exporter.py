@@ -6,6 +6,7 @@ import unittest
 
 from azure_monitor.exporter import BaseExporter
 from azure_monitor.protocol import Data, Envelope
+from azure_monitor.utils import Options
 
 
 # pylint: disable=W0212
@@ -15,6 +16,32 @@ class TestBaseExporter(unittest.TestCase):
         os.environ[
             "APPINSIGHTS_INSTRUMENTATIONKEY"
         ] = "1234abcd-5678-4efa-8abc-1234567890ab"
+
+    def test_constructor(self):
+        """Test the constructor."""
+        base = BaseExporter(
+            instrumentation_key="4321abcd-5678-4efa-8abc-1234567890ab",
+            storage_maintenance_period=2,
+            storage_max_size=3,
+            storage_path="testStoragePath",
+            storage_retention_period=4,
+            timeout=5,
+        )
+        self.assertIsInstance(base.options, Options)
+        self.assertEqual(
+            base.options.instrumentation_key,
+            "4321abcd-5678-4efa-8abc-1234567890ab",
+        )
+        self.assertEqual(base.options.storage_maintenance_period, 2)
+        self.assertEqual(base.options.storage_max_size, 3)
+        self.assertEqual(base.options.storage_retention_period, 4)
+        self.assertEqual(base.options.timeout, 5)
+        self.assertEqual(base.options.storage_path, "testStoragePath")
+
+    def test_constructor_wrong_options(self):
+        """Test the constructor with wrong options."""
+        with self.assertRaises(TypeError):
+            base = BaseExporter(something_else=6)
 
     def test_telemetry_processor_add(self):
         base = BaseExporter()

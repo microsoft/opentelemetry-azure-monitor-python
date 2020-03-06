@@ -1,6 +1,9 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 
+import typing
+from enum import Enum
+
 
 class BaseObject:
     __slots__ = ()
@@ -19,20 +22,43 @@ class BaseObject:
 
 
 class Data(BaseObject):
+    """Data
+
+    Args:
+        base_data: Container for data item (B section).
+        base_type: Name of item (B section) if any. If telemetry data is
+        derived straight from this, this should be None.
+    """
+
     __slots__ = ("base_data", "base_type")
 
-    def __init__(self, base_data=None, base_type=None) -> None:
+    def __init__(self, base_data: any = None, base_type: str = None) -> None:
         self.base_data = base_data
         self.base_type = base_type
 
     def to_dict(self):
-        return {
-            "baseData": self.base_data.to_dict() if self.base_data else None,
-            "baseType": self.base_type.to_dict() if self.base_type else None,
-        }
+        return {"baseData": self.base_data, "baseType": self.base_type}
+
+
+class DataPointType(Enum):
+    MEASUREMENT = 0
+    AGGREGATION = 1
 
 
 class DataPoint(BaseObject):
+    """Metric data single measurement.
+
+    Args:
+        ns: Namespace of the metric
+        name: Name of the metric.
+        kind: Metric type. Single measurement or the aggregated value.
+        value: Single value for measurement. Sum of individual measurements for the aggregation.
+        count: Metric weight of the aggregated metric. Should not be set for a measurement.
+        min: Minimum value of the aggregated metric. Should not be set for a measurement.
+        max: Maximum value of the aggregated metric. Should not be set for a measurement.
+        std_dev: Standard deviation of the aggregated metric. Should not be set for a measurement.
+    """
+
     __slots__ = (
         "ns",
         "name",
@@ -46,14 +72,14 @@ class DataPoint(BaseObject):
 
     def __init__(
         self,
-        ns="",
-        name="",
-        kind=None,
-        value=0.0,
-        count=None,
-        min=None,
-        max=None,
-        std_dev=None,
+        ns: str = "",
+        name: str = "",
+        kind: DataPointType = None,
+        value: float = 0.0,
+        count: float = None,
+        min: float = None,
+        max: float = None,
+        std_dev: float = None,
     ) -> None:
         self.ns = ns
         self.name = name
@@ -78,6 +104,26 @@ class DataPoint(BaseObject):
 
 
 class Envelope(BaseObject):
+    """Envelope represents a telemetry item
+
+    Args:
+        ver: Envelope version. For internal use only. By assigning this the default,
+        it will not be serialized within the payload unless changed to a value other
+        than #1.
+        name: Type name of telemetry data item.
+        time: Event date time when telemetry item was created. This is the wall clock
+        time on the client when the event was generated.
+        There is no guarantee that the client's time is accurate. This field must be
+        formatted in UTC ISO 8601 format
+        sample_rate: Sampling rate used in application. This telemetry item represents
+        1 / sampleRate actual telemetry items.
+        seq: Sequence field used to track absolute order of uploaded events.
+        ikey: The application's instrumentation key.
+        flags: Key/value collection of flags.
+        tags: Key/value collection of context properties.
+        data: Telemetry data item.
+    """
+
     __slots__ = (
         "ver",
         "name",
@@ -92,15 +138,15 @@ class Envelope(BaseObject):
 
     def __init__(
         self,
-        ver=1,
-        name="",
-        time="",
-        sample_rate=None,
-        seq=None,
-        ikey=None,
-        flags=None,
-        tags=None,
-        data=None,
+        ver: int = 1,
+        name: str = "",
+        time: str = "",
+        sample_rate: int = None,
+        seq: str = None,
+        ikey: str = None,
+        flags: typing.Dict = None,
+        tags: typing.Dict = None,
+        data: Data = None,
     ) -> None:
         self.ver = ver
         self.name = name
@@ -128,9 +174,27 @@ class Envelope(BaseObject):
 
 
 class Event(BaseObject):
+    """Instances of Event represent structured event records that can be grouped
+    and searched by their properties. Event data item also creates a metric of
+    event count by name.
+
+    Args:
+        ver: Schema version.
+        name: Event name. Keep it low cardinality to allow proper grouping and
+        useful metrics.
+        properties: Collection of custom properties.
+        measurements: Collection of custom measurements.
+    """
+
     __slots__ = ("ver", "name", "properties", "measurements")
 
-    def __init__(self, ver=2, name="", properties=None, measurements=None):
+    def __init__(
+        self,
+        ver: int = 2,
+        name: str = "",
+        properties: typing.Dict[str, any] = None,
+        measurements: typing.Dict[str, int] = None,
+    ):
         self.ver = ver
         self.name = name
         self.properties = properties
@@ -145,7 +209,80 @@ class Event(BaseObject):
         }
 
 
+class ExceptionDetails(BaseObject):
+    """Exception details of the exception in a chain.
+
+    Args:
+        id: In case exception is nested (outer exception contains inner one),
+        the id and outerId properties are used to represent the nesting.
+        outer_id: The value of outerId is a reference to an element in
+        ExceptionDetails that represents the outer exception.
+        type_name: Exception type name.
+        message: Exception message.
+        has_full_stack: Indicates if full exception stack is provided in the exception.
+        The stack may be trimmed, such as in the case of a StackOverflow exception.
+        stack: Text describing the stack. Either stack or parsedStack should have a
+        value.
+        parsed_stack: List of stack frames. Either stack or parsedStack should have
+        a value.
+    """
+
+    __slots__ = (
+        "id",
+        "outer_id",
+        "type_name",
+        "message",
+        "has_full_stack",
+        "stack",
+        "parsed_stack",
+    )
+
+    def __init__(
+        self,
+        id: int = None,
+        outer_id: int = None,
+        type_name: str = None,
+        message: str = None,
+        has_full_stack: bool = None,
+        stack: str = None,
+        parsed_stack: any = None,
+    ) -> None:
+        self.id = id
+        self.outer_id = outer_id
+        self.type_name = type_name
+        self.message = message
+        self.has_full_stack = has_full_stack
+        self.stack = stack
+        self.parsed_stack = parsed_stack
+
+    def to_dict(self):
+        return {
+            "id": self.ver,
+            "outerId": self.outer_id,
+            "typeName": self.type_name,
+            "message": self.message,
+            "hasFullStack ": self.has_full_stack,
+            "stack": self.stack,
+            "parsedStack": self.parsed_stack,
+        }
+
+
 class ExceptionData(BaseObject):
+    """An instance of Exception represents a handled or unhandled exception that
+    occurred during execution of the monitored application.
+
+    Args:
+        ver: Schema version.
+        exceptions: Exception chain - list of inner exceptions.
+        severity_level: Severity level. Mostly used to indicate exception severity
+        level when it is reported by logging library.
+        problem_id: Identifier of where the exception was thrown in code.
+        Used for exceptions grouping. Typically a combination of exception type
+        and a function from the call stack.
+        properties: Collection of custom properties.
+        measurements: Collection of custom measurements.
+    """
+
     __slots__ = (
         "ver",
         "exceptions",
@@ -157,12 +294,12 @@ class ExceptionData(BaseObject):
 
     def __init__(
         self,
-        ver=2,
-        exceptions=None,
-        severity_level=None,
-        problem_id=None,
-        properties=None,
-        measurements=None,
+        ver: int = 2,
+        exceptions: typing.List[ExceptionDetails] = None,
+        severity_level: int = None,
+        problem_id: str = None,
+        properties: typing.Dict[str, any] = None,
+        measurements: typing.Dict[str, int] = None,
     ) -> None:
         if exceptions is None:
             exceptions = []
@@ -184,22 +321,40 @@ class ExceptionData(BaseObject):
         }
 
 
+class SeverityLevel(Enum):
+    VERBOSE = 0
+    INFORMATION = 1
+    WARNING = 2
+    ERROR = 3
+    CRITICAL = 4
+
+
 class Message(BaseObject):
+    """Instances of Message represent printf-like trace statements that are
+    text-searched. The message does not have measurements.
+
+    Args:
+        ver: Schema version.
+        message: Trace message.
+        severity_level: Trace severity level.
+        properties: Collection of custom properties.
+    """
+
     __slots__ = (
         "ver",
         "message",
+        "measurements",
         "severity_level",
         "properties",
-        "measurements",
     )
 
     def __init__(
         self,
-        ver=2,
-        message="",
-        severity_level=None,
-        properties=None,
-        measurements=None,
+        ver: int = 2,
+        message: str = "",
+        severity_level: SeverityLevel = None,
+        properties: typing.Dict[str, any] = None,
+        measurements: typing.Dict[str, int] = None,
     ) -> None:
         self.ver = ver
         self.message = message
@@ -218,9 +373,25 @@ class Message(BaseObject):
 
 
 class MetricData(BaseObject):
+    """An instance of the Metric item is a list of measurements (single data points)
+    and/or aggregations.
+
+    Args:
+        ver: Data base data.
+        metrics: List of metrics. Only one metric in the list is currently supported
+        by Application Insights storage. If multiple data points were sent only the
+        first one will be used.
+        properties:Collection of custom properties.
+    """
+
     __slots__ = ("ver", "metrics", "properties")
 
-    def __init__(self, ver=2, metrics=None, properties=None) -> None:
+    def __init__(
+        self,
+        ver: int = 2,
+        metrics: typing.List[DataPoint] = None,
+        properties: typing.Dict[str, any] = None,
+    ) -> None:
         if metrics is None:
             metrics = []
         self.ver = ver
@@ -236,6 +407,29 @@ class MetricData(BaseObject):
 
 
 class RemoteDependency(BaseObject):
+    """An instance of Remote Dependency represents an interaction of the monitored component
+    with a remote component/service like SQL or an HTTP endpoint.
+
+    Args:
+        ver: Schema version.
+        name: Name of the command initiated with this dependency call. Low cardinality value.
+        Examples are stored procedure name and URL path template.
+        id: Identifier of a dependency call instance. Used for correlation with the request
+        telemetry item corresponding to this dependency call.
+        result_code: Result code of a dependency call. Examples are SQL error code and HTTP
+        status code.
+        duration: Request duration in format: DD.HH:MM:SS.MMMMMM. Must be less than 1000 days.
+        success: Indication of successfull or unsuccessfull call.
+        data: Command initiated by this dependency call. Examples are SQL statement and HTTP
+        URL's with all query parameters.
+        type: Dependency type name. Very low cardinality value for logical grouping of
+        dependencies and interpretation of other fields like commandName and resultCode.
+        Examples are SQL, Azure table, and HTTP.
+        target: Target site of a dependency call. Examples are server name, host address.
+        properties: Collection of custom properties.
+        measurements: Collection of custom measurements.
+    """
+
     __slots__ = (
         "ver",
         "name",
@@ -252,17 +446,17 @@ class RemoteDependency(BaseObject):
 
     def __init__(
         self,
-        ver=2,
-        name="",
-        id="",
-        result_code="",
-        duration="",
-        success=True,
-        data=None,
-        type=None,
-        target=None,
-        properties=None,
-        measurements=None,
+        ver: int = 2,
+        name: str = "",
+        id: str = "",
+        result_code: str = "",
+        duration: str = "",
+        success: bool = True,
+        data: Data = None,
+        type: str = None,
+        target: str = None,
+        properties: typing.Dict[str, any] = None,
+        measurements: typing.Dict[str, int] = None,
     ) -> None:
         self.ver = ver
         self.name = name
@@ -293,6 +487,28 @@ class RemoteDependency(BaseObject):
 
 
 class Request(BaseObject):
+    """An instance of Request represents completion of an external request to the
+    application to do work and contains a summary of that request execution and the
+    results.
+
+    Args:
+        ver: Schema version.
+        id: Identifier of a request call instance. Used for correlation between request
+        and other telemetry items.
+        duration: Request duration in format: DD.HH:MM:SS.MMMMMM. Must be less than 1000
+        days.
+        response_code: Response code from Request
+        success: Indication of successfull or unsuccessfull call.
+        source: Source of the request. Examples are the instrumentation key of the caller
+        or the ip address of the caller.
+        name: Name of the request. Represents code path taken to process request. Low
+        cardinality value to allow better grouping of requests. For HTTP requests it
+        represents the HTTP method and URL path template like 'GET /values/{id}'.
+        url: Request URL with all query string parameters.
+        properties: Collection of custom properties.
+        measurements: Collection of custom measurements.
+    """
+
     __slots__ = (
         "ver",
         "id",
@@ -308,16 +524,16 @@ class Request(BaseObject):
 
     def __init__(
         self,
-        ver=2,
-        id="",
-        duration="",
-        response_code="",
-        success=True,
-        source=None,
-        name=None,
-        url=None,
-        properties=None,
-        measurements=None,
+        ver: int = 2,
+        id: str = "",
+        duration: str = "",
+        response_code: str = "",
+        success: bool = True,
+        source: str = None,
+        name: str = None,
+        url: str = None,
+        properties: typing.Dict[str, any] = None,
+        measurements: typing.Dict[str, int] = None,
     ) -> None:
         self.ver = ver
         self.id = id

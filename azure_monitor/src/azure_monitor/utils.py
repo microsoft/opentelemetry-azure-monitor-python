@@ -7,11 +7,12 @@ import re
 import sys
 import threading
 import time
+import typing
 from enum import Enum
 
+from opentelemetry.sdk.metrics.export import MetricsExportResult
 from opentelemetry.sdk.trace.export import SpanExportResult
 from opentelemetry.sdk.version import __version__ as opentelemetry_version
-
 
 from azure_monitor.protocol import BaseObject
 from azure_monitor.version import __version__ as ext_version
@@ -60,7 +61,7 @@ class ExportResult(Enum):
     FAILED_NOT_RETRYABLE = 2
 
 
-def get_trace_export_result(result: ExportResult):
+def get_trace_export_result(result: ExportResult) -> SpanExportResult:
     if result == ExportResult.SUCCESS:
         return SpanExportResult.SUCCESS
     elif result == ExportResult.FAILED_RETRYABLE:
@@ -71,13 +72,34 @@ def get_trace_export_result(result: ExportResult):
         return None
 
 
+def get_metrics_export_result(result: ExportResult) -> MetricsExportResult:
+    if result == ExportResult.SUCCESS:
+        return MetricsExportResult.SUCCESS
+    elif result == ExportResult.FAILED_RETRYABLE:
+        return MetricsExportResult.FAILED_RETRYABLE
+    elif result == ExportResult.FAILED_NOT_RETRYABLE:
+        return MetricsExportResult.FAILED_NOT_RETRYABLE
+    else:
+        return None
+
+
 class Options(BaseObject):
+    """Options to configure Azure exporters.
+
+    Args:
+        connection_string: Azure Connection String.
+        instrumentation_key: Azure Instrumentation Key.
+        storage_maintenance_period: Local storage maintenance interval in seconds.
+        storage_max_size: Local storage maximum size in bytes.
+        storage_path: Local storage file path.
+        storage_retention_period: Local storage retention period in seconds
+        timeout: Request timeout in seconds
+    """
 
     __slots__ = (
         "connection_string",
         "endpoint",
         "instrumentation_key",
-        "max_batch_size",
         "storage_maintenance_period",
         "storage_max_size",
         "storage_path",
@@ -87,34 +109,31 @@ class Options(BaseObject):
 
     def __init__(
         self,
-        connection_string=None,
-        endpoint="https://dc.services.visualstudio.com/v2/track",
-        instrumentation_key=None,
-        max_batch_size=100,
-        storage_maintenance_period=60,
-        storage_max_size=100 * 1024 * 1024,
-        storage_path=os.path.join(
+        connection_string: str = None,
+        instrumentation_key: str = None,
+        storage_maintenance_period: int = 60,
+        storage_max_size: int = 100 * 1024 * 1024,
+        storage_path: str = os.path.join(
             os.path.expanduser("~"),
             ".opentelemetry",
             ".azure",
             os.path.basename(sys.argv[0]) or ".console",
         ),
-        storage_retention_period=7 * 24 * 60 * 60,
-        timeout=10.0,  # networking timeout in seconds
+        storage_retention_period: int = 7 * 24 * 60 * 60,
+        timeout: int = 10.0,  # networking timeout in seconds
     ) -> None:
         self.connection_string = connection_string
-        self.endpoint = endpoint
         self.instrumentation_key = instrumentation_key
-        self.max_batch_size = max_batch_size
         self.storage_maintenance_period = storage_maintenance_period
         self.storage_max_size = storage_max_size
         self.storage_path = storage_path
         self.storage_retention_period = storage_retention_period
         self.timeout = timeout
+        self.endpoint = ""
         self._initialize()
         self._validate_instrumentation_key()
 
-    def _initialize(self):
+    def _initialize(self) -> None:
         code_cs = self._parse_connection_string(self.connection_string)
         code_ikey = self.instrumentation_key
         env_cs = self._parse_connection_string(
@@ -144,7 +163,7 @@ class Options(BaseObject):
         )
         self.endpoint = endpoint + "/v2/track"
 
-    def _validate_instrumentation_key(self):
+    def _validate_instrumentation_key(self) -> None:
         """Validates the instrumentation key used for Azure Monitor.
         An instrumentation key cannot be null or empty. An instrumentation key
         is valid for Azure Monitor only if it is a valid UUID.
@@ -156,7 +175,7 @@ class Options(BaseObject):
         if not match:
             raise ValueError("Invalid instrumentation key.")
 
-    def _parse_connection_string(self, connection_string):
+    def _parse_connection_string(self, connection_string) -> typing.Dict:
         if connection_string is None:
             return {}
         try:

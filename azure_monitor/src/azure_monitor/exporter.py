@@ -2,12 +2,12 @@
 # Licensed under the MIT License.
 import json
 import logging
+import typing
 
-# pylint: disable=import-error
 import requests
 
-
 from azure_monitor import utils
+from azure_monitor.protocol import Envelope
 from azure_monitor.storage import LocalFileStorage
 
 logger = logging.getLogger(__name__)
@@ -24,7 +24,9 @@ class BaseExporter:
             retention_period=self.options.storage_retention_period,
         )
 
-    def add_telemetry_processor(self, processor):
+    def add_telemetry_processor(
+        self, processor: typing.Callable[..., any]
+    ) -> None:
         """Adds telemetry processor to the collection.
 
         Telemetry processors will be called one by one before telemetry
@@ -33,11 +35,13 @@ class BaseExporter:
         """
         self._telemetry_processors.append(processor)
 
-    def clear_telemetry_processors(self):
+    def clear_telemetry_processors(self) -> None:
         """Removes all telemetry processors"""
         self._telemetry_processors = []
 
-    def apply_telemetry_processors(self, envelopes):
+    def apply_telemetry_processors(
+        self, envelopes: typing.List[Envelope]
+    ) -> typing.List[Envelope]:
         """Applies all telemetry processors in the order they were added.
 
         This function will return the list of envelopes to be exported after
@@ -61,7 +65,7 @@ class BaseExporter:
                 filtered_envelopes.append(envelope)
         return filtered_envelopes
 
-    def _transmit_from_storage(self):
+    def _transmit_from_storage(self) -> None:
         for blob in self.storage.gets():
             # give a few more seconds for blob lease operation
             # to reduce the chance of race (for perf consideration)
@@ -73,14 +77,16 @@ class BaseExporter:
                 else:
                     blob.delete(silent=True)
 
-    def _transmit(self, envelopes_to_export):
+    def _transmit(
+        self, envelopes_to_export: typing.List[Envelope]
+    ) -> utils.ExportResult:
         """
         Transmit the data envelopes to the ingestion service.
 
         Returns an ExportResult, this function should never
         throw an exception.
         """
-        if envelopes_to_export:
+        if len(envelopes_to_export) > 0:
             try:
                 response = requests.post(
                     url=self.options.endpoint,

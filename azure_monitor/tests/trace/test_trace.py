@@ -10,13 +10,13 @@ from unittest import mock
 
 # pylint: disable=import-error
 from opentelemetry.sdk.trace import Span
-from opentelemetry.sdk.trace.export import SpanExportResult
 from opentelemetry.trace import Link, SpanContext, SpanKind
 from opentelemetry.trace.status import Status, StatusCanonicalCode
 
 from azure_monitor.protocol import Envelope
 from azure_monitor.trace import AzureMonitorSpanExporter
-from azure_monitor.utils import Options
+from azure_monitor.utils import ExportResult, Options
+
 
 TEST_FOLDER = os.path.abspath(".test.exporter")
 
@@ -40,12 +40,23 @@ def throw(exc_type, *args, **kwargs):
 class TestAzureExporter(unittest.TestCase):
     @classmethod
     def setUpClass(self):
+        os.environ.clear()
         os.environ[
             "APPINSIGHTS_INSTRUMENTATIONKEY"
         ] = "1234abcd-5678-4efa-8abc-1234567890ab"
 
-    @mock.patch("requests.post", return_value=mock.Mock())
-    def test_export_empty(self, request_mock):
+    def test_constructor(self):
+        """Test the constructor."""
+        exporter = AzureMonitorSpanExporter(
+            instrumentation_key="4321abcd-5678-4efa-8abc-1234567890ab"
+        )
+        self.assertIsInstance(exporter.options, Options)
+        self.assertEqual(
+            exporter.options.instrumentation_key,
+            "4321abcd-5678-4efa-8abc-1234567890ab",
+        )
+
+    def test_export_empty(self):
         exporter = AzureMonitorSpanExporter(
             storage_path=os.path.join(TEST_FOLDER, self.id())
         )
@@ -80,7 +91,7 @@ class TestAzureExporter(unittest.TestCase):
             )
             test_span.start()
             test_span.end()
-            transmit.return_value = SpanExportResult.FAILED_RETRYABLE
+            transmit.return_value = ExportResult.FAILED_RETRYABLE
             exporter.export([test_span])
         self.assertEqual(len(os.listdir(exporter.storage.path)), 1)
         self.assertIsNone(exporter.storage.get())
@@ -91,7 +102,7 @@ class TestAzureExporter(unittest.TestCase):
     def test_export_success(self, span_to_envelope_mock):
         span_to_envelope_mock.return_value = ["bar"]
         exporter = AzureMonitorSpanExporter(
-            max_batch_size=1, storage_path=os.path.join(TEST_FOLDER, self.id())
+            storage_path=os.path.join(TEST_FOLDER, self.id())
         )
         with mock.patch(
             "azure_monitor.trace.AzureMonitorSpanExporter._transmit"
