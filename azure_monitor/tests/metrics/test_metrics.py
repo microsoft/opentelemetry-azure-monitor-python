@@ -7,7 +7,7 @@ import unittest
 from unittest import mock
 
 from opentelemetry import metrics
-from opentelemetry.sdk.metrics import Counter, MeterProvider
+from opentelemetry.sdk.metrics import Counter, Meter
 from opentelemetry.sdk.metrics.export import MetricRecord, MetricsExportResult
 from opentelemetry.sdk.metrics.export.aggregate import CounterAggregator
 from opentelemetry.sdk.util import ns_to_iso_str
@@ -24,8 +24,8 @@ class TestAzureMetricsExporter(unittest.TestCase):
             "APPINSIGHTS_INSTRUMENTATIONKEY"
         ] = "1234abcd-5678-4efa-8abc-1234567890ab"
 
-        metrics.set_preferred_meter_provider_implementation(lambda _: MeterProvider())
-        self._meter = metrics.get_meter(__name__)
+        metrics.set_preferred_meter_implementation(lambda _: Meter())
+        self._meter = metrics.meter()
         self._test_metric = self._meter.create_metric(
             "testname", "testdesc", "unit", int, Counter, ["environment"]
         )
