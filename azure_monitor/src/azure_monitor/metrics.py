@@ -69,7 +69,6 @@ class AzureMonitorMetricsExporter(BaseExporter, MetricsExporter):
         properties = {}
         for label_tuple in metric_record.label_set.labels:
             properties[label_tuple[0]] = label_tuple[1]
-
         data = protocol.MetricData(metrics=[data_point], properties=properties)
         envelope.data = protocol.Data(base_data=data, base_type="MetricData")
         return envelope

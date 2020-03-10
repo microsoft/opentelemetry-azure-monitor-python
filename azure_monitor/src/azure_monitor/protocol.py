@@ -388,22 +388,22 @@ class MetricData(BaseObject):
     def __init__(
         self,
         ver: int = 2,
-        metrics: typing.List[DataPoint] = [],
+        metrics: typing.List[DataPoint] = None,
         properties: typing.Dict[str, any] = None,
     ) -> None:
         if metrics is None:
             metrics = []
         self.ver = ver
-        self.metrics = list(map(
-            lambda x: x.to_dict(),
-            metrics,
-        ))
+        self.metrics = metrics
         self.properties = properties
 
     def to_dict(self):
         return {
             "ver": self.ver,
-            "metrics": self.metrics,
+            "metrics": list(map(
+                lambda x: x.to_dict(),
+                self.metrics,
+            )),
             "properties": self.properties,
         }
 
