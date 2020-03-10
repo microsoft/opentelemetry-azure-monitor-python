@@ -11,7 +11,11 @@ from opentelemetry.trace import Span, SpanKind
 from opentelemetry.trace.status import StatusCanonicalCode
 
 from azure_monitor import protocol, utils
-from azure_monitor.exporter import BaseExporter
+from azure_monitor.export import (
+    BaseExporter,
+    ExportResult,
+    get_trace_export_result,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -28,12 +32,12 @@ class AzureMonitorSpanExporter(BaseExporter, SpanExporter):
         )
         try:
             result = self._transmit(envelopes_to_export)
-            if result == utils.ExportResult.FAILED_RETRYABLE:
+            if result == ExportResult.FAILED_RETRYABLE:
                 self.storage.put(envelopes, result)
-            if result == utils.ExportResult.SUCCESS:
+            if result == ExportResult.SUCCESS:
                 # Try to send any cached events
                 self._transmit_from_storage()
-            return utils.get_trace_export_result(result)
+            return get_trace_export_result(result)
         except Exception:
             logger.exception("Exception occurred while exporting the data.")
 

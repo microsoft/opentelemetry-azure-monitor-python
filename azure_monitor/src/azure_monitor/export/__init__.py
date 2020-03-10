@@ -6,17 +6,29 @@ import typing
 
 import requests
 
-from azure_monitor import utils
+from enum import Enum
+
+from opentelemetry.sdk.metrics.export import MetricsExportResult
+from opentelemetry.sdk.trace.export import SpanExportResult
+
+from azure_monitor.options import ExporterOptions
 from azure_monitor.protocol import Envelope
 from azure_monitor.storage import LocalFileStorage
 
+
 logger = logging.getLogger(__name__)
+
+
+class ExportResult(Enum):
+    SUCCESS = 0
+    FAILED_RETRYABLE = 1
+    FAILED_NOT_RETRYABLE = 2
 
 
 class BaseExporter:
     def __init__(self, **options):
         self._telemetry_processors = []
-        self.options = utils.Options(**options)
+        self.options = ExporterOptions(**options)
         self.storage = LocalFileStorage(
             path=self.options.storage_path,
             max_size=self.options.storage_max_size,
@@ -72,14 +84,14 @@ class BaseExporter:
             if blob.lease(self.options.timeout + 5):
                 envelopes = blob.get()  # TODO: handle error
                 result = self._transmit(envelopes)
-                if result == utils.ExportResult.FAILED_RETRYABLE:
+                if result == ExportResult.FAILED_RETRYABLE:
                     blob.lease(1)
                 else:
                     blob.delete(silent=True)
 
     def _transmit(
         self, envelopes_to_export: typing.List[Envelope]
-    ) -> utils.ExportResult:
+    ) -> ExportResult:
         """
         Transmit the data envelopes to the ingestion service.
 
@@ -99,7 +111,7 @@ class BaseExporter:
                 )
             except Exception as ex:
                 logger.warning("Transient client side error %s.", ex)
-                return utils.ExportResult.FAILED_RETRYABLE
+                return ExportResult.FAILED_RETRYABLE
 
             text = "N/A"
             data = None
@@ -115,7 +127,7 @@ class BaseExporter:
 
             if response.status_code == 200:
                 logger.info("Transmission succeeded: %s.", text)
-                return utils.ExportResult.SUCCESS
+                return ExportResult.SUCCESS
             if response.status_code == 206:  # Partial Content
                 # TODO: store the unsent data
                 if data:
@@ -146,7 +158,7 @@ class BaseExporter:
                             text,
                             ex,
                         )
-                    return utils.ExportResult.FAILED_NOT_RETRYABLE
+                    return ExportResult.FAILED_NOT_RETRYABLE
                 # cannot parse response body, fallback to retry
 
             if response.status_code in (
@@ -155,8 +167,30 @@ class BaseExporter:
                 500,  # Internal Server Error
                 503,  # Service Unavailable
             ):
-                return utils.ExportResult.FAILED_RETRYABLE
+                return ExportResult.FAILED_RETRYABLE
 
-            return utils.ExportResult.FAILED_NOT_RETRYABLE
+            return ExportResult.FAILED_NOT_RETRYABLE
         # No spans to export
-        return utils.ExportResult.SUCCESS
+        return ExportResult.SUCCESS
+
+
+def get_trace_export_result(result: ExportResult) -> SpanExportResult:
+    if result == ExportResult.SUCCESS:
+        return SpanExportResult.SUCCESS
+    elif result == ExportResult.FAILED_RETRYABLE:
+        return SpanExportResult.FAILED_RETRYABLE
+    elif result == ExportResult.FAILED_NOT_RETRYABLE:
+        return SpanExportResult.FAILED_NOT_RETRYABLE
+    else:
+        return None
+
+
+def get_metrics_export_result(result: ExportResult) -> MetricsExportResult:
+    if result == ExportResult.SUCCESS:
+        return MetricsExportResult.SUCCESS
+    elif result == ExportResult.FAILED_RETRYABLE:
+        return MetricsExportResult.FAILED_RETRYABLE
+    elif result == ExportResult.FAILED_NOT_RETRYABLE:
+        return MetricsExportResult.FAILED_NOT_RETRYABLE
+    else:
+        return None

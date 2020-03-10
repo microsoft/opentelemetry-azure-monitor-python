@@ -13,9 +13,10 @@ from opentelemetry.sdk.trace import Span
 from opentelemetry.trace import Link, SpanContext, SpanKind
 from opentelemetry.trace.status import Status, StatusCanonicalCode
 
+from azure_monitor.export import ExportResult
+from azure_monitor.export.trace import AzureMonitorSpanExporter
+from azure_monitor.options import ExporterOptions
 from azure_monitor.protocol import Envelope
-from azure_monitor.trace import AzureMonitorSpanExporter
-from azure_monitor.utils import ExportResult, Options
 
 
 TEST_FOLDER = os.path.abspath(".test.exporter")
@@ -50,7 +51,7 @@ class TestAzureExporter(unittest.TestCase):
         exporter = AzureMonitorSpanExporter(
             instrumentation_key="4321abcd-5678-4efa-8abc-1234567890ab"
         )
-        self.assertIsInstance(exporter.options, Options)
+        self.assertIsInstance(exporter.options, ExporterOptions)
         self.assertEqual(
             exporter.options.instrumentation_key,
             "4321abcd-5678-4efa-8abc-1234567890ab",
@@ -63,7 +64,7 @@ class TestAzureExporter(unittest.TestCase):
         exporter.export([])
         self.assertEqual(len(os.listdir(exporter.storage.path)), 0)
 
-    @mock.patch("azure_monitor.trace.logger")
+    @mock.patch("azure_monitor.export.trace.logger")
     def test_export_exception(self, mock_logger):
         exporter = AzureMonitorSpanExporter(
             storage_path=os.path.join(TEST_FOLDER, self.id())
@@ -72,7 +73,7 @@ class TestAzureExporter(unittest.TestCase):
         mock_logger.exception.assert_called()
 
     @mock.patch(
-        "azure_monitor.trace.AzureMonitorSpanExporter.span_to_envelope"
+        "azure_monitor.export.trace.AzureMonitorSpanExporter.span_to_envelope"
     )  # noqa: E501
     def test_export_failure(self, span_to_envelope_mock):
         span_to_envelope_mock.return_value = ["bar"]
@@ -80,7 +81,7 @@ class TestAzureExporter(unittest.TestCase):
             storage_path=os.path.join(TEST_FOLDER, self.id())
         )
         with mock.patch(
-            "azure_monitor.trace.AzureMonitorSpanExporter._transmit"
+            "azure_monitor.export.trace.AzureMonitorSpanExporter._transmit"
         ) as transmit:  # noqa: E501
             test_span = Span(
                 name="test",
@@ -97,7 +98,7 @@ class TestAzureExporter(unittest.TestCase):
         self.assertIsNone(exporter.storage.get())
 
     @mock.patch(
-        "azure_monitor.trace.AzureMonitorSpanExporter.span_to_envelope"
+        "azure_monitor.export.trace.AzureMonitorSpanExporter.span_to_envelope"
     )  # noqa: E501
     def test_export_success(self, span_to_envelope_mock):
         span_to_envelope_mock.return_value = ["bar"]
@@ -105,7 +106,7 @@ class TestAzureExporter(unittest.TestCase):
             storage_path=os.path.join(TEST_FOLDER, self.id())
         )
         with mock.patch(
-            "azure_monitor.trace.AzureMonitorSpanExporter._transmit"
+            "azure_monitor.export.trace.AzureMonitorSpanExporter._transmit"
         ) as transmit:  # noqa: E501
             transmit.return_value = 0
             exporter.export([])

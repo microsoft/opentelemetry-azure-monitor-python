@@ -14,7 +14,11 @@ from opentelemetry.sdk.metrics.export import (
 from opentelemetry.sdk.util import ns_to_iso_str
 
 from azure_monitor import protocol, utils
-from azure_monitor.exporter import BaseExporter
+from azure_monitor.export import (
+    BaseExporter,
+    ExportResult,
+    get_metrics_export_result,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -35,10 +39,10 @@ class AzureMonitorMetricsExporter(BaseExporter, MetricsExporter):
             result = self._transmit(envelopes_to_export)
             if result == MetricsExportResult.FAILED_RETRYABLE:
                 self.storage.put(envelopes, result)
-            if result == utils.ExportResult.SUCCESS:
+            if result == ExportResult.SUCCESS:
                 # Try to send any cached events
                 self._transmit_from_storage()
-            return utils.get_metrics_export_result(result)
+            return get_metrics_export_result(result)
         except Exception:
             logger.exception("Exception occurred while exporting the data.")
 
