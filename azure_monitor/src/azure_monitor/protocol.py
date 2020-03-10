@@ -37,7 +37,7 @@ class Data(BaseObject):
         self.base_type = base_type
 
     def to_dict(self):
-        return {"baseData": self.base_data, "baseType": self.base_type}
+        return {"baseData": self.base_data.to_dict(), "baseType": self.base_type}
 
 
 class DataPointType(Enum):
@@ -169,7 +169,6 @@ class Envelope(BaseObject):
             "flags": self.flags,
             "tags": self.tags,
             "data": self.data.to_dict() if self.data else None,
-            "baseType": self.data.base_type if self.data else None,
         }
 
 
@@ -389,13 +388,16 @@ class MetricData(BaseObject):
     def __init__(
         self,
         ver: int = 2,
-        metrics: typing.List[DataPoint] = None,
+        metrics: typing.List[DataPoint] = [],
         properties: typing.Dict[str, any] = None,
     ) -> None:
         if metrics is None:
             metrics = []
         self.ver = ver
-        self.metrics = metrics
+        self.metrics = list(map(
+            lambda x: x.to_dict(),
+            metrics,
+        ))
         self.properties = properties
 
     def to_dict(self):

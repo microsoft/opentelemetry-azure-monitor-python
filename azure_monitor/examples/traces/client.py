@@ -6,18 +6,20 @@
 import requests
 from opentelemetry import trace
 from opentelemetry.ext import http_requests
-from opentelemetry.sdk.trace import TracerSource
+from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import BatchExportSpanProcessor
 
 from azure_monitor import AzureMonitorSpanExporter
 
-trace.set_preferred_tracer_source_implementation(lambda T: TracerSource())
-tracer = trace.tracer_source().get_tracer(__name__)
-http_requests.enable(trace.tracer_source())
+trace.set_preferred_tracer_provider_implementation(lambda T: TracerProvider())
+tracer = trace.get_tracer(__name__)
+http_requests.enable(trace.tracer_provider())
 span_processor = BatchExportSpanProcessor(
-    AzureMonitorSpanExporter(instrumentation_key="<INSTRUMENTATION KEY HERE>")
+    AzureMonitorSpanExporter(
+        connection_string="InstrumentationKey=<INSTRUMENTATION KEY HERE>"
+    )
 )
-trace.tracer_source().add_span_processor(span_processor)
+trace.tracer_provider().add_span_processor(span_processor)
 
 response = requests.get(url="http://127.0.0.1:8080/")
 span_processor.shutdown()
