@@ -90,19 +90,19 @@ class BaseExporter:
                     blob.delete(silent=True)
 
     def _transmit(
-        self, envelopes_to_export: typing.List[Envelope]
-    ) -> ExportResult:
+        self, envelopes: typing.List[Envelope]
+    ) -> utils.ExportResult:
         """
         Transmit the data envelopes to the ingestion service.
 
         Returns an ExportResult, this function should never
         throw an exception.
         """
-        if len(envelopes_to_export) > 0:
+        if len(envelopes) > 0:
             try:
                 response = requests.post(
                     url=self.options.endpoint,
-                    data=json.dumps(envelopes_to_export),
+                    data=json.dumps(envelopes),
                     headers={
                         "Accept": "application/json",
                         "Content-Type": "application/json; charset=utf-8",
@@ -110,8 +110,8 @@ class BaseExporter:
                     timeout=self.options.timeout,
                 )
             except Exception as ex:
-                logger.warning("Transient client side error %s.", ex)
-                return ExportResult.FAILED_RETRYABLE
+                logger.warning("Transient client side error: %s.", ex)
+                return utils.ExportResult.FAILED_RETRYABLE
 
             text = "N/A"
             data = None
@@ -140,14 +140,14 @@ class BaseExporter:
                                 503,  # Service Unavailable
                             ):
                                 resend_envelopes.append(
-                                    envelopes_to_export[error["index"]]
+                                    envelopes[error["index"]]
                                 )
                             else:
                                 logger.error(
                                     "Data drop %s: %s %s.",
                                     error["statusCode"],
                                     error["message"],
-                                    envelopes_to_export[error["index"]],
+                                    envelopes[error["index"]],
                                 )
                         if resend_envelopes:
                             self.storage.put(resend_envelopes)

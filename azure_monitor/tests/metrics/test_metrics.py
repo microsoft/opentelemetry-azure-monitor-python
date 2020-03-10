@@ -1,7 +1,5 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
-
-
 import json
 import os
 import shutil
@@ -92,8 +90,9 @@ class TestAzureMetricsExporter(unittest.TestCase):
         self.assertIsInstance(envelope.data.base_data, MetricData)
         self.assertEqual(envelope.data.base_data.ver, 2)
         self.assertEqual(len(envelope.data.base_data.metrics), 1)
-        self.assertEqual(envelope.data.base_data.metrics[0].ns, "testname")
-        self.assertEqual(envelope.data.base_data.metrics[0].name, "testdesc")
+        self.assertIsInstance(envelope.data.base_data.metrics[0], DataPoint)
+        self.assertEqual(envelope.data.base_data.metrics[0].ns, "testdesc")
+        self.assertEqual(envelope.data.base_data.metrics[0].name, "testname")
         self.assertEqual(envelope.data.base_data.metrics[0].value, 123)
         self.assertEqual(
             envelope.data.base_data.properties["environment"], "staging"

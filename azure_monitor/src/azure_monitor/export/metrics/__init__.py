@@ -30,13 +30,13 @@ class AzureMonitorMetricsExporter(BaseExporter, MetricsExporter):
     def export(
         self, metric_records: Sequence[MetricRecord]
     ) -> MetricsExportResult:
-        envelopes = map(self.metric_to_envelope, metric_records)
-        envelopes_to_export = map(
+        envelopes = list(map(self.metric_to_envelope, metric_records))
+        envelopes = list(map(
             lambda x: x.to_dict(),
-            tuple(self.apply_telemetry_processors(envelopes)),
-        )
+            self.apply_telemetry_processors(envelopes),
+        ))
         try:
-            result = self._transmit(envelopes_to_export)
+            result = self._transmit(envelopes)
             if result == MetricsExportResult.FAILED_RETRYABLE:
                 self.storage.put(envelopes, result)
             if result == ExportResult.SUCCESS:
@@ -64,16 +64,15 @@ class AzureMonitorMetricsExporter(BaseExporter, MetricsExporter):
         envelope.name = "Microsoft.ApplicationInsights.Metric"
 
         data_point = protocol.DataPoint(
-            ns=metric_record.metric.name,
-            name=metric_record.metric.description,
+            ns=metric_record.metric.description,
+            name=metric_record.metric.name,
             value=metric_record.aggregator.checkpoint,
-            kind=protocol.DataPointType.MEASUREMENT,
+            kind=protocol.DataPointType.MEASUREMENT.value,
         )
 
         properties = {}
         for label_tuple in metric_record.label_set.labels:
             properties[label_tuple[0]] = label_tuple[1]
-
         data = protocol.MetricData(metrics=[data_point], properties=properties)
         envelope.data = protocol.Data(base_data=data, base_type="MetricData")
         return envelope
