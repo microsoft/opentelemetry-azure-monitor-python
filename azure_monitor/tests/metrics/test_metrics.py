@@ -15,7 +15,7 @@ from opentelemetry.sdk.util import ns_to_iso_str
 from azure_monitor.export import ExportResult
 from azure_monitor.export.metrics import AzureMonitorMetricsExporter
 from azure_monitor.options import ExporterOptions
-from azure_monitor.protocol import Data, Envelope, MetricData
+from azure_monitor.protocol import Data, DataPoint, Envelope, MetricData
 
 
 class TestAzureMetricsExporter(unittest.TestCase):

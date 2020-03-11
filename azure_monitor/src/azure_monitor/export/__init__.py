@@ -89,9 +89,7 @@ class BaseExporter:
                 else:
                     blob.delete(silent=True)
 
-    def _transmit(
-        self, envelopes: typing.List[Envelope]
-    ) -> utils.ExportResult:
+    def _transmit(self, envelopes: typing.List[Envelope]) -> ExportResult:
         """
         Transmit the data envelopes to the ingestion service.
 
@@ -111,7 +109,7 @@ class BaseExporter:
                 )
             except Exception as ex:
                 logger.warning("Transient client side error: %s.", ex)
-                return utils.ExportResult.FAILED_RETRYABLE
+                return ExportResult.FAILED_RETRYABLE
 
             text = "N/A"
             data = None

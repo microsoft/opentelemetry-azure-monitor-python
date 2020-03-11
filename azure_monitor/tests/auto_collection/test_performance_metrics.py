@@ -1,7 +1,7 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 
-
+import collections
 import json
 import os
 import shutil
@@ -10,9 +10,6 @@ from unittest import mock
 
 from opentelemetry import metrics
 from opentelemetry.sdk.metrics import Gauge, Meter
-from opentelemetry.sdk.metrics.export import MetricRecord, MetricsExportResult
-from opentelemetry.sdk.metrics.export.aggregate import CounterAggregator
-from opentelemetry.sdk.util import ns_to_iso_str
 
 from azure_monitor.auto_collection import PerformanceMetrics
 
@@ -31,26 +28,128 @@ class TestPerformanceMetrics(unittest.TestCase):
         metrics._METER, metrics._METER_FACTORY = cls._meter_defaults
 
     def test_constructor(self):
-        """Test the constructor."""
-        auto_collector = PerformanceMetrics(
+        mock_meter = mock.Mock()
+        performance_metrics_collector = PerformanceMetrics(
+            meter=mock_meter, label_set=self._test_label_set
+        )
+        self.assertEqual(performance_metrics_collector._meter, mock_meter)
+        self.assertEqual(
+            performance_metrics_collector._label_set, self._test_label_set
+        )
+
+        self.assertEqual(mock_meter.create_metric.call_count, 4)
+
+        create_metric_calls = mock_meter.create_metric.call_args_list
+
+        self.assertEqual(
+            create_metric_calls[0][0],
+            (
+                "\\Processor(_Total)\\% Processor Time",
+                "Processor time as a percentage",
+                "percentage",
+                float,
+                Gauge,
+            ),
+        )
+        self.assertEqual(
+            create_metric_calls[1][0],
+            (
+                "\\Memory\\Available Bytes",
+                "Amount of available memory in bytes",
+                "byte",
+                int,
+                Gauge,
+            ),
+        )
+        self.assertEqual(
+            create_metric_calls[2][0],
+            (
+                "\\Process(??APP_WIN32_PROC??)\\% Processor Time",
+                "Process CPU usage as a percentage",
+                "percentage",
+                float,
+                Gauge,
+            ),
+        )
+        self.assertEqual(
+            create_metric_calls[3][0],
+            (
+                "\\Process(??APP_WIN32_PROC??)\\Private Bytes",
+                "Amount of memory process has used in bytes",
+                "byte",
+                int,
+                Gauge,
+            ),
+        )
+
+    def test_track_cpu(self):
+        performance_metrics_collector = PerformanceMetrics(
             meter=self._meter, label_set=self._test_label_set
         )
-        self.assertEqual(auto_collector._meter, self._meter)
-        self.assertEqual(auto_collector._label_set, self._test_label_set)
+        with mock.patch("psutil.cpu_times_percent") as processor_mock:
+            cpu = collections.namedtuple("cpu", "idle")
+            cpu_times = cpu(idle=94.5)
+            processor_mock.return_value = cpu_times
+            performance_metrics_collector._track_cpu()
+            self.assertEqual(
+                performance_metrics_collector._cpu_handle.aggregator.current,
+                5.5,
+            )
 
-        result_metric = list(self._meter.metrics)[0]
-        self.assertIsInstance(result_metric, Gauge)
-        self.assertEqual(
-            result_metric.name, "\Processor(_Total)\% Processor Time"
+    @mock.patch("azure_monitor.auto_collection.performance_metrics.psutil")
+    def test_track_process_cpu(self, psutil_mock):
+        with mock.patch(
+            "azure_monitor.auto_collection.performance_metrics.PROCESS"
+        ) as process_mock:
+            performance_metrics_collector = PerformanceMetrics(
+                meter=self._meter, label_set=self._test_label_set
+            )
+            process_mock.cpu_percent.return_value = 44.4
+            psutil_mock.cpu_count.return_value = 2
+            performance_metrics_collector._track_process_cpu()
+            self.assertEqual(
+                performance_metrics_collector._process_cpu_handle.aggregator.current,
+                22.2,
+            )
+
+    @mock.patch("azure_monitor.auto_collection.performance_metrics.logger")
+    def test_track_process_cpu_exception(self, logger_mock):
+        with mock.patch(
+            "azure_monitor.auto_collection.performance_metrics.psutil"
+        ) as psutil_mock:
+            performance_metrics_collector = PerformanceMetrics(
+                meter=self._meter, label_set=self._test_label_set
+            )
+            psutil_mock.cpu_count.return_value = None
+            performance_metrics_collector._track_process_cpu()
+            logger_mock.exception.assert_called()
+
+    @mock.patch("psutil.virtual_memory")
+    def test_track_memory(self, psutil_mock):
+        performance_metrics_collector = PerformanceMetrics(
+            meter=self._meter, label_set=self._test_label_set
         )
+        memory = collections.namedtuple("memory", "available")
+        vmem = memory(available=100)
+        psutil_mock.return_value = vmem
+        performance_metrics_collector._track_memory()
         self.assertEqual(
-            result_metric.description, "Processor time as a percentage"
+            performance_metrics_collector._memory_handle.aggregator.current,
+            100,
         )
-        self.assertEqual(result_metric.unit, "percentage")
-        self.assertEqual(result_metric.value_type, float)
-        self.assertEqual(
-            result_metric.get_handle(
-                self._test_label_set
-            ).aggregator.checkpoint,
-            0,
-        )
+
+    def test_track_process_memory(self):
+        with mock.patch(
+            "azure_monitor.auto_collection.performance_metrics.PROCESS"
+        ) as process_mock:
+            performance_metrics_collector = PerformanceMetrics(
+                meter=self._meter, label_set=self._test_label_set
+            )
+            memory = collections.namedtuple("memory", "rss")
+            pmem = memory(rss=100)
+            process_mock.memory_info.return_value = pmem
+            performance_metrics_collector._track_process_memory()
+            self.assertEqual(
+                performance_metrics_collector._process_memory_handle.aggregator.current,
+                100,
+            )

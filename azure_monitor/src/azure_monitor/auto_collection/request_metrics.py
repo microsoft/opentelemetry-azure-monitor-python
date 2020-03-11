@@ -10,6 +10,8 @@ from opentelemetry.sdk.metrics import Gauge
 
 logger = logging.getLogger(__name__)
 
+_requests_lock = threading.Lock()
+requests_map = dict()
 ORIGINAL_CONSTRUCTOR = HTTPServer.__init__
 
 
@@ -51,7 +53,7 @@ def server_patch(*args, **kwargs):
     return result
 
 
-class HttpRequestMetrics:
+class RequestMetrics:
     def __init__(self, meter: Meter, label_set: LabelSet):
         self._meter = meter
         self._label_set = label_set
@@ -72,7 +74,7 @@ class HttpRequestMetrics:
         request_rate_metric = self._meter.create_metric(
             "\\ASP.NET Applications(??APP_W3SVC_PROC??)\\Requests/Sec",
             "Incoming Requests Average Execution Rate",
-            "milliseconds",
+            "rps",
             int,
             Gauge,
         )
@@ -101,11 +103,13 @@ class HttpRequestMetrics:
             requests_map["last_average_duration"] = result
             requests_map["last_duration"] = requests_map.get("duration", 0)
             # Convert to milliseconds
-            self._request_duration_handle(result * 1000.0)
+            self._request_duration_handle.set(int(result * 1000.0))
         except ZeroDivisionError:
             # If interval_count is 0, exporter call made too close to previous
             # Return the previous result if this is the case
-            self._request_duration_handle(last_average_duration * 1000.0)
+            self._request_duration_handle.set(
+                int(last_average_duration * 1000.0)
+            )
 
     def _track_request_rate(self) -> None:
         """ Track Request execution rate
@@ -131,8 +135,8 @@ class HttpRequestMetrics:
             requests_map["last_time"] = current_time
             requests_map["last_count"] = requests_map.get("count", 0)
             requests_map["last_rate"] = result
-            self._request_rate_handle(result)
+            self._request_rate_handle.set(int(result))
         except ZeroDivisionError:
             # If elapsed_seconds is 0, exporter call made too close to previous
             # Return the previous result if this is the case
-            self._request_rate_handle(last_rate)
+            self._request_rate_handle.set(int(last_rate))

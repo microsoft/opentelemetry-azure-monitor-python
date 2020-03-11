@@ -18,7 +18,6 @@ from azure_monitor.export.trace import AzureMonitorSpanExporter
 from azure_monitor.options import ExporterOptions
 from azure_monitor.protocol import Envelope
 
-
 TEST_FOLDER = os.path.abspath(".test.exporter")
 
 

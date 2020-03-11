@@ -9,21 +9,21 @@ import requests
 from opentelemetry.metrics import LabelSet, Meter
 from opentelemetry.sdk.metrics import Gauge
 
-logger = logging.getLogger(__name__)
+dependency_map = dict()
+_dependency_lock = threading.Lock()
+ORIGINAL_REQUEST = requests.Session.request
 
 
-def dependency_patch(self) -> None:
+def dependency_patch(*args, **kwargs) -> None:
     result = ORIGINAL_REQUEST(*args, **kwargs)
-    # Only collect request metric if sent from non-exporter thread
-    if not execution_context.is_exporter():
-        # We don't want multiple threads updating this at once
-        with _dependency_lock:
-            count = dependency_map.get("count", 0)
-            dependency_map["count"] = count + 1
+    # We don't want multiple threads updating this at once
+    with _dependency_lock:
+        count = dependency_map.get("count", 0)
+        dependency_map["count"] = count + 1
     return result
 
 
-class HttpDependencyMetrics:
+class DependencyMetrics:
     def __init__(self, meter: Meter, label_set: LabelSet):
         self._meter = meter
         self._label_set = label_set
@@ -67,8 +67,8 @@ class HttpDependencyMetrics:
             dependency_map["last_time"] = current_time
             dependency_map["last_count"] = current_count
             dependency_map["last_result"] = result
-            self._dependency_rate_handle.set(result)
+            self._dependency_rate_handle.set(int(result))
         except ZeroDivisionError:
             # If elapsed_seconds is 0, exporter call made too close to previous
             # Return the previous result if this is the case
-            self._dependency_rate_handle.set(last_result)
+            self._dependency_rate_handle.set(int(last_result))
