@@ -41,7 +41,7 @@ class TestBaseExporter(unittest.TestCase):
     def test_constructor_wrong_options(self):
         """Test the constructor with wrong options."""
         with self.assertRaises(TypeError):
-            base = BaseExporter(something_else=6)
+            BaseExporter(something_else=6)
 
     def test_telemetry_processor_add(self):
         base = BaseExporter()

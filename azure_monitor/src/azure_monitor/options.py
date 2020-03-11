@@ -1,12 +1,11 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 import os
-import sys
 import re
+import sys
 import typing
 
 from azure_monitor.protocol import BaseObject
-
 
 INGESTION_ENDPOINT = "ingestionendpoint"
 INSTRUMENTATION_KEY = "instrumentationkey"

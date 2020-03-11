@@ -3,18 +3,15 @@
 import json
 import logging
 import typing
-
-import requests
-
 from enum import Enum
 
+import requests
 from opentelemetry.sdk.metrics.export import MetricsExportResult
 from opentelemetry.sdk.trace.export import SpanExportResult
 
 from azure_monitor.options import ExporterOptions
 from azure_monitor.protocol import Envelope
 from azure_monitor.storage import LocalFileStorage
-
 
 logger = logging.getLogger(__name__)
 

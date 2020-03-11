@@ -2,10 +2,10 @@
 # Licensed under the MIT License.
 import logging
 
-import psutil
-
 from opentelemetry.metrics import LabelSet, Meter
 from opentelemetry.sdk.metrics import Gauge
+
+import psutil
 
 logger = logging.getLogger(__name__)
 PROCESS = psutil.Process()

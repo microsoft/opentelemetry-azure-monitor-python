@@ -5,7 +5,6 @@ import threading
 import time
 
 import requests
-
 from opentelemetry.metrics import LabelSet, Meter
 from opentelemetry.sdk.metrics import Gauge
 

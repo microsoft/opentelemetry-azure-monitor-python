@@ -6,17 +6,14 @@ import json
 import os
 import shutil
 import unittest
-
-import requests
-
 from http.server import HTTPServer
 from unittest import mock
 
+import requests
 from opentelemetry import metrics
 from opentelemetry.sdk.metrics import Gauge, Meter
-from opentelemetry.sdk.util import ns_to_iso_str
 
-from azure_monitor.auto_collection import dependency_metrics, DependencyMetrics
+from azure_monitor.auto_collection import DependencyMetrics, dependency_metrics
 
 ORIGINAL_FUNCTION = requests.Session.request
 ORIGINAL_CONS = HTTPServer.__init__

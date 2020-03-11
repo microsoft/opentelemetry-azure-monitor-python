@@ -6,12 +6,10 @@ import json
 import os
 import shutil
 import unittest
-
-import requests
-
 from http.server import HTTPServer
 from unittest import mock
 
+import requests
 from opentelemetry import metrics
 from opentelemetry.sdk.metrics import Gauge, Meter
 

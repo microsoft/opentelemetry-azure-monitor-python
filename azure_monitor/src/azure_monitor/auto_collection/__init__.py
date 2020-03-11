@@ -3,10 +3,10 @@
 #
 from opentelemetry.metrics import LabelSet, Meter
 
+from azure_monitor.auto_collection.dependency_metrics import DependencyMetrics
 from azure_monitor.auto_collection.performance_metrics import (
     PerformanceMetrics,
 )
-from azure_monitor.auto_collection.dependency_metrics import DependencyMetrics
 from azure_monitor.auto_collection.request_metrics import RequestMetrics
 from azure_monitor.utils import PeriodicTask
 

@@ -3,8 +3,8 @@
 import logging
 import threading
 import time
-
 from http.server import HTTPServer
+
 from opentelemetry.metrics import LabelSet, Meter
 from opentelemetry.sdk.metrics import Gauge
 
