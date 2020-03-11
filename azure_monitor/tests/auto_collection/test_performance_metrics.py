@@ -2,9 +2,6 @@
 # Licensed under the MIT License.
 
 import collections
-import json
-import os
-import shutil
 import unittest
 from unittest import mock
 
@@ -14,6 +11,7 @@ from opentelemetry.sdk.metrics import Gauge, Meter
 from azure_monitor.auto_collection import PerformanceMetrics
 
 
+# pylint: disable=protected-access
 class TestPerformanceMetrics(unittest.TestCase):
     @classmethod
     def setUpClass(cls):

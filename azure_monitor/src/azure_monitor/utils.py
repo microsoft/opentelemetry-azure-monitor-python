@@ -9,7 +9,6 @@ import time
 
 from opentelemetry.sdk.version import __version__ as opentelemetry_version
 
-from azure_monitor.protocol import BaseObject
 from azure_monitor.version import __version__ as ext_version
 
 azure_monitor_context = {

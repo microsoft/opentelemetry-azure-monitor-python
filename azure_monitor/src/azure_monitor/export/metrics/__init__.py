@@ -24,9 +24,6 @@ logger = logging.getLogger(__name__)
 
 
 class AzureMonitorMetricsExporter(BaseExporter, MetricsExporter):
-    def __init__(self, **options):
-        super(AzureMonitorMetricsExporter, self).__init__(**options)
-
     def export(
         self, metric_records: Sequence[MetricRecord]
     ) -> MetricsExportResult:
@@ -45,7 +42,7 @@ class AzureMonitorMetricsExporter(BaseExporter, MetricsExporter):
                 # Try to send any cached events
                 self._transmit_from_storage()
             return get_metrics_export_result(result)
-        except Exception:
+        except Exception:  # pylint: disable=broad-except
             logger.exception("Exception occurred while exporting the data.")
 
     def metric_to_envelope(

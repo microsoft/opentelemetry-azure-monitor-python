@@ -7,6 +7,7 @@ import unittest
 from azure_monitor.options import ExporterOptions
 
 
+# pylint: disable=too-many-public-methods
 class TestOptions(unittest.TestCase):
     def setUp(self):
         os.environ.clear()

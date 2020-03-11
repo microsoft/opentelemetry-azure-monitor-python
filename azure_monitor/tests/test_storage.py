@@ -16,10 +16,12 @@ from azure_monitor.storage import (
 TEST_FOLDER = os.path.abspath(".test")
 
 
+# pylint: disable=invalid-name
 def setUpModule():
     os.makedirs(TEST_FOLDER)
 
 
+# pylint: disable=invalid-name
 def tearDownModule():
     shutil.rmtree(TEST_FOLDER)
 
@@ -35,13 +37,13 @@ class TestLocalFileBlob(unittest.TestCase):
     def test_delete(self):
         blob = LocalFileBlob(os.path.join(TEST_FOLDER, "foobar"))
         blob.delete(silent=True)
-        self.assertRaises(Exception, lambda: blob.delete())
+        self.assertRaises(Exception, blob.delete)
         self.assertRaises(Exception, lambda: blob.delete(silent=False))
 
     def test_get(self):
         blob = LocalFileBlob(os.path.join(TEST_FOLDER, "foobar"))
         self.assertIsNone(blob.get(silent=True))
-        self.assertRaises(Exception, lambda: blob.get())
+        self.assertRaises(Exception, blob.get)
         self.assertRaises(Exception, lambda: blob.get(silent=False))
 
     def test_put_error(self):
@@ -51,18 +53,18 @@ class TestLocalFileBlob(unittest.TestCase):
 
     def test_put_without_lease(self):
         blob = LocalFileBlob(os.path.join(TEST_FOLDER, "foobar.blob"))
-        input = (1, 2, 3)
+        test_input = (1, 2, 3)
         blob.delete(silent=True)
-        blob.put(input)
-        self.assertEqual(blob.get(), input)
+        blob.put(test_input)
+        self.assertEqual(blob.get(), test_input)
 
     def test_put_with_lease(self):
         blob = LocalFileBlob(os.path.join(TEST_FOLDER, "foobar.blob"))
-        input = (1, 2, 3)
+        test_input = (1, 2, 3)
         blob.delete(silent=True)
-        blob.put(input, lease_period=0.01)
+        blob.put(test_input, lease_period=0.01)
         blob.lease(0.01)
-        self.assertEqual(blob.get(), input)
+        self.assertEqual(blob.get(), test_input)
 
     def test_lease_error(self):
         blob = LocalFileBlob(os.path.join(TEST_FOLDER, "foobar.blob"))
@@ -70,6 +72,7 @@ class TestLocalFileBlob(unittest.TestCase):
         self.assertEqual(blob.lease(0.01), None)
 
 
+# pylint: disable=protected-access
 class TestLocalFileStorage(unittest.TestCase):
     def test_get_nothing(self):
         with LocalFileStorage(os.path.join(TEST_FOLDER, "test", "a")) as stor:
@@ -95,15 +98,15 @@ class TestLocalFileStorage(unittest.TestCase):
             self.assertIsNone(stor.get())
 
     def test_put(self):
-        input = (1, 2, 3)
+        test_input = (1, 2, 3)
         with LocalFileStorage(os.path.join(TEST_FOLDER, "bar")) as stor:
-            stor.put(input)
-            self.assertEqual(stor.get().get(), input)
+            stor.put(test_input)
+            self.assertEqual(stor.get().get(), test_input)
         with LocalFileStorage(os.path.join(TEST_FOLDER, "bar")) as stor:
-            self.assertEqual(stor.get().get(), input)
+            self.assertEqual(stor.get().get(), test_input)
             with mock.patch("os.rename", side_effect=throw(Exception)):
-                self.assertIsNone(stor.put(input, silent=True))
-                self.assertRaises(Exception, lambda: stor.put(input))
+                self.assertIsNone(stor.put(test_input, silent=True))
+                self.assertRaises(Exception, lambda: stor.put(test_input))
 
     def test_maintanence_routine(self):
         with mock.patch("os.makedirs") as m:
@@ -125,11 +128,7 @@ class TestLocalFileStorage(unittest.TestCase):
         with LocalFileStorage(os.path.join(TEST_FOLDER, "baz")) as stor:
             with mock.patch("os.listdir", side_effect=throw(Exception)):
                 stor._maintenance_routine(silent=True)
-                self.assertRaises(
-                    Exception, lambda: stor._maintenance_routine()
-                )
+                self.assertRaises(Exception, stor._maintenance_routine)
             with mock.patch("os.path.isdir", side_effect=throw(Exception)):
                 stor._maintenance_routine(silent=True)
-                self.assertRaises(
-                    Exception, lambda: stor._maintenance_routine()
-                )
+                self.assertRaises(Exception, stor._maintenance_routine)

@@ -80,11 +80,11 @@ class DataPoint(BaseObject):
         kind: DataPointType = None,
         value: float = 0.0,
         count: float = None,
-        min: float = None,
-        max: float = None,
+        min: float = None,  # pylint: disable=redefined-builtin
+        max: float = None,  # pylint: disable=redefined-builtin
         std_dev: float = None,
     ) -> None:
-        self.ns = ns
+        self.ns = ns  # pylint: disable=invalid-name
         self.name = name
         self.kind = kind
         self.value = value
@@ -241,7 +241,7 @@ class ExceptionDetails(BaseObject):
 
     def __init__(
         self,
-        id: int = None,
+        id: int = None,  # pylint: disable=redefined-builtin
         outer_id: int = None,
         type_name: str = None,
         message: str = None,
@@ -249,7 +249,7 @@ class ExceptionDetails(BaseObject):
         stack: str = None,
         parsed_stack: any = None,
     ) -> None:
-        self.id = id
+        self.id = id  # pylint: disable=invalid-name
         self.outer_id = outer_id
         self.type_name = type_name
         self.message = message
@@ -259,7 +259,7 @@ class ExceptionDetails(BaseObject):
 
     def to_dict(self):
         return {
-            "id": self.ver,
+            "id": self.id,
             "outerId": self.outer_id,
             "typeName": self.type_name,
             "message": self.message,
@@ -450,19 +450,19 @@ class RemoteDependency(BaseObject):
         self,
         ver: int = 2,
         name: str = "",
-        id: str = "",
+        id: str = "",  # pylint: disable=redefined-builtin
         result_code: str = "",
         duration: str = "",
         success: bool = True,
         data: Data = None,
-        type: str = None,
+        type: str = None,  # pylint: disable=redefined-builtin
         target: str = None,
         properties: typing.Dict[str, any] = None,
         measurements: typing.Dict[str, int] = None,
     ) -> None:
         self.ver = ver
         self.name = name
-        self.id = id
+        self.id = id  # pylint: disable=invalid-name
         self.result_code = result_code
         self.duration = duration
         self.success = success
@@ -527,7 +527,7 @@ class Request(BaseObject):
     def __init__(
         self,
         ver: int = 2,
-        id: str = "",
+        id: str = "",  # pylint: disable=redefined-builtin
         duration: str = "",
         response_code: str = "",
         success: bool = True,
@@ -538,7 +538,7 @@ class Request(BaseObject):
         measurements: typing.Dict[str, int] = None,
     ) -> None:
         self.ver = ver
-        self.id = id
+        self.id = id  # pylint: disable=invalid-name
         self.duration = duration
         self.response_code = response_code
         self.success = success

@@ -1,10 +1,6 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 
-
-import json
-import os
-import shutil
 import unittest
 from unittest import mock
 
@@ -15,6 +11,7 @@ from azure_monitor.auto_collection import AutoCollection
 from azure_monitor.utils import PeriodicTask
 
 
+# pylint: disable=protected-access
 class TestAutoCollection(unittest.TestCase):
     @classmethod
     def setUpClass(cls):

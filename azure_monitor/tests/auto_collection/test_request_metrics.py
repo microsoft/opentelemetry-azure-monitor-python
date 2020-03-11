@@ -1,10 +1,6 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 
-import collections
-import json
-import os
-import shutil
 import unittest
 from http.server import HTTPServer
 from unittest import mock
@@ -19,6 +15,7 @@ ORIGINAL_FUNCTION = requests.Session.request
 ORIGINAL_CONS = HTTPServer.__init__
 
 
+# pylint: disable=protected-access
 class TestRequestMetrics(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
@@ -77,10 +74,9 @@ class TestRequestMetrics(unittest.TestCase):
         request_metrics_collector = RequestMetrics(
             meter=self._meter, label_set=self._test_label_set
         )
-        map = request_metrics.requests_map
-        map["duration"] = 0.1
-        map["count"] = 10
-        map["last_count"] = 5
+        request_metrics.requests_map["duration"] = 0.1
+        request_metrics.requests_map["count"] = 10
+        request_metrics.requests_map["last_count"] = 5
         request_metrics_collector._track_request_duration()
         self.assertEqual(
             request_metrics_collector._request_duration_handle.aggregator.current,
@@ -91,10 +87,9 @@ class TestRequestMetrics(unittest.TestCase):
         request_metrics_collector = RequestMetrics(
             meter=self._meter, label_set=self._test_label_set
         )
-        map = request_metrics.requests_map
-        map["duration"] = 0.1
-        map["count"] = 10
-        map["last_count"] = 10
+        request_metrics.requests_map["duration"] = 0.1
+        request_metrics.requests_map["count"] = 10
+        request_metrics.requests_map["last_count"] = 10
         request_metrics_collector._track_request_duration()
         self.assertEqual(
             request_metrics_collector._request_duration_handle.aggregator.current,
@@ -130,7 +125,7 @@ class TestRequestMetrics(unittest.TestCase):
         )
 
     def test_request_patch(self):
-        map = request_metrics.requests_map
+        map = request_metrics.requests_map  # pylint: disable=redefined-builtin
         func = mock.Mock()
         new_func = request_metrics.request_patch(func)
         new_func()
@@ -181,12 +176,11 @@ class TestRequestMetrics(unittest.TestCase):
 
     def test_server_patch_no_args(self):
         request_metrics.ORIGINAL_CONSTRUCTOR = lambda x, y: None
-        r = request_metrics.server_patch(None, None)
+        req = request_metrics.server_patch(None, None)
 
-        self.assertEqual(r, None)
+        self.assertEqual(req, None)
 
     def test_server_patch_no_handler(self):
         request_metrics.ORIGINAL_CONSTRUCTOR = lambda x, y, z: None
-        r = request_metrics.server_patch(None, None, None)
-
-        self.assertEqual(r, None)
+        req = request_metrics.server_patch(None, None, None)
+        self.assertEqual(req, None)

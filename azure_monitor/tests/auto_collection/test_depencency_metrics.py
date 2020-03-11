@@ -1,10 +1,6 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 
-import collections
-import json
-import os
-import shutil
 import unittest
 from http.server import HTTPServer
 from unittest import mock
@@ -19,6 +15,7 @@ ORIGINAL_FUNCTION = requests.Session.request
 ORIGINAL_CONS = HTTPServer.__init__
 
 
+# pylint: disable=protected-access
 class TestDependencyMetrics(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
@@ -66,9 +63,8 @@ class TestDependencyMetrics(unittest.TestCase):
         metrics_collector = DependencyMetrics(
             meter=self._meter, label_set=self._test_label_set
         )
-        map = dependency_metrics.dependency_map
-        map["last_time"] = 98
-        map["count"] = 4
+        dependency_metrics.dependency_map["last_time"] = 98
+        dependency_metrics.dependency_map["count"] = 4
         metrics_collector._track_dependency_rate()
         self.assertEqual(
             metrics_collector._dependency_rate_handle.aggregator.current, 2
@@ -80,19 +76,17 @@ class TestDependencyMetrics(unittest.TestCase):
         metrics_collector = DependencyMetrics(
             meter=self._meter, label_set=self._test_label_set
         )
-        map = dependency_metrics.dependency_map
-        map["last_time"] = 100
-        map["last_result"] = 5
+        dependency_metrics.dependency_map["last_time"] = 100
+        dependency_metrics.dependency_map["last_result"] = 5
         metrics_collector._track_dependency_rate()
         self.assertEqual(
             metrics_collector._dependency_rate_handle.aggregator.current, 5
         )
 
     def test_dependency_patch(self):
-        map = dependency_metrics.dependency_map
         dependency_metrics.ORIGINAL_REQUEST = lambda x: None
         session = requests.Session()
         result = dependency_metrics.dependency_patch(session)
 
-        self.assertEqual(map["count"], 1)
+        self.assertEqual(dependency_metrics.dependency_map["count"], 1)
         self.assertIsNone(result)

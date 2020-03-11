@@ -2,10 +2,9 @@
 # Licensed under the MIT License.
 import logging
 
+import psutil
 from opentelemetry.metrics import LabelSet, Meter
 from opentelemetry.sdk.metrics import Gauge
-
-import psutil
 
 logger = logging.getLogger(__name__)
 PROCESS = psutil.Process()
@@ -85,7 +84,7 @@ class PerformanceMetrics:
             # normalize the cpu process using the number of logical CPUs
             cpu_count = psutil.cpu_count(logical=True)
             self._process_cpu_handle.set(PROCESS.cpu_percent() / cpu_count)
-        except Exception:
+        except Exception:  # pylint: disable=broad-except
             logger.exception("Error handling get process cpu usage.")
 
     def _track_memory(self) -> None:
@@ -104,5 +103,5 @@ class PerformanceMetrics:
         """
         try:
             self._process_memory_handle.set(PROCESS.memory_info().rss)
-        except Exception:
+        except Exception:  # pylint: disable=broad-except
             logger.exception("Error handling get process private bytes.")

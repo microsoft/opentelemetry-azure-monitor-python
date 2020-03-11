@@ -1,8 +1,6 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
-import json
 import os
-import shutil
 import unittest
 from unittest import mock
 
@@ -18,6 +16,7 @@ from azure_monitor.options import ExporterOptions
 from azure_monitor.protocol import Data, DataPoint, Envelope, MetricData
 
 
+# pylint: disable=protected-access
 class TestAzureMetricsExporter(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
@@ -104,18 +103,3 @@ class TestAzureMetricsExporter(unittest.TestCase):
         self.assertIsNotNone(envelope.tags["ai.device.osVersion"])
         self.assertIsNotNone(envelope.tags["ai.device.type"])
         self.assertIsNotNone(envelope.tags["ai.internal.sdkVersion"])
-
-
-class MockResponse(object):
-    def __init__(self, status_code, text):
-        self.status_code = status_code
-        self.text = text
-
-
-class MockTransport(object):
-    def __init__(self, exporter=None):
-        self.export_called = False
-        self.exporter = exporter
-
-    def export(self, datas):
-        self.export_called = True

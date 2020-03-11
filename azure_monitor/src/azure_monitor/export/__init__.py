@@ -22,6 +22,7 @@ class ExportResult(Enum):
     FAILED_NOT_RETRYABLE = 2
 
 
+# pylint: disable=broad-except
 class BaseExporter:
     def __init__(self, **options):
         self._telemetry_processors = []
@@ -86,6 +87,8 @@ class BaseExporter:
                 else:
                     blob.delete(silent=True)
 
+    # pylint: disable=too-many-branches
+    # pylint: disable=too-many-nested-blocks
     def _transmit(self, envelopes: typing.List[Envelope]) -> ExportResult:
         """
         Transmit the data envelopes to the ingestion service.
@@ -112,12 +115,12 @@ class BaseExporter:
             data = None
             try:
                 text = response.text
-            except Exception as ex:  # noqa pylint: disable=broad-except
+            except Exception as ex:
                 logger.warning("Error while reading response body %s.", ex)
             else:
                 try:
                     data = json.loads(text)
-                except Exception:  # noqa pylint: disable=broad-except
+                except Exception:
                     pass
 
             if response.status_code == 200:
@@ -172,20 +175,18 @@ class BaseExporter:
 def get_trace_export_result(result: ExportResult) -> SpanExportResult:
     if result == ExportResult.SUCCESS:
         return SpanExportResult.SUCCESS
-    elif result == ExportResult.FAILED_RETRYABLE:
+    if result == ExportResult.FAILED_RETRYABLE:
         return SpanExportResult.FAILED_RETRYABLE
-    elif result == ExportResult.FAILED_NOT_RETRYABLE:
+    if result == ExportResult.FAILED_NOT_RETRYABLE:
         return SpanExportResult.FAILED_NOT_RETRYABLE
-    else:
-        return None
+    return None
 
 
 def get_metrics_export_result(result: ExportResult) -> MetricsExportResult:
     if result == ExportResult.SUCCESS:
         return MetricsExportResult.SUCCESS
-    elif result == ExportResult.FAILED_RETRYABLE:
+    if result == ExportResult.FAILED_RETRYABLE:
         return MetricsExportResult.FAILED_RETRYABLE
-    elif result == ExportResult.FAILED_NOT_RETRYABLE:
+    if result == ExportResult.FAILED_NOT_RETRYABLE:
         return MetricsExportResult.FAILED_NOT_RETRYABLE
-    else:
-        return None
+    return None

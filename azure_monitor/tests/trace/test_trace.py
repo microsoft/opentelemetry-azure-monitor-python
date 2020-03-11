@@ -4,7 +4,6 @@
 
 import json
 import os
-import shutil
 import unittest
 from unittest import mock
 
@@ -21,14 +20,6 @@ from azure_monitor.protocol import Envelope
 TEST_FOLDER = os.path.abspath(".test.exporter")
 
 
-def setUpModule():
-    os.makedirs(TEST_FOLDER)
-
-
-def tearDownModule():
-    shutil.rmtree(TEST_FOLDER)
-
-
 def throw(exc_type, *args, **kwargs):
     def func(*_args, **_kwargs):
         raise exc_type(*args, **kwargs)
@@ -37,9 +28,11 @@ def throw(exc_type, *args, **kwargs):
 
 
 # pylint: disable=import-error
+# pylint: disable=protected-access
+# pylint: disable=too-many-lines
 class TestAzureExporter(unittest.TestCase):
     @classmethod
-    def setUpClass(self):
+    def setUpClass(cls):
         os.environ.clear()
         os.environ[
             "APPINSIGHTS_INSTRUMENTATIONKEY"
@@ -285,6 +278,7 @@ class TestAzureExporter(unittest.TestCase):
         self.assertIsNone(exporter.storage.get())
         self.assertEqual(len(os.listdir(exporter.storage.path)), 1)
 
+    # pylint: disable=too-many-statements
     def test_span_to_envelope(self):
         options = {
             "instrumentation_key": "12345678-1234-5678-abcd-12345678abcd"
@@ -1019,16 +1013,7 @@ class TestAzureExporter(unittest.TestCase):
         )
 
 
-class MockResponse(object):
+class MockResponse:
     def __init__(self, status_code, text):
         self.status_code = status_code
         self.text = text
-
-
-class MockTransport(object):
-    def __init__(self, exporter=None):
-        self.export_called = False
-        self.exporter = exporter
-
-    def export(self, datas):
-        self.export_called = True
