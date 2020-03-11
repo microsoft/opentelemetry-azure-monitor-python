@@ -19,6 +19,15 @@ from azure_monitor.protocol import Envelope
 
 TEST_FOLDER = os.path.abspath(".test.exporter.trace")
 
+# pylint: disable=invalid-name
+def setUpModule():
+    os.makedirs(TEST_FOLDER)
+
+
+# pylint: disable=invalid-name
+def tearDownModule():
+    shutil.rmtree(TEST_FOLDER)
+
 
 def throw(exc_type, *args, **kwargs):
     def func(*_args, **_kwargs):
