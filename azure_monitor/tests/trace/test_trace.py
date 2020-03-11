@@ -17,7 +17,7 @@ from azure_monitor.export.trace import AzureMonitorSpanExporter
 from azure_monitor.options import ExporterOptions
 from azure_monitor.protocol import Envelope
 
-TEST_FOLDER = os.path.abspath(".test.exporter")
+TEST_FOLDER = os.path.abspath(".test.exporter.trace")
 
 
 def throw(exc_type, *args, **kwargs):
@@ -62,7 +62,7 @@ class TestAzureExporter(unittest.TestCase):
             storage_path=os.path.join(TEST_FOLDER, self.id())
         )
         exporter.export([None])
-        mock_logger.exception.assert_called()
+        self.assertEqual(mock_logger.exception.called, True)
 
     @mock.patch(
         "azure_monitor.export.trace.AzureMonitorSpanExporter.span_to_envelope"

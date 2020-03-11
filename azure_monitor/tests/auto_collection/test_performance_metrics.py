@@ -120,7 +120,7 @@ class TestPerformanceMetrics(unittest.TestCase):
             )
             psutil_mock.cpu_count.return_value = None
             performance_metrics_collector._track_process_cpu()
-            logger_mock.exception.assert_called()
+            self.assertEqual(logger_mock.exception.called, True)
 
     @mock.patch("psutil.virtual_memory")
     def test_track_memory(self, psutil_mock):
