@@ -4,6 +4,7 @@
 
 import json
 import os
+import shutil
 import unittest
 from unittest import mock
 
@@ -18,6 +19,7 @@ from azure_monitor.options import ExporterOptions
 from azure_monitor.protocol import Envelope
 
 TEST_FOLDER = os.path.abspath(".test.exporter.trace")
+
 
 # pylint: disable=invalid-name
 def setUpModule():
