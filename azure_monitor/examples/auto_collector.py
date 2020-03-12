@@ -1,7 +1,7 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 from opentelemetry import metrics
-from opentelemetry.sdk.metrics import Counter, Meter
+from opentelemetry.sdk.metrics import Meter
 from opentelemetry.sdk.metrics.export.controller import PushController
 
 from azure_monitor import AutoCollection, AzureMonitorMetricsExporter
