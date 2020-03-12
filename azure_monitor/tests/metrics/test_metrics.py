@@ -1,8 +1,6 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
-import json
 import os
-import shutil
 import unittest
 from unittest import mock
 
@@ -12,32 +10,39 @@ from opentelemetry.sdk.metrics.export import MetricRecord, MetricsExportResult
 from opentelemetry.sdk.metrics.export.aggregate import CounterAggregator
 from opentelemetry.sdk.util import ns_to_iso_str
 
-from azure_monitor.metrics import AzureMonitorMetricsExporter
+from azure_monitor.export import ExportResult
+from azure_monitor.export.metrics import AzureMonitorMetricsExporter
+from azure_monitor.options import ExporterOptions
 from azure_monitor.protocol import Data, DataPoint, Envelope, MetricData
-from azure_monitor.utils import ExportResult, Options
 
 
+# pylint: disable=protected-access
 class TestAzureMetricsExporter(unittest.TestCase):
     @classmethod
-    def setUpClass(self):
+    def setUpClass(cls):
         os.environ[
             "APPINSIGHTS_INSTRUMENTATIONKEY"
         ] = "1234abcd-5678-4efa-8abc-1234567890ab"
 
+        cls._meter_defaults = (metrics._METER, metrics._METER_FACTORY)
         metrics.set_preferred_meter_implementation(lambda _: Meter())
-        self._meter = metrics.meter()
-        self._test_metric = self._meter.create_metric(
+        cls._meter = metrics.meter()
+        cls._test_metric = cls._meter.create_metric(
             "testname", "testdesc", "unit", int, Counter, ["environment"]
         )
         kvp = {"environment": "staging"}
-        self._test_label_set = self._meter.get_label_set(kvp)
+        cls._test_label_set = cls._meter.get_label_set(kvp)
+
+    @classmethod
+    def tearDownClass(cls):
+        metrics._METER, metrics._METER_PROVIDER_FACTORY = cls._meter_defaults
 
     def test_constructor(self):
         """Test the constructor."""
         exporter = AzureMonitorMetricsExporter(
             instrumentation_key="4321abcd-5678-4efa-8abc-1234567890ab"
         )
-        self.assertIsInstance(exporter.options, Options)
+        self.assertIsInstance(exporter.options, ExporterOptions)
         self.assertEqual(
             exporter.options.instrumentation_key,
             "4321abcd-5678-4efa-8abc-1234567890ab",
@@ -49,7 +54,7 @@ class TestAzureMetricsExporter(unittest.TestCase):
         )
         exporter = AzureMonitorMetricsExporter()
         with mock.patch(
-            "azure_monitor.metrics.AzureMonitorMetricsExporter._transmit"
+            "azure_monitor.export.metrics.AzureMonitorMetricsExporter._transmit"
         ) as transmit:  # noqa: E501
             transmit.return_value = ExportResult.SUCCESS
             result = exporter.export([record])
@@ -98,18 +103,3 @@ class TestAzureMetricsExporter(unittest.TestCase):
         self.assertIsNotNone(envelope.tags["ai.device.osVersion"])
         self.assertIsNotNone(envelope.tags["ai.device.type"])
         self.assertIsNotNone(envelope.tags["ai.internal.sdkVersion"])
-
-
-class MockResponse(object):
-    def __init__(self, status_code, text):
-        self.status_code = status_code
-        self.text = text
-
-
-class MockTransport(object):
-    def __init__(self, exporter=None):
-        self.export_called = False
-        self.exporter = exporter
-
-    def export(self, datas):
-        self.export_called = True

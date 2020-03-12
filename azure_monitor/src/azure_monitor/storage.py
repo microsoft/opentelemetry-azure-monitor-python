@@ -21,7 +21,8 @@ def _seconds(seconds):
     return datetime.timedelta(seconds=seconds)
 
 
-class LocalFileBlob(object):
+# pylint: disable=broad-except
+class LocalFileBlob:
     def __init__(self, fullpath):
         self.fullpath = fullpath
 
@@ -75,7 +76,8 @@ class LocalFileBlob(object):
         return self
 
 
-class LocalFileStorage(object):
+# pylint: disable=broad-except
+class LocalFileStorage:
     def __init__(
         self,
         path,
@@ -105,6 +107,7 @@ class LocalFileStorage(object):
     def __enter__(self):
         return self
 
+    # pylint: disable=redefined-builtin
     def __exit__(self, type, value, traceback):
         self.close()
 

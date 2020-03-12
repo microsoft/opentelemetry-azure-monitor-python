@@ -14,32 +14,35 @@ from opentelemetry.sdk.metrics.export import (
 from opentelemetry.sdk.util import ns_to_iso_str
 
 from azure_monitor import protocol, utils
-from azure_monitor.exporter import BaseExporter
+from azure_monitor.export import (
+    BaseExporter,
+    ExportResult,
+    get_metrics_export_result,
+)
 
 logger = logging.getLogger(__name__)
 
 
 class AzureMonitorMetricsExporter(BaseExporter, MetricsExporter):
-    def __init__(self, **options):
-        super(AzureMonitorMetricsExporter, self).__init__(**options)
-
     def export(
         self, metric_records: Sequence[MetricRecord]
     ) -> MetricsExportResult:
         envelopes = list(map(self.metric_to_envelope, metric_records))
-        envelopes = list(map(
-            lambda x: x.to_dict(),
-            self.apply_telemetry_processors(envelopes),
-        ))
+        envelopes = list(
+            map(
+                lambda x: x.to_dict(),
+                self.apply_telemetry_processors(envelopes),
+            )
+        )
         try:
             result = self._transmit(envelopes)
             if result == MetricsExportResult.FAILED_RETRYABLE:
                 self.storage.put(envelopes, result)
-            if result == utils.ExportResult.SUCCESS:
+            if result == ExportResult.SUCCESS:
                 # Try to send any cached events
                 self._transmit_from_storage()
-            return utils.get_metrics_export_result(result)
-        except Exception:
+            return get_metrics_export_result(result)
+        except Exception:  # pylint: disable=broad-except
             logger.exception("Exception occurred while exporting the data.")
 
     def metric_to_envelope(
