@@ -12,10 +12,12 @@ from azure_monitor.protocol import Data, Envelope
 TEST_FOLDER = os.path.abspath(".test.exporter")
 
 
+# pylint: disable=invalid-name
 def setUpModule():
     os.makedirs(TEST_FOLDER)
 
 
+# pylint: disable=invalid-name
 def tearDownModule():
     shutil.rmtree(TEST_FOLDER)
 
