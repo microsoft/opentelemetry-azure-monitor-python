@@ -9,7 +9,6 @@ from azure_monitor.export import BaseExporter
 from azure_monitor.options import ExporterOptions
 from azure_monitor.protocol import Data, Envelope
 
-
 TEST_FOLDER = os.path.abspath(".test.exporter")
 
 
