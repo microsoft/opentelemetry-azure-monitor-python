@@ -44,7 +44,7 @@ class DependencyMetrics:
     def _track_dependency_rate(self) -> None:
         """ Track Dependency rate
 
-        Calculated by obtaining by getting the number of outgoing requests made
+        Calculated by obtaining the number of outgoing requests made
         using the requests library within an elapsed time and dividing that
         value over the elapsed time.
         """
