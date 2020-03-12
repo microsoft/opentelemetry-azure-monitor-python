@@ -48,7 +48,9 @@ class TestBaseExporter(unittest.TestCase):
         self.assertEqual(base.options.storage_max_size, 3)
         self.assertEqual(base.options.storage_retention_period, 4)
         self.assertEqual(base.options.timeout, 5)
-        self.assertEqual(base.options.storage_path, os.path.join(TEST_FOLDER, self.id()))
+        self.assertEqual(
+            base.options.storage_path, os.path.join(TEST_FOLDER, self.id())
+        )
 
     def test_constructor_wrong_options(self):
         """Test the constructor with wrong options."""
