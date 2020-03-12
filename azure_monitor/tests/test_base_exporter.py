@@ -2,11 +2,23 @@
 # Licensed under the MIT License.
 
 import os
+import shutil
 import unittest
 
 from azure_monitor.export import BaseExporter
 from azure_monitor.options import ExporterOptions
 from azure_monitor.protocol import Data, Envelope
+
+
+TEST_FOLDER = os.path.abspath(".test.exporter")
+
+
+def setUpModule():
+    os.makedirs(TEST_FOLDER)
+
+
+def tearDownModule():
+    shutil.rmtree(TEST_FOLDER)
 
 
 # pylint: disable=W0212
@@ -23,7 +35,7 @@ class TestBaseExporter(unittest.TestCase):
             instrumentation_key="4321abcd-5678-4efa-8abc-1234567890ab",
             storage_maintenance_period=2,
             storage_max_size=3,
-            storage_path="testStoragePath",
+            storage_path=os.path.join(TEST_FOLDER, self.id()),
             storage_retention_period=4,
             timeout=5,
         )
@@ -36,7 +48,7 @@ class TestBaseExporter(unittest.TestCase):
         self.assertEqual(base.options.storage_max_size, 3)
         self.assertEqual(base.options.storage_retention_period, 4)
         self.assertEqual(base.options.timeout, 5)
-        self.assertEqual(base.options.storage_path, "testStoragePath")
+        self.assertEqual(base.options.storage_path, os.path.join(TEST_FOLDER, self.id()))
 
     def test_constructor_wrong_options(self):
         """Test the constructor with wrong options."""
