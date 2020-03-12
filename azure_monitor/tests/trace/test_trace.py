@@ -126,7 +126,7 @@ class TestAzureExporter(unittest.TestCase):
             post.return_value = None
             exporter._transmit_from_storage()
 
-    def test_transmission_request_exception(self):
+    def test_transmit_request_exception(self):
         exporter = AzureMonitorSpanExporter(
             storage_path=os.path.join(TEST_FOLDER, self.id())
         )
@@ -152,7 +152,7 @@ class TestAzureExporter(unittest.TestCase):
             exporter._transmit_from_storage()
         self.assertTrue(exporter.storage.get())
 
-    def test_transmission_response_exception(self):
+    def test_transmit_response_exception(self):
         exporter = AzureMonitorSpanExporter(
             storage_path=os.path.join(TEST_FOLDER, self.id())
         )
@@ -223,7 +223,7 @@ class TestAzureExporter(unittest.TestCase):
             exporter.storage.get().get()[0]["name"], "testEnvelope"
         )
 
-    def test_transmission_206_nothing_to_retry(self):
+    def test_transmission_206_no_retry(self):
         exporter = AzureMonitorSpanExporter(
             storage_path=os.path.join(TEST_FOLDER, self.id())
         )
