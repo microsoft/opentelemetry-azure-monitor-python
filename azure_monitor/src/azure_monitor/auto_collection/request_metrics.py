@@ -84,6 +84,7 @@ class RequestMetrics:
 
     def track(self) -> None:
         self._track_request_duration()
+        self._track_request_rate()
 
     def _track_request_duration(self) -> None:
         """ Track Request execution time
