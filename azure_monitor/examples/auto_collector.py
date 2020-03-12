@@ -5,8 +5,8 @@ from opentelemetry import metrics
 from opentelemetry.sdk.metrics import Counter, Meter
 from opentelemetry.sdk.metrics.export.controller import PushController
 
-metrics.set_preferred_meter_implementation(lambda _: Meter())
-meter = metrics.get_meter(__name__)
+metrics.set_preferred_meter_implementation(lambda T: Meter())
+meter = metrics.meter()
 exporter = AzureMonitorMetricsExporter(
     connection_string="InstrumentationKey=<INSTRUMENTATION KEY HERE>"
 )
