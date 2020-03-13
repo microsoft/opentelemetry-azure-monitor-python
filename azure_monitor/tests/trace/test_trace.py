@@ -10,13 +10,13 @@ from unittest import mock
 
 # pylint: disable=import-error
 from opentelemetry.sdk.trace import Span
+from opentelemetry.sdk.trace.export import SpanExportResult
 from opentelemetry.trace import Link, SpanContext, SpanKind
 from opentelemetry.trace.status import Status, StatusCanonicalCode
 
 from azure_monitor.export import ExportResult
 from azure_monitor.export.trace import AzureMonitorSpanExporter
 from azure_monitor.options import ExporterOptions
-from azure_monitor.protocol import Envelope
 
 TEST_FOLDER = os.path.abspath(".test.exporter.trace")
 
@@ -67,19 +67,7 @@ class TestAzureExporter(unittest.TestCase):
         exporter.export([])
         self.assertEqual(len(os.listdir(exporter.storage.path)), 0)
 
-    @mock.patch("azure_monitor.export.trace.logger")
-    def test_export_exception(self, mock_logger):
-        exporter = AzureMonitorSpanExporter(
-            storage_path=os.path.join(TEST_FOLDER, self.id())
-        )
-        exporter.export([None])
-        self.assertEqual(mock_logger.exception.called, True)
-
-    @mock.patch(
-        "azure_monitor.export.trace.AzureMonitorSpanExporter.span_to_envelope"
-    )  # noqa: E501
-    def test_export_failure(self, span_to_envelope_mock):
-        span_to_envelope_mock.return_value = ["bar"]
+    def test_export_failure(self):
         exporter = AzureMonitorSpanExporter(
             storage_path=os.path.join(TEST_FOLDER, self.id())
         )
@@ -100,194 +88,74 @@ class TestAzureExporter(unittest.TestCase):
         self.assertEqual(len(os.listdir(exporter.storage.path)), 1)
         self.assertIsNone(exporter.storage.get())
 
-    @mock.patch(
-        "azure_monitor.export.trace.AzureMonitorSpanExporter.span_to_envelope"
-    )  # noqa: E501
-    def test_export_success(self, span_to_envelope_mock):
-        span_to_envelope_mock.return_value = ["bar"]
+    def test_export_success(self):
         exporter = AzureMonitorSpanExporter(
             storage_path=os.path.join(TEST_FOLDER, self.id())
         )
+        test_span = Span(
+            name="test",
+            context=SpanContext(
+                trace_id=36873507687745823477771305566750195431,
+                span_id=12030755672171557338,
+            ),
+        )
+        test_span.start()
+        test_span.end()
         with mock.patch(
             "azure_monitor.export.trace.AzureMonitorSpanExporter._transmit"
         ) as transmit:  # noqa: E501
-            transmit.return_value = 0
-            exporter.export([])
-            exporter.export(["foo"])
+            transmit.return_value = ExportResult.SUCCESS
+            storage_mock = mock.Mock()
+            exporter._transmit_from_storage = storage_mock
+            exporter.export([test_span])
+            self.assertEqual(storage_mock.call_count, 1)
             self.assertEqual(len(os.listdir(exporter.storage.path)), 0)
-            exporter.export(["foo"])
-            self.assertEqual(len(os.listdir(exporter.storage.path)), 0)
 
-    def test_transmission_nothing(self):
+    @mock.patch("azure_monitor.export.trace.logger")
+    def test_export_exception(self, logger_mock):
+        test_span = Span(
+            name="test",
+            context=SpanContext(
+                trace_id=36873507687745823477771305566750195431,
+                span_id=12030755672171557338,
+            ),
+        )
+        test_span.start()
+        test_span.end()
         exporter = AzureMonitorSpanExporter(
             storage_path=os.path.join(TEST_FOLDER, self.id())
         )
-        with mock.patch("requests.post") as post:
-            post.return_value = None
-            exporter._transmit_from_storage()
-
-    def test_transmit_request_exception(self):
-        exporter = AzureMonitorSpanExporter(
-            storage_path=os.path.join(TEST_FOLDER, self.id())
-        )
-        envelopes_to_export = map(lambda x: x.to_dict(), tuple([Envelope()]))
-        exporter.storage.put(envelopes_to_export)
-        with mock.patch("requests.post", throw(Exception)):
-            exporter._transmit_from_storage()
-        self.assertIsNone(exporter.storage.get())
-        self.assertEqual(len(os.listdir(exporter.storage.path)), 1)
-
-    @mock.patch("requests.post", return_value=mock.Mock())
-    def test_transmission_lease_failure(self, requests_mock):
-        requests_mock.return_value = MockResponse(200, "unknown")
-        exporter = AzureMonitorSpanExporter(
-            storage_path=os.path.join(TEST_FOLDER, self.id())
-        )
-        envelopes_to_export = map(lambda x: x.to_dict(), tuple([Envelope()]))
-        exporter.storage.put(envelopes_to_export)
         with mock.patch(
-            "azure_monitor.storage.LocalFileBlob.lease"
-        ) as lease:  # noqa: E501
-            lease.return_value = False
-            exporter._transmit_from_storage()
-        self.assertTrue(exporter.storage.get())
+            "azure_monitor.export.trace.AzureMonitorSpanExporter._transmit",
+            throw(Exception),
+        ):  # noqa: E501
+            result = exporter.export([test_span])
+            self.assertEqual(result, SpanExportResult.FAILED_NOT_RETRYABLE)
+            self.assertEqual(logger_mock.exception.called, True)
 
-    def test_transmit_response_exception(self):
+    def test_export_not_retryable(self):
         exporter = AzureMonitorSpanExporter(
             storage_path=os.path.join(TEST_FOLDER, self.id())
         )
-        envelopes_to_export = map(lambda x: x.to_dict(), tuple([Envelope()]))
-        exporter.storage.put(envelopes_to_export)
-        with mock.patch("requests.post") as post:
-            post.return_value = MockResponse(200, None)
-            del post.return_value.text
-            exporter._transmit_from_storage()
-        self.assertIsNone(exporter.storage.get())
-        self.assertEqual(len(os.listdir(exporter.storage.path)), 0)
+        test_span = Span(
+            name="test",
+            context=SpanContext(
+                trace_id=36873507687745823477771305566750195431,
+                span_id=12030755672171557338,
+            ),
+        )
+        test_span.start()
+        test_span.end()
+        with mock.patch(
+            "azure_monitor.export.trace.AzureMonitorSpanExporter._transmit"
+        ) as transmit:  # noqa: E501
+            transmit.return_value = ExportResult.FAILED_NOT_RETRYABLE
+            result = exporter.export([test_span])
+            self.assertEqual(result, SpanExportResult.FAILED_NOT_RETRYABLE)
 
-    def test_transmission_200(self):
-        exporter = AzureMonitorSpanExporter(
-            storage_path=os.path.join(TEST_FOLDER, self.id())
-        )
-        envelopes_to_export = map(lambda x: x.to_dict(), tuple([Envelope()]))
-        exporter.storage.put(envelopes_to_export)
-        with mock.patch("requests.post") as post:
-            post.return_value = MockResponse(200, "unknown")
-            exporter._transmit_from_storage()
-        self.assertIsNone(exporter.storage.get())
-        self.assertEqual(len(os.listdir(exporter.storage.path)), 0)
-
-    def test_transmission_206(self):
-        exporter = AzureMonitorSpanExporter(
-            storage_path=os.path.join(TEST_FOLDER, self.id())
-        )
-        envelopes_to_export = map(lambda x: x.to_dict(), tuple([Envelope()]))
-        exporter.storage.put(envelopes_to_export)
-        with mock.patch("requests.post") as post:
-            post.return_value = MockResponse(206, "unknown")
-            exporter._transmit_from_storage()
-        self.assertIsNone(exporter.storage.get())
-        self.assertEqual(len(os.listdir(exporter.storage.path)), 1)
-
-    def test_transmission_206_500(self):
-        exporter = AzureMonitorSpanExporter(
-            storage_path=os.path.join(TEST_FOLDER, self.id())
-        )
-        test_envelope = Envelope(name="testEnvelope")
-        envelopes_to_export = map(
-            lambda x: x.to_dict(),
-            tuple([Envelope(), Envelope(), test_envelope]),
-        )
-        exporter.storage.put(envelopes_to_export)
-        with mock.patch("requests.post") as post:
-            post.return_value = MockResponse(
-                206,
-                json.dumps(
-                    {
-                        "itemsReceived": 5,
-                        "itemsAccepted": 3,
-                        "errors": [
-                            {"index": 0, "statusCode": 400, "message": ""},
-                            {
-                                "index": 2,
-                                "statusCode": 500,
-                                "message": "Internal Server Error",
-                            },
-                        ],
-                    }
-                ),
-            )
-            exporter._transmit_from_storage()
-        self.assertEqual(len(os.listdir(exporter.storage.path)), 1)
-        self.assertEqual(
-            exporter.storage.get().get()[0]["name"], "testEnvelope"
-        )
-
-    def test_transmission_206_no_retry(self):
-        exporter = AzureMonitorSpanExporter(
-            storage_path=os.path.join(TEST_FOLDER, self.id())
-        )
-        envelopes_to_export = map(lambda x: x.to_dict(), tuple([Envelope()]))
-        exporter.storage.put(envelopes_to_export)
-        with mock.patch("requests.post") as post:
-            post.return_value = MockResponse(
-                206,
-                json.dumps(
-                    {
-                        "itemsReceived": 3,
-                        "itemsAccepted": 2,
-                        "errors": [
-                            {"index": 0, "statusCode": 400, "message": ""}
-                        ],
-                    }
-                ),
-            )
-            exporter._transmit_from_storage()
-        self.assertEqual(len(os.listdir(exporter.storage.path)), 0)
-
-    def test_transmission_206_bogus(self):
-        exporter = AzureMonitorSpanExporter(
-            storage_path=os.path.join(TEST_FOLDER, self.id())
-        )
-        envelopes_to_export = map(lambda x: x.to_dict(), tuple([Envelope()]))
-        exporter.storage.put(envelopes_to_export)
-        with mock.patch("requests.post") as post:
-            post.return_value = MockResponse(
-                206,
-                json.dumps(
-                    {
-                        "itemsReceived": 5,
-                        "itemsAccepted": 3,
-                        "errors": [{"foo": 0, "bar": 1}],
-                    }
-                ),
-            )
-            exporter._transmit_from_storage()
-        self.assertIsNone(exporter.storage.get())
-        self.assertEqual(len(os.listdir(exporter.storage.path)), 0)
-
-    def test_transmission_400(self):
-        exporter = AzureMonitorSpanExporter(
-            storage_path=os.path.join(TEST_FOLDER, self.id())
-        )
-        envelopes_to_export = map(lambda x: x.to_dict(), tuple([Envelope()]))
-        exporter.storage.put(envelopes_to_export)
-        with mock.patch("requests.post") as post:
-            post.return_value = MockResponse(400, "{}")
-            exporter._transmit_from_storage()
-        self.assertEqual(len(os.listdir(exporter.storage.path)), 0)
-
-    def test_transmission_500(self):
-        exporter = AzureMonitorSpanExporter(
-            storage_path=os.path.join(TEST_FOLDER, self.id())
-        )
-        envelopes_to_export = map(lambda x: x.to_dict(), tuple([Envelope()]))
-        exporter.storage.put(envelopes_to_export)
-        with mock.patch("requests.post") as post:
-            post.return_value = MockResponse(500, "{}")
-            exporter._transmit_from_storage()
-        self.assertIsNone(exporter.storage.get())
-        self.assertEqual(len(os.listdir(exporter.storage.path)), 1)
+    def test_span_to_envelope_none(self):
+        exporter = AzureMonitorSpanExporter()
+        self.assertIsNone(exporter.span_to_envelope(None))
 
     # pylint: disable=too-many-statements
     def test_span_to_envelope(self):
@@ -1022,9 +890,3 @@ class TestAzureExporter(unittest.TestCase):
         self.assertIsNone(
             envelope.data.base_data.properties.get("request.url")
         )
-
-
-class MockResponse:
-    def __init__(self, status_code, text):
-        self.status_code = status_code
-        self.text = text
