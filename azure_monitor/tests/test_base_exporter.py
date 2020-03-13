@@ -40,6 +40,7 @@ def throw(exc_type, *args, **kwargs):
 
 
 # pylint: disable=W0212
+# pylint: disable=R0904
 class TestBaseExporter(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
