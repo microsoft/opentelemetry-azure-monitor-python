@@ -7,6 +7,9 @@ import shutil
 import unittest
 from unittest import mock
 
+from opentelemetry.sdk.metrics.export import MetricsExportResult
+from opentelemetry.sdk.trace.export import SpanExportResult
+
 from azure_monitor.export import (
     BaseExporter,
     ExportResult,
@@ -15,8 +18,6 @@ from azure_monitor.export import (
 )
 from azure_monitor.options import ExporterOptions
 from azure_monitor.protocol import Data, Envelope
-from opentelemetry.sdk.metrics.export import MetricsExportResult
-from opentelemetry.sdk.trace.export import SpanExportResult
 
 TEST_FOLDER = os.path.abspath(".test.exporter")
 
@@ -160,7 +161,7 @@ class TestBaseExporter(unittest.TestCase):
         self.assertIsNone(exporter.storage.get())
         self.assertEqual(len(os.listdir(exporter.storage.path)), 1)
 
-    @mock.patch("requests.post", return_value=mock.Mock())  
+    @mock.patch("requests.post", return_value=mock.Mock())
     def test_transmission_lease_failure(self, requests_mock):
         requests_mock.return_value = MockResponse(200, "unknown")
         exporter = BaseExporter(

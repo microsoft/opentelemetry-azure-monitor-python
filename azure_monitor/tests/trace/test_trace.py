@@ -114,12 +114,12 @@ class TestAzureExporter(unittest.TestCase):
     @mock.patch("azure_monitor.export.trace.logger")
     def test_export_exception(self, logger_mock):
         test_span = Span(
-                name="test",
-                context=SpanContext(
-                    trace_id=36873507687745823477771305566750195431,
-                    span_id=12030755672171557338,
-                ),
-            )
+            name="test",
+            context=SpanContext(
+                trace_id=36873507687745823477771305566750195431,
+                span_id=12030755672171557338,
+            ),
+        )
         test_span.start()
         test_span.end()
         exporter = AzureMonitorSpanExporter(
@@ -127,7 +127,7 @@ class TestAzureExporter(unittest.TestCase):
         )
         with mock.patch(
             "azure_monitor.export.trace.AzureMonitorSpanExporter._transmit",
-            throw(Exception)
+            throw(Exception),
         ):  # noqa: E501
             result = exporter.export([test_span])
             self.assertEqual(result, SpanExportResult.FAILED_NOT_RETRYABLE)

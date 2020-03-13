@@ -182,7 +182,7 @@ class TestPerformanceMetrics(unittest.TestCase):
     def test_track_process_memory_exception(self, logger_mock):
         with mock.patch(
             "azure_monitor.auto_collection.performance_metrics.PROCESS",
-            throw(Exception)
+            throw(Exception),
         ):
             performance_metrics_collector = PerformanceMetrics(
                 meter=self._meter, label_set=self._test_label_set

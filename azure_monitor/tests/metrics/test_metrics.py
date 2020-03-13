@@ -90,7 +90,7 @@ class TestAzureMetricsExporter(unittest.TestCase):
         exporter = AzureMonitorMetricsExporter()
         with mock.patch(
             "azure_monitor.export.metrics.AzureMonitorMetricsExporter._transmit",
-            throw(Exception)
+            throw(Exception),
         ):  # noqa: E501
             result = exporter.export([record])
             self.assertEqual(result, MetricsExportResult.FAILED_NOT_RETRYABLE)
