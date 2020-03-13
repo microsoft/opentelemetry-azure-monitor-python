@@ -5,7 +5,7 @@ omit =
     azure_monitor/tests/*
 
 [report]
-fail_under = 80
+fail_under = 98
 show_missing = True
 omit =
     azure_monitor/setup.py

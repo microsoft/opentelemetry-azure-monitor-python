@@ -254,3 +254,17 @@ class TestOptions(unittest.TestCase):
                 instrumentation_key=self._valid_instrumentation_key,
             ),
         )
+
+    def test_parse_connection_string_suffix(self):
+        options = ExporterOptions(
+            connection_string="Authorization=ikey;EndpointSuffix=123;Location=US",
+            instrumentation_key=self._valid_instrumentation_key,
+        )
+        self.assertEqual(options.endpoint, "https://US.dc.123/v2/track")
+
+    def test_parse_connection_string_suffix_no_location(self):
+        options = ExporterOptions(
+            connection_string="Authorization=ikey;EndpointSuffix=123",
+            instrumentation_key=self._valid_instrumentation_key,
+        )
+        self.assertEqual(options.endpoint, "https://dc.123/v2/track")

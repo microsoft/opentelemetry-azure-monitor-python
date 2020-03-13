@@ -36,7 +36,7 @@ class AzureMonitorMetricsExporter(BaseExporter, MetricsExporter):
         )
         try:
             result = self._transmit(envelopes)
-            if result == MetricsExportResult.FAILED_RETRYABLE:
+            if result == ExportResult.FAILED_RETRYABLE:
                 self.storage.put(envelopes, result)
             if result == ExportResult.SUCCESS:
                 # Try to send any cached events
@@ -44,6 +44,7 @@ class AzureMonitorMetricsExporter(BaseExporter, MetricsExporter):
             return get_metrics_export_result(result)
         except Exception:  # pylint: disable=broad-except
             logger.exception("Exception occurred while exporting the data.")
+            return get_metrics_export_result(ExportResult.FAILED_NOT_RETRYABLE)
 
     def metric_to_envelope(
         self, metric_record: MetricRecord

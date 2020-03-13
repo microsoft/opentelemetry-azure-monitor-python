@@ -4,15 +4,7 @@
 import os
 import unittest
 
-from opentelemetry.sdk.metrics.export import MetricsExportResult
-from opentelemetry.sdk.trace.export import SpanExportResult
-
 from azure_monitor import utils
-from azure_monitor.export import (
-    ExportResult,
-    get_metrics_export_result,
-    get_trace_export_result,
-)
 
 
 class TestUtils(unittest.TestCase):
@@ -30,33 +22,3 @@ class TestUtils(unittest.TestCase):
         self.assertEqual(ns_to_duration(60 * 1000000000), "0.00:01:00.000")
         self.assertEqual(ns_to_duration(3600 * 1000000000), "0.01:00:00.000")
         self.assertEqual(ns_to_duration(86400 * 1000000000), "1.00:00:00.000")
-
-    def test_get_trace_export_result(self):
-        self.assertEqual(
-            get_trace_export_result(ExportResult.SUCCESS),
-            SpanExportResult.SUCCESS,
-        )
-        self.assertEqual(
-            get_trace_export_result(ExportResult.FAILED_NOT_RETRYABLE),
-            SpanExportResult.FAILED_NOT_RETRYABLE,
-        )
-        self.assertEqual(
-            get_trace_export_result(ExportResult.FAILED_RETRYABLE),
-            SpanExportResult.FAILED_RETRYABLE,
-        )
-        self.assertEqual(get_trace_export_result(None), None)
-
-    def test_get_metrics_export_result(self):
-        self.assertEqual(
-            get_metrics_export_result(ExportResult.SUCCESS),
-            MetricsExportResult.SUCCESS,
-        )
-        self.assertEqual(
-            get_metrics_export_result(ExportResult.FAILED_NOT_RETRYABLE),
-            MetricsExportResult.FAILED_NOT_RETRYABLE,
-        )
-        self.assertEqual(
-            get_metrics_export_result(ExportResult.FAILED_RETRYABLE),
-            MetricsExportResult.FAILED_RETRYABLE,
-        )
-        self.assertEqual(get_metrics_export_result(None), None)

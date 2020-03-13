@@ -70,6 +70,19 @@ class TestRequestMetrics(unittest.TestCase):
             ),
         )
 
+    def test_track(self):
+        mock_meter = mock.Mock()
+        request_metrics_collector = RequestMetrics(
+            meter=mock_meter, label_set=self._test_label_set
+        )
+        duration_mock = mock.Mock()
+        rate_mock = mock.Mock()
+        request_metrics_collector._track_request_duration = duration_mock
+        request_metrics_collector._track_request_rate = rate_mock
+        request_metrics_collector.track()
+        self.assertEqual(duration_mock.call_count, 1)
+        self.assertEqual(rate_mock.call_count, 1)
+
     def test_track_request_duration(self):
         request_metrics_collector = RequestMetrics(
             meter=self._meter, label_set=self._test_label_set
@@ -108,6 +121,19 @@ class TestRequestMetrics(unittest.TestCase):
         self.assertEqual(
             request_metrics_collector._request_rate_handle.aggregator.current,
             2,
+        )
+
+    @mock.patch("azure_monitor.auto_collection.request_metrics.time")
+    def test_track_request_rate_time_none(self, time_mock):
+        time_mock.time.return_value = 100
+        request_metrics_collector = RequestMetrics(
+            meter=self._meter, label_set=self._test_label_set
+        )
+        request_metrics.requests_map["last_time"] = None
+        request_metrics_collector._track_request_rate()
+        self.assertEqual(
+            request_metrics_collector._request_rate_handle.aggregator.current,
+            0,
         )
 
     @mock.patch("azure_monitor.auto_collection.request_metrics.time")

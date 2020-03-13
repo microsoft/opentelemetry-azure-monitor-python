@@ -57,8 +57,18 @@ class TestDependencyMetrics(unittest.TestCase):
             ),
         )
 
+    def test_track(self):
+        mock_meter = mock.Mock()
+        metrics_collector = DependencyMetrics(
+            meter=mock_meter, label_set=self._test_label_set
+        )
+        track_mock = mock.Mock()
+        metrics_collector._track_dependency_rate = track_mock
+        metrics_collector.track()
+        self.assertEqual(track_mock.call_count, 1)
+
     @mock.patch("azure_monitor.auto_collection.dependency_metrics.time")
-    def test_track_depencency_rate(self, time_mock):
+    def test_track_dependency_rate(self, time_mock):
         time_mock.time.return_value = 100
         metrics_collector = DependencyMetrics(
             meter=self._meter, label_set=self._test_label_set
@@ -71,7 +81,19 @@ class TestDependencyMetrics(unittest.TestCase):
         )
 
     @mock.patch("azure_monitor.auto_collection.dependency_metrics.time")
-    def test_track_depencency_rate_error(self, time_mock):
+    def test_track_dependency_rate_time_none(self, time_mock):
+        time_mock.time.return_value = 100
+        metrics_collector = DependencyMetrics(
+            meter=self._meter, label_set=self._test_label_set
+        )
+        dependency_metrics.dependency_map["last_time"] = None
+        metrics_collector._track_dependency_rate()
+        self.assertEqual(
+            metrics_collector._dependency_rate_handle.aggregator.current, 0
+        )
+
+    @mock.patch("azure_monitor.auto_collection.dependency_metrics.time")
+    def test_track_dependency_rate_error(self, time_mock):
         time_mock.time.return_value = 100
         metrics_collector = DependencyMetrics(
             meter=self._meter, label_set=self._test_label_set

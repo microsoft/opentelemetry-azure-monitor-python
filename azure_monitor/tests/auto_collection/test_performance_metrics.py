@@ -11,6 +11,13 @@ from opentelemetry.sdk.metrics import Gauge, Meter
 from azure_monitor.auto_collection import PerformanceMetrics
 
 
+def throw(exc_type, *args, **kwargs):
+    def func(*_args, **_kwargs):
+        raise exc_type(*args, **kwargs)
+
+    return func
+
+
 # pylint: disable=protected-access
 class TestPerformanceMetrics(unittest.TestCase):
     @classmethod
@@ -79,6 +86,25 @@ class TestPerformanceMetrics(unittest.TestCase):
                 Gauge,
             ),
         )
+
+    def test_track(self):
+        mock_meter = mock.Mock()
+        performance_metrics_collector = PerformanceMetrics(
+            meter=mock_meter, label_set=self._test_label_set
+        )
+        cpu_mock = mock.Mock()
+        process_mock = mock.Mock()
+        memory_mock = mock.Mock()
+        proc_memory_mock = mock.Mock()
+        performance_metrics_collector._track_cpu = cpu_mock
+        performance_metrics_collector._track_process_cpu = process_mock
+        performance_metrics_collector._track_memory = memory_mock
+        performance_metrics_collector._track_process_memory = proc_memory_mock
+        performance_metrics_collector.track()
+        self.assertEqual(cpu_mock.call_count, 1)
+        self.assertEqual(process_mock.call_count, 1)
+        self.assertEqual(memory_mock.call_count, 1)
+        self.assertEqual(proc_memory_mock.call_count, 1)
 
     def test_track_cpu(self):
         performance_metrics_collector = PerformanceMetrics(
@@ -151,3 +177,15 @@ class TestPerformanceMetrics(unittest.TestCase):
                 performance_metrics_collector._process_memory_handle.aggregator.current,
                 100,
             )
+
+    @mock.patch("azure_monitor.auto_collection.performance_metrics.logger")
+    def test_track_process_memory_exception(self, logger_mock):
+        with mock.patch(
+            "azure_monitor.auto_collection.performance_metrics.PROCESS",
+            throw(Exception)
+        ):
+            performance_metrics_collector = PerformanceMetrics(
+                meter=self._meter, label_set=self._test_label_set
+            )
+            performance_metrics_collector._track_process_memory()
+            self.assertEqual(logger_mock.exception.called, True)

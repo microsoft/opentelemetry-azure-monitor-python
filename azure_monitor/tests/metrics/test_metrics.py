@@ -16,6 +16,13 @@ from azure_monitor.options import ExporterOptions
 from azure_monitor.protocol import Data, DataPoint, Envelope, MetricData
 
 
+def throw(exc_type, *args, **kwargs):
+    def func(*_args, **_kwargs):
+        raise exc_type(*args, **kwargs)
+
+    return func
+
+
 # pylint: disable=protected-access
 class TestAzureMetricsExporter(unittest.TestCase):
     @classmethod
@@ -59,6 +66,39 @@ class TestAzureMetricsExporter(unittest.TestCase):
             transmit.return_value = ExportResult.SUCCESS
             result = exporter.export([record])
             self.assertEqual(result, MetricsExportResult.SUCCESS)
+
+    def test_export_failed_retryable(self):
+        record = MetricRecord(
+            CounterAggregator(), self._test_label_set, self._test_metric
+        )
+        exporter = AzureMonitorMetricsExporter()
+        with mock.patch(
+            "azure_monitor.export.metrics.AzureMonitorMetricsExporter._transmit"
+        ) as transmit:  # noqa: E501
+            transmit.return_value = ExportResult.FAILED_RETRYABLE
+            storage_mock = mock.Mock()
+            exporter.storage.put = storage_mock
+            result = exporter.export([record])
+            self.assertEqual(result, MetricsExportResult.FAILED_RETRYABLE)
+            self.assertEqual(storage_mock.call_count, 1)
+
+    @mock.patch("azure_monitor.export.metrics.logger")
+    def test_export_exception(self, logger_mock):
+        record = MetricRecord(
+            CounterAggregator(), self._test_label_set, self._test_metric
+        )
+        exporter = AzureMonitorMetricsExporter()
+        with mock.patch(
+            "azure_monitor.export.metrics.AzureMonitorMetricsExporter._transmit",
+            throw(Exception)
+        ):  # noqa: E501
+            result = exporter.export([record])
+            self.assertEqual(result, MetricsExportResult.FAILED_NOT_RETRYABLE)
+            self.assertEqual(logger_mock.exception.called, True)
+
+    def test_metric_to_envelope_none(self):
+        exporter = AzureMonitorMetricsExporter()
+        self.assertIsNone(exporter.metric_to_envelope(None))
 
     def test_metric_to_envelope(self):
         aggregator = CounterAggregator()

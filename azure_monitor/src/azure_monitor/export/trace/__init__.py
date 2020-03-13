@@ -22,13 +22,15 @@ logger = logging.getLogger(__name__)
 
 class AzureMonitorSpanExporter(BaseExporter, SpanExporter):
     def export(self, spans: Sequence[Span]) -> SpanExportResult:
-        envelopes = map(self.span_to_envelope, spans)
-        envelopes_to_export = map(
-            lambda x: x.to_dict(),
-            tuple(self.apply_telemetry_processors(envelopes)),
+        envelopes = list(map(self.span_to_envelope, spans))
+        envelopes = list(
+            map(
+                lambda x: x.to_dict(),
+                self.apply_telemetry_processors(envelopes),
+            )
         )
         try:
-            result = self._transmit(envelopes_to_export)
+            result = self._transmit(envelopes)
             if result == ExportResult.FAILED_RETRYABLE:
                 self.storage.put(envelopes, result)
             if result == ExportResult.SUCCESS:
@@ -37,6 +39,7 @@ class AzureMonitorSpanExporter(BaseExporter, SpanExporter):
             return get_trace_export_result(result)
         except Exception:  # pylint: disable=broad-except
             logger.exception("Exception occurred while exporting the data.")
+            return get_trace_export_result(ExportResult.FAILED_NOT_RETRYABLE)
 
     # pylint: disable=too-many-statements
     # pylint: disable=too-many-branches
