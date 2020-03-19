@@ -8,7 +8,6 @@ from opentelemetry import metrics
 from opentelemetry.sdk.metrics import MeterProvider
 
 from azure_monitor.auto_collection import AutoCollection
-from azure_monitor.utils import PeriodicTask
 
 
 # pylint: disable=protected-access
