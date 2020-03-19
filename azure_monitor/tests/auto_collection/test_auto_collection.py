@@ -5,7 +5,7 @@ import unittest
 from unittest import mock
 
 from opentelemetry import metrics
-from opentelemetry.sdk.metrics import Meter
+from opentelemetry.sdk.metrics import MeterProvider
 
 from azure_monitor.auto_collection import AutoCollection
 from azure_monitor.utils import PeriodicTask
@@ -15,15 +15,14 @@ from azure_monitor.utils import PeriodicTask
 class TestAutoCollection(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls._meter_defaults = (metrics._METER, metrics._METER_FACTORY)
-        metrics.set_preferred_meter_implementation(lambda _: Meter())
-        cls._meter = metrics.meter()
+        metrics.set_meter_provider(MeterProvider())
+        cls._meter = metrics.get_meter(__name__)
         kvp = {"environment": "staging"}
         cls._test_label_set = cls._meter.get_label_set(kvp)
 
     @classmethod
     def tearDownClass(cls):
-        metrics._METER, metrics._METER_FACTORY = cls._meter_defaults
+        metrics._METER_PROVIDER = None
 
     @mock.patch(
         "azure_monitor.auto_collection.PerformanceMetrics", autospec=True
@@ -36,11 +35,9 @@ class TestAutoCollection(unittest.TestCase):
         self, mock_performance, mock_dependencies, mock_requests
     ):
         """Test the constructor."""
-
-        auto_collector = AutoCollection(
+        AutoCollection(
             meter=self._meter,
             label_set=self._test_label_set,
-            collection_interval=1000,
         )
         self.assertEqual(mock_performance.called, True)
         self.assertEqual(mock_dependencies.called, True)
@@ -55,26 +52,3 @@ class TestAutoCollection(unittest.TestCase):
         )
         self.assertEqual(mock_requests.call_args[0][0], self._meter)
         self.assertEqual(mock_requests.call_args[0][1], self._test_label_set)
-
-        self.assertIsInstance(auto_collector._collect_task, PeriodicTask)
-        self.assertEqual(auto_collector._collect_task.interval, 1000)
-
-    @mock.patch(
-        "azure_monitor.auto_collection.PerformanceMetrics.track", autospec=True
-    )
-    @mock.patch(
-        "azure_monitor.auto_collection.DependencyMetrics.track", autospec=True
-    )
-    @mock.patch(
-        "azure_monitor.auto_collection.RequestMetrics.track", autospec=True
-    )
-    def test_collect(self, mock_performance, mock_dependencies, mock_requests):
-        """Test collect method."""
-
-        auto_collector = AutoCollection(
-            meter=self._meter, label_set=self._test_label_set
-        )
-        auto_collector.collect()
-        self.assertEqual(mock_performance.called, True)
-        self.assertEqual(mock_dependencies.called, True)
-        self.assertEqual(mock_requests.called, True)

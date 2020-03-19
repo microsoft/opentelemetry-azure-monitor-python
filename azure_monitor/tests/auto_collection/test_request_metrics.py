@@ -7,7 +7,7 @@ from unittest import mock
 
 import requests
 from opentelemetry import metrics
-from opentelemetry.sdk.metrics import Gauge, Meter
+from opentelemetry.sdk.metrics import MeterProvider, Observer
 
 from azure_monitor.auto_collection import RequestMetrics, request_metrics
 
@@ -19,15 +19,14 @@ ORIGINAL_CONS = HTTPServer.__init__
 class TestRequestMetrics(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls._meter_defaults = (metrics._METER, metrics._METER_FACTORY)
-        metrics.set_preferred_meter_implementation(lambda _: Meter())
-        cls._meter = metrics.meter()
+        metrics.set_meter_provider(MeterProvider())
+        cls._meter = metrics.get_meter(__name__)
         kvp = {"environment": "staging"}
         cls._test_label_set = cls._meter.get_label_set(kvp)
 
     @classmethod
     def tearDown(cls):
-        metrics._METER, metrics._METER_FACTORY = cls._meter_defaults
+        metrics._METER_PROVIDER = None
 
     def setUp(self):
         request_metrics.requests_map.clear()
@@ -44,44 +43,26 @@ class TestRequestMetrics(unittest.TestCase):
             request_metrics_collector._label_set, self._test_label_set
         )
 
-        self.assertEqual(mock_meter.create_metric.call_count, 2)
+        self.assertEqual(mock_meter.register_observer.call_count, 2)
 
-        create_metric_calls = mock_meter.create_metric.call_args_list
+        create_metric_calls = mock_meter.register_observer.call_args_list
 
-        self.assertEqual(
-            create_metric_calls[0][0],
-            (
-                "\\ASP.NET Applications(??APP_W3SVC_PROC??)\\Request Execution Time",
-                "Incoming Requests Average Execution Time",
-                "milliseconds",
-                int,
-                Gauge,
-            ),
+        create_metric_calls[0].assert_called_with(
+            callback=request_metrics_collector._track_request_duration,
+            name="\\ASP.NET Applications(??APP_W3SVC_PROC??)\\Request Execution Time",
+            description="Incoming Requests Average Execution Time",
+            unit="milliseconds",
+            value_type=int,
         )
 
-        self.assertEqual(
-            create_metric_calls[1][0],
-            (
-                "\\ASP.NET Applications(??APP_W3SVC_PROC??)\\Requests/Sec",
-                "Incoming Requests Average Execution Rate",
-                "rps",
-                int,
-                Gauge,
-            ),
-        )
+        create_metric_calls[1].assert_called_with(
+            callback=request_metrics_collector._track_request_rate,
+            name="\\ASP.NET Applications(??APP_W3SVC_PROC??)\\Requests/Sec",
+            description="Incoming Requests Average Execution Rate",
+            unit="rps",
+            value_type=int,
+        )   
 
-    def test_track(self):
-        mock_meter = mock.Mock()
-        request_metrics_collector = RequestMetrics(
-            meter=mock_meter, label_set=self._test_label_set
-        )
-        duration_mock = mock.Mock()
-        rate_mock = mock.Mock()
-        request_metrics_collector._track_request_duration = duration_mock
-        request_metrics_collector._track_request_rate = rate_mock
-        request_metrics_collector.track()
-        self.assertEqual(duration_mock.call_count, 1)
-        self.assertEqual(rate_mock.call_count, 1)
 
     def test_track_request_duration(self):
         request_metrics_collector = RequestMetrics(
@@ -90,9 +71,17 @@ class TestRequestMetrics(unittest.TestCase):
         request_metrics.requests_map["duration"] = 0.1
         request_metrics.requests_map["count"] = 10
         request_metrics.requests_map["last_count"] = 5
-        request_metrics_collector._track_request_duration()
+        obs = Observer(
+            callback=request_metrics_collector._track_request_duration,
+            name="\\ASP.NET Applications(??APP_W3SVC_PROC??)\\Request Execution Time",
+            description="Incoming Requests Average Execution Time",
+            unit="milliseconds",
+            value_type=int,
+            meter=self._meter
+        )
+        request_metrics_collector._track_request_duration(obs)
         self.assertEqual(
-            request_metrics_collector._request_duration_handle.aggregator.current,
+            obs.aggregators[self._test_label_set].current,
             20,
         )
 
@@ -103,9 +92,17 @@ class TestRequestMetrics(unittest.TestCase):
         request_metrics.requests_map["duration"] = 0.1
         request_metrics.requests_map["count"] = 10
         request_metrics.requests_map["last_count"] = 10
-        request_metrics_collector._track_request_duration()
+        obs = Observer(
+            callback=request_metrics_collector._track_request_duration,
+            name="\\ASP.NET Applications(??APP_W3SVC_PROC??)\\Request Execution Time",
+            description="Incoming Requests Average Execution Time",
+            unit="milliseconds",
+            value_type=int,
+            meter=self._meter
+        )
+        request_metrics_collector._track_request_duration(obs)
         self.assertEqual(
-            request_metrics_collector._request_duration_handle.aggregator.current,
+            obs.aggregators[self._test_label_set].current,
             0,
         )
 
@@ -117,9 +114,17 @@ class TestRequestMetrics(unittest.TestCase):
         time_mock.time.return_value = 100
         request_metrics.requests_map["last_time"] = 98
         request_metrics.requests_map["count"] = 4
-        request_metrics_collector._track_request_rate()
+        obs = Observer(
+            callback=request_metrics_collector._track_request_rate,
+            name="\\ASP.NET Applications(??APP_W3SVC_PROC??)\\Requests/Sec",
+            description="Incoming Requests Average Execution Rate",
+            unit="rps",
+            value_type=int,
+            meter=self._meter
+        )
+        request_metrics_collector._track_request_rate(obs)
         self.assertEqual(
-            request_metrics_collector._request_rate_handle.aggregator.current,
+            obs.aggregators[self._test_label_set].current,
             2,
         )
 
@@ -130,9 +135,17 @@ class TestRequestMetrics(unittest.TestCase):
             meter=self._meter, label_set=self._test_label_set
         )
         request_metrics.requests_map["last_time"] = None
-        request_metrics_collector._track_request_rate()
+        obs = Observer(
+            callback=request_metrics_collector._track_request_rate,
+            name="\\ASP.NET Applications(??APP_W3SVC_PROC??)\\Requests/Sec",
+            description="Incoming Requests Average Execution Rate",
+            unit="rps",
+            value_type=int,
+            meter=self._meter
+        )
+        request_metrics_collector._track_request_rate(obs)
         self.assertEqual(
-            request_metrics_collector._request_rate_handle.aggregator.current,
+            obs.aggregators[self._test_label_set].current,
             0,
         )
 
@@ -144,9 +157,17 @@ class TestRequestMetrics(unittest.TestCase):
         time_mock.time.return_value = 100
         request_metrics.requests_map["last_rate"] = 5
         request_metrics.requests_map["last_time"] = 100
-        request_metrics_collector._track_request_rate()
+        obs = Observer(
+            callback=request_metrics_collector._track_request_rate,
+            name="\\ASP.NET Applications(??APP_W3SVC_PROC??)\\Requests/Sec",
+            description="Incoming Requests Average Execution Rate",
+            unit="rps",
+            value_type=int,
+            meter=self._meter
+        )
+        request_metrics_collector._track_request_rate(obs)
         self.assertEqual(
-            request_metrics_collector._request_rate_handle.aggregator.current,
+            obs.aggregators[self._test_label_set].current,
             5,
         )
 

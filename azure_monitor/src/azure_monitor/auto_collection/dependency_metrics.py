@@ -4,8 +4,8 @@ import threading
 import time
 
 import requests
-from opentelemetry.metrics import LabelSet, Meter
-from opentelemetry.sdk.metrics import Gauge
+from opentelemetry.metrics import Meter
+from opentelemetry.sdk.metrics import LabelSet
 
 dependency_map = dict()
 _dependency_lock = threading.Lock()
@@ -27,21 +27,15 @@ class DependencyMetrics:
         self._label_set = label_set
         # Patch requests
         requests.Session.request = dependency_patch
-        dependency_rate_metric = self._meter.create_metric(
-            "\\ApplicationInsights\\Dependency Calls/Sec",
-            "Outgoing Requests per second",
-            "rps",
-            int,
-            Gauge,
-        )
-        self._dependency_rate_handle = dependency_rate_metric.get_handle(
-            self._label_set
+        meter.register_observer(
+            callback=self._track_dependency_rate,
+            name="\\ApplicationInsights\\Dependency Calls/Sec",
+            description="Outgoing Requests per second",
+            unit="rps",
+            value_type=int,
         )
 
-    def track(self) -> None:
-        self._track_dependency_rate()
-
-    def _track_dependency_rate(self) -> None:
+    def _track_dependency_rate(self, observer) -> None:
         """ Track Dependency rate
 
         Calculated by obtaining the number of outgoing requests made
@@ -65,8 +59,8 @@ class DependencyMetrics:
             dependency_map["last_time"] = current_time
             dependency_map["last_count"] = current_count
             dependency_map["last_result"] = result
-            self._dependency_rate_handle.set(int(result))
+            observer.observe(int(result), self._label_set)
         except ZeroDivisionError:
             # If elapsed_seconds is 0, exporter call made too close to previous
             # Return the previous result if this is the case
-            self._dependency_rate_handle.set(int(last_result))
+            observer.observe(int(last_result), self._label_set)

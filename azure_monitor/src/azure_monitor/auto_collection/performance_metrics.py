@@ -3,8 +3,8 @@
 import logging
 
 import psutil
-from opentelemetry.metrics import LabelSet, Meter
-from opentelemetry.sdk.metrics import Gauge
+from opentelemetry.metrics import Meter
+from opentelemetry.sdk.metrics import LabelSet
 
 logger = logging.getLogger(__name__)
 PROCESS = psutil.Process()
@@ -15,53 +15,36 @@ class PerformanceMetrics:
         self._meter = meter
         self._label_set = label_set
         # Create performance metrics
-        cpu_metric = self._meter.create_metric(
-            "\\Processor(_Total)\\% Processor Time",
-            "Processor time as a percentage",
-            "percentage",
-            float,
-            Gauge,
+        meter.register_observer(
+            callback=self._track_cpu,
+            name="\\Processor(_Total)\\% Processor Time",
+            description="Processor time as a percentage",
+            unit="percentage",
+            value_type=float,
         )
-        self._cpu_handle = cpu_metric.get_handle(self._label_set)
-
-        memory_metric = self._meter.create_metric(
-            "\\Memory\\Available Bytes",
-            "Amount of available memory in bytes",
-            "byte",
-            int,
-            Gauge,
+        meter.register_observer(
+            callback=self._track_memory,
+            name="\\Memory\\Available Bytes",
+            description="Amount of available memory in bytes",
+            unit="byte",
+            value_type=int,
         )
-        self._memory_handle = memory_metric.get_handle(self._label_set)
-
-        process_cpu_metric = self._meter.create_metric(
-            "\\Process(??APP_WIN32_PROC??)\\% Processor Time",
-            "Process CPU usage as a percentage",
-            "percentage",
-            float,
-            Gauge,
+        meter.register_observer(
+            callback=self._track_process_cpu,
+            name="\\Process(??APP_WIN32_PROC??)\\% Processor Time",
+            description="Process CPU usage as a percentage",
+            unit="percentage",
+            value_type=float,
         )
-        self._process_cpu_handle = process_cpu_metric.get_handle(
-            self._label_set
-        )
-
-        process_memory_metric = self._meter.create_metric(
-            "\\Process(??APP_WIN32_PROC??)\\Private Bytes",
-            "Amount of memory process has used in bytes",
-            "byte",
-            int,
-            Gauge,
-        )
-        self._process_memory_handle = process_memory_metric.get_handle(
-            self._label_set
+        meter.register_observer(
+            callback=self._track_process_memory,
+            name="\\Process(??APP_WIN32_PROC??)\\Private Bytes",
+            description="Amount of memory process has used in bytes",
+            unit="byte",
+            value_type=int,
         )
 
-    def track(self) -> None:
-        self._track_cpu()
-        self._track_process_cpu()
-        self._track_memory()
-        self._track_process_memory()
-
-    def _track_cpu(self) -> None:
+    def _track_cpu(self, observer) -> None:
         """ Track CPU time
 
         Processor time is defined as a float representing the current system
@@ -70,9 +53,17 @@ class PerformanceMetrics:
         from 0.0 to 100.0 inclusive.
         """
         cpu_times_percent = psutil.cpu_times_percent()
-        self._cpu_handle.set(100 - cpu_times_percent.idle)
+        observer.observe(100.0 - cpu_times_percent.idle, self._label_set)
 
-    def _track_process_cpu(self) -> None:
+    def _track_memory(self, observer) -> None:
+        """ Track Memory
+
+        Available memory is defined as memory that can be given instantly to
+        processes without the system going into swap.
+        """
+        observer.observe(psutil.virtual_memory().available, self._label_set)
+
+    def _track_process_cpu(self, observer) -> None:
         """ Track Process CPU time
 
         Returns a derived gauge for the CPU usage for the current process.
@@ -83,25 +74,20 @@ class PerformanceMetrics:
             # CPU cores, the returned value of cpu_percent() can be > 100.0. We
             # normalize the cpu process using the number of logical CPUs
             cpu_count = psutil.cpu_count(logical=True)
-            self._process_cpu_handle.set(PROCESS.cpu_percent() / cpu_count)
+            observer.observe(
+                PROCESS.cpu_percent() / cpu_count,
+                self._label_set
+        )
         except Exception:  # pylint: disable=broad-except
             logger.exception("Error handling get process cpu usage.")
 
-    def _track_memory(self) -> None:
-        """ Track Memory
-
-         Available memory is defined as memory that can be given instantly to
-        processes without the system going into swap.
-        """
-        self._memory_handle.set(psutil.virtual_memory().available)
-
-    def _track_process_memory(self) -> None:
+    def _track_process_memory(self, observer) -> None:
         """ Track Memory
 
          Available memory is defined as memory that can be given instantly to
         processes without the system going into swap.
         """
         try:
-            self._process_memory_handle.set(PROCESS.memory_info().rss)
+            observer.observe(PROCESS.memory_info().rss, self._label_set)
         except Exception:  # pylint: disable=broad-except
             logger.exception("Error handling get process private bytes.")

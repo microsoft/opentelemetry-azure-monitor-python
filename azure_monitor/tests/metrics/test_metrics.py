@@ -5,7 +5,7 @@ import unittest
 from unittest import mock
 
 from opentelemetry import metrics
-from opentelemetry.sdk.metrics import Counter, Meter
+from opentelemetry.sdk.metrics import Counter, MeterProvider
 from opentelemetry.sdk.metrics.export import MetricRecord, MetricsExportResult
 from opentelemetry.sdk.metrics.export.aggregate import CounterAggregator
 from opentelemetry.sdk.util import ns_to_iso_str
@@ -31,9 +31,8 @@ class TestAzureMetricsExporter(unittest.TestCase):
             "APPINSIGHTS_INSTRUMENTATIONKEY"
         ] = "1234abcd-5678-4efa-8abc-1234567890ab"
 
-        cls._meter_defaults = (metrics._METER, metrics._METER_FACTORY)
-        metrics.set_preferred_meter_implementation(lambda _: Meter())
-        cls._meter = metrics.meter()
+        metrics.set_meter_provider(MeterProvider())
+        cls._meter = metrics.get_meter(__name__)
         cls._test_metric = cls._meter.create_metric(
             "testname", "testdesc", "unit", int, Counter, ["environment"]
         )
@@ -42,7 +41,7 @@ class TestAzureMetricsExporter(unittest.TestCase):
 
     @classmethod
     def tearDownClass(cls):
-        metrics._METER, metrics._METER_PROVIDER_FACTORY = cls._meter_defaults
+        metrics._METER_PROVIDER = None
 
     def test_constructor(self):
         """Test the constructor."""
@@ -115,7 +114,7 @@ class TestAzureMetricsExporter(unittest.TestCase):
         self.assertEqual(
             envelope.time,
             ns_to_iso_str(
-                record.metric.get_handle(
+                record.metric.bind(
                     record.label_set
                 ).last_update_timestamp
             ),

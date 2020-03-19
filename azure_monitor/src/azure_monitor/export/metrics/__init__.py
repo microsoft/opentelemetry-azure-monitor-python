@@ -5,7 +5,9 @@ import logging
 from typing import Sequence
 from urllib.parse import urlparse
 
-from opentelemetry.metrics import Counter, Measure, Metric
+from opentelemetry.metrics import Metric
+from opentelemetry.util import time_ns
+from opentelemetry.sdk.metrics import Counter, Observer
 from opentelemetry.sdk.metrics.export import (
     MetricRecord,
     MetricsExporter,
@@ -52,21 +54,35 @@ class AzureMonitorMetricsExporter(BaseExporter, MetricsExporter):
 
         if not metric_record:
             return None
+        # TODO: Opentelemetry does not have last updated timestamp for observer
+        # type metrics yet.
+        _time = time_ns()
+        if isinstance(metric_record.metric, Metric):
+            _time = metric_record.metric.bind(
+                    metric_record.label_set
+                ).last_update_timestamp
         envelope = protocol.Envelope(
             ikey=self.options.instrumentation_key,
             tags=dict(utils.azure_monitor_context),
-            time=ns_to_iso_str(
-                metric_record.metric.get_handle(
-                    metric_record.label_set
-                ).last_update_timestamp
-            ),
+            time=ns_to_iso_str(_time),
         )
         envelope.name = "Microsoft.ApplicationInsights.Metric"
+        value = 0
+        metric = metric_record.metric
+        if isinstance(metric, Counter):
+            value = metric_record.aggregator.checkpoint
+        elif isinstance(metric, Observer):
+            value = metric_record.aggregator.checkpoint.last
+            if not value:
+                value = 0
+        else:
+            # TODO: What do measure aggregations look like in AI?
+            logger.warning("Measure metric recorded.")
 
         data_point = protocol.DataPoint(
             ns=metric_record.metric.description,
             name=metric_record.metric.name,
-            value=metric_record.aggregator.checkpoint,
+            value=value,
             kind=protocol.DataPointType.MEASUREMENT.value,
         )
 
