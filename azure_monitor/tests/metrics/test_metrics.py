@@ -10,7 +10,7 @@ from opentelemetry.sdk.metrics.export import MetricRecord, MetricsExportResult
 from opentelemetry.sdk.metrics.export.aggregate import (
     CounterAggregator,
     MinMaxSumCountAggregator,
-    ObserverAggregator
+    ObserverAggregator,
 )
 from opentelemetry.sdk.util import ns_to_iso_str
 
@@ -44,7 +44,13 @@ class TestAzureMetricsExporter(unittest.TestCase):
             "testname", "testdesc", "unit", int, Measure, ["environment"]
         )
         cls._test_obs = cls._meter.register_observer(
-            lambda x: x, "testname", "testdesc", "unit", int, Counter, ["environment"]
+            lambda x: x,
+            "testname",
+            "testdesc",
+            "unit",
+            int,
+            Counter,
+            ["environment"],
         )
         kvp = {"environment": "staging"}
         cls._test_label_set = cls._meter.get_label_set(kvp)
@@ -124,9 +130,7 @@ class TestAzureMetricsExporter(unittest.TestCase):
         self.assertEqual(
             envelope.time,
             ns_to_iso_str(
-                record.metric.bind(
-                    record.label_set
-                ).last_update_timestamp
+                record.metric.bind(record.label_set).last_update_timestamp
             ),
         )
         self.assertEqual(envelope.sample_rate, None)
@@ -157,9 +161,7 @@ class TestAzureMetricsExporter(unittest.TestCase):
         aggregator = ObserverAggregator()
         aggregator.update(123)
         aggregator.take_checkpoint()
-        record = MetricRecord(
-            aggregator, self._test_label_set, self._test_obs
-        )
+        record = MetricRecord(aggregator, self._test_label_set, self._test_obs)
         exporter = AzureMonitorMetricsExporter()
         envelope = exporter.metric_to_envelope(record)
         self.assertIsInstance(envelope, Envelope)
@@ -214,9 +216,7 @@ class TestAzureMetricsExporter(unittest.TestCase):
         self.assertEqual(
             envelope.time,
             ns_to_iso_str(
-                record.metric.bind(
-                    record.label_set
-                ).last_update_timestamp
+                record.metric.bind(record.label_set).last_update_timestamp
             ),
         )
         self.assertEqual(envelope.sample_rate, None)

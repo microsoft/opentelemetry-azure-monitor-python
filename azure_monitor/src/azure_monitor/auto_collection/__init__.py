@@ -18,9 +18,7 @@ __all__ = [
 
 
 class AutoCollection:
-    def __init__(
-        self, meter: Meter, label_set: LabelSet
-    ):
+    def __init__(self, meter: Meter, label_set: LabelSet):
         self._performance_metrics = PerformanceMetrics(meter, label_set)
         self._dependency_metrics = DependencyMetrics(meter, label_set)
         self._request_metrics = RequestMetrics(meter, label_set)

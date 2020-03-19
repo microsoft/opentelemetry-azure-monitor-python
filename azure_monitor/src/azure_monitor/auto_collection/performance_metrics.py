@@ -75,9 +75,8 @@ class PerformanceMetrics:
             # normalize the cpu process using the number of logical CPUs
             cpu_count = psutil.cpu_count(logical=True)
             observer.observe(
-                PROCESS.cpu_percent() / cpu_count,
-                self._label_set
-        )
+                PROCESS.cpu_percent() / cpu_count, self._label_set
+            )
         except Exception:  # pylint: disable=broad-except
             logger.exception("Error handling get process cpu usage.")
 

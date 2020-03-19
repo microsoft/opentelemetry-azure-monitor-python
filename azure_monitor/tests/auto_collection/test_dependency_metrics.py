@@ -61,14 +61,12 @@ class TestDependencyMetrics(unittest.TestCase):
             description="Outgoing Requests per second",
             unit="rps",
             value_type=int,
-            meter=self._meter
+            meter=self._meter,
         )
         dependency_metrics.dependency_map["last_time"] = 98
         dependency_metrics.dependency_map["count"] = 4
         metrics_collector._track_dependency_rate(obs)
-        self.assertEqual(
-            obs.aggregators[self._test_label_set].current, 2
-        )
+        self.assertEqual(obs.aggregators[self._test_label_set].current, 2)
 
     @mock.patch("azure_monitor.auto_collection.dependency_metrics.time")
     def test_track_dependency_rate_time_none(self, time_mock):
@@ -83,12 +81,10 @@ class TestDependencyMetrics(unittest.TestCase):
             description="Outgoing Requests per second",
             unit="rps",
             value_type=int,
-            meter=self._meter
+            meter=self._meter,
         )
         metrics_collector._track_dependency_rate(obs)
-        self.assertEqual(
-            obs.aggregators[self._test_label_set].current, 0
-        )
+        self.assertEqual(obs.aggregators[self._test_label_set].current, 0)
 
     @mock.patch("azure_monitor.auto_collection.dependency_metrics.time")
     def test_track_dependency_rate_error(self, time_mock):
@@ -104,12 +100,10 @@ class TestDependencyMetrics(unittest.TestCase):
             description="Outgoing Requests per second",
             unit="rps",
             value_type=int,
-            meter=self._meter
+            meter=self._meter,
         )
         metrics_collector._track_dependency_rate(obs)
-        self.assertEqual(
-            obs.aggregators[self._test_label_set].current, 5
-        )
+        self.assertEqual(obs.aggregators[self._test_label_set].current, 5)
 
     def test_dependency_patch(self):
         dependency_metrics.ORIGINAL_REQUEST = lambda x: None

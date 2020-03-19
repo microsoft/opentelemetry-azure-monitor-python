@@ -61,8 +61,7 @@ class TestRequestMetrics(unittest.TestCase):
             description="Incoming Requests Average Execution Rate",
             unit="rps",
             value_type=int,
-        )   
-
+        )
 
     def test_track_request_duration(self):
         request_metrics_collector = RequestMetrics(
@@ -77,13 +76,10 @@ class TestRequestMetrics(unittest.TestCase):
             description="Incoming Requests Average Execution Time",
             unit="milliseconds",
             value_type=int,
-            meter=self._meter
+            meter=self._meter,
         )
         request_metrics_collector._track_request_duration(obs)
-        self.assertEqual(
-            obs.aggregators[self._test_label_set].current,
-            20,
-        )
+        self.assertEqual(obs.aggregators[self._test_label_set].current, 20)
 
     def test_track_request_duration_error(self):
         request_metrics_collector = RequestMetrics(
@@ -98,13 +94,10 @@ class TestRequestMetrics(unittest.TestCase):
             description="Incoming Requests Average Execution Time",
             unit="milliseconds",
             value_type=int,
-            meter=self._meter
+            meter=self._meter,
         )
         request_metrics_collector._track_request_duration(obs)
-        self.assertEqual(
-            obs.aggregators[self._test_label_set].current,
-            0,
-        )
+        self.assertEqual(obs.aggregators[self._test_label_set].current, 0)
 
     @mock.patch("azure_monitor.auto_collection.request_metrics.time")
     def test_track_request_rate(self, time_mock):
@@ -120,13 +113,10 @@ class TestRequestMetrics(unittest.TestCase):
             description="Incoming Requests Average Execution Rate",
             unit="rps",
             value_type=int,
-            meter=self._meter
+            meter=self._meter,
         )
         request_metrics_collector._track_request_rate(obs)
-        self.assertEqual(
-            obs.aggregators[self._test_label_set].current,
-            2,
-        )
+        self.assertEqual(obs.aggregators[self._test_label_set].current, 2)
 
     @mock.patch("azure_monitor.auto_collection.request_metrics.time")
     def test_track_request_rate_time_none(self, time_mock):
@@ -141,13 +131,10 @@ class TestRequestMetrics(unittest.TestCase):
             description="Incoming Requests Average Execution Rate",
             unit="rps",
             value_type=int,
-            meter=self._meter
+            meter=self._meter,
         )
         request_metrics_collector._track_request_rate(obs)
-        self.assertEqual(
-            obs.aggregators[self._test_label_set].current,
-            0,
-        )
+        self.assertEqual(obs.aggregators[self._test_label_set].current, 0)
 
     @mock.patch("azure_monitor.auto_collection.request_metrics.time")
     def test_track_request_rate_error(self, time_mock):
@@ -163,13 +150,10 @@ class TestRequestMetrics(unittest.TestCase):
             description="Incoming Requests Average Execution Rate",
             unit="rps",
             value_type=int,
-            meter=self._meter
+            meter=self._meter,
         )
         request_metrics_collector._track_request_rate(obs)
-        self.assertEqual(
-            obs.aggregators[self._test_label_set].current,
-            5,
-        )
+        self.assertEqual(obs.aggregators[self._test_label_set].current, 5)
 
     def test_request_patch(self):
         map = request_metrics.requests_map  # pylint: disable=redefined-builtin

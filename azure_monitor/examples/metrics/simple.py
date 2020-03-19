@@ -1,9 +1,10 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
-from azure_monitor import AzureMonitorMetricsExporter
 from opentelemetry import metrics
 from opentelemetry.sdk.metrics import Counter, MeterProvider
 from opentelemetry.sdk.metrics.export.controller import PushController
+
+from azure_monitor import AzureMonitorMetricsExporter
 
 metrics.set_meter_provider(MeterProvider())
 meter = metrics.get_meter(__name__)

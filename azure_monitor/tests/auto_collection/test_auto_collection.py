@@ -35,10 +35,7 @@ class TestAutoCollection(unittest.TestCase):
         self, mock_performance, mock_dependencies, mock_requests
     ):
         """Test the constructor."""
-        AutoCollection(
-            meter=self._meter,
-            label_set=self._test_label_set,
-        )
+        AutoCollection(meter=self._meter, label_set=self._test_label_set)
         self.assertEqual(mock_performance.called, True)
         self.assertEqual(mock_dependencies.called, True)
         self.assertEqual(mock_requests.called, True)

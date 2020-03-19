@@ -4,6 +4,7 @@ from opentelemetry.sdk.trace.export import BatchExportSpanProcessor
 
 from azure_monitor import AzureMonitorSpanExporter
 
+
 # Callback function to add os_type: linux to span properties
 def callback_function(envelope):
     envelope.data.base_data.properties["os_type"] = "linux"

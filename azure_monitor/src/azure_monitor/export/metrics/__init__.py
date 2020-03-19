@@ -6,7 +6,6 @@ from typing import Sequence
 from urllib.parse import urlparse
 
 from opentelemetry.metrics import Metric
-from opentelemetry.util import time_ns
 from opentelemetry.sdk.metrics import Counter, Observer
 from opentelemetry.sdk.metrics.export import (
     MetricRecord,
@@ -14,6 +13,7 @@ from opentelemetry.sdk.metrics.export import (
     MetricsExportResult,
 )
 from opentelemetry.sdk.util import ns_to_iso_str
+from opentelemetry.util import time_ns
 
 from azure_monitor import protocol, utils
 from azure_monitor.export import (
@@ -59,8 +59,8 @@ class AzureMonitorMetricsExporter(BaseExporter, MetricsExporter):
         _time = time_ns()
         if isinstance(metric_record.metric, Metric):
             _time = metric_record.metric.bind(
-                    metric_record.label_set
-                ).last_update_timestamp
+                metric_record.label_set
+            ).last_update_timestamp
         envelope = protocol.Envelope(
             ikey=self.options.instrumentation_key,
             tags=dict(utils.azure_monitor_context),

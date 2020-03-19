@@ -98,8 +98,7 @@ class RequestMetrics:
             # If interval_count is 0, exporter call made too close to previous
             # Return the previous result if this is the case
             observer.observe(
-                int(last_average_duration * 1000.0),
-                self._label_set
+                int(last_average_duration * 1000.0), self._label_set
             )
 
     def _track_request_rate(self, observer) -> None:
