@@ -6,7 +6,6 @@ import time
 from http.server import HTTPServer
 
 from opentelemetry.metrics import LabelSet, Meter
-from opentelemetry.sdk.metrics import Gauge
 
 logger = logging.getLogger(__name__)
 
@@ -60,33 +59,23 @@ class RequestMetrics:
         # Patch the HTTPServer handler to track request information
         HTTPServer.__init__ = server_patch
 
-        request_duration_metric = self._meter.create_metric(
-            "\\ASP.NET Applications(??APP_W3SVC_PROC??)\\Request Execution Time",
-            "Incoming Requests Average Execution Time",
-            "milliseconds",
-            int,
-            Gauge,
-        )
-        self._request_duration_handle = request_duration_metric.get_handle(
-            self._label_set
+        meter.register_observer(
+            callback=self._track_request_duration,
+            name="\\ASP.NET Applications(??APP_W3SVC_PROC??)\\Request Execution Time",
+            description="Incoming Requests Average Execution Time",
+            unit="milliseconds",
+            value_type=int,
         )
 
-        request_rate_metric = self._meter.create_metric(
-            "\\ASP.NET Applications(??APP_W3SVC_PROC??)\\Requests/Sec",
-            "Incoming Requests Average Execution Rate",
-            "rps",
-            int,
-            Gauge,
-        )
-        self._request_rate_handle = request_rate_metric.get_handle(
-            self._label_set
+        meter.register_observer(
+            callback=self._track_request_rate,
+            name="\\ASP.NET Applications(??APP_W3SVC_PROC??)\\Requests/Sec",
+            description="Incoming Requests Average Execution Rate",
+            unit="rps",
+            value_type=int,
         )
 
-    def track(self) -> None:
-        self._track_request_duration()
-        self._track_request_rate()
-
-    def _track_request_duration(self) -> None:
+    def _track_request_duration(self, observer) -> None:
         """ Track Request execution time
 
         Calculated by getting the time it takes to make an incoming request
@@ -104,15 +93,15 @@ class RequestMetrics:
             requests_map["last_average_duration"] = result
             requests_map["last_duration"] = requests_map.get("duration", 0)
             # Convert to milliseconds
-            self._request_duration_handle.set(int(result * 1000.0))
+            observer.observe(int(result * 1000.0), self._label_set)
         except ZeroDivisionError:
             # If interval_count is 0, exporter call made too close to previous
             # Return the previous result if this is the case
-            self._request_duration_handle.set(
-                int(last_average_duration * 1000.0)
+            observer.observe(
+                int(last_average_duration * 1000.0), self._label_set
             )
 
-    def _track_request_rate(self) -> None:
+    def _track_request_rate(self, observer) -> None:
         """ Track Request execution rate
 
         Calculated by obtaining by getting the number of incoming requests
@@ -136,8 +125,8 @@ class RequestMetrics:
             requests_map["last_time"] = current_time
             requests_map["last_count"] = requests_map.get("count", 0)
             requests_map["last_rate"] = result
-            self._request_rate_handle.set(int(result))
+            observer.observe(int(result), self._label_set)
         except ZeroDivisionError:
             # If elapsed_seconds is 0, exporter call made too close to previous
             # Return the previous result if this is the case
-            self._request_rate_handle.set(int(last_rate))
+            observer.observe(int(last_rate), self._label_set)
