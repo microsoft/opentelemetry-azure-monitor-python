@@ -96,7 +96,7 @@ class TestBaseExporter(unittest.TestCase):
 
         base.add_telemetry_processor(callback_function)
         envelope = Envelope(data=Data(base_type="type1"))
-        base.apply_telemetry_processors([envelope])
+        base._apply_telemetry_processors([envelope])
         self.assertEqual(envelope.data.base_type, "type1_world")
 
     def test_telemetry_processor_apply_multiple(self):
@@ -112,7 +112,7 @@ class TestBaseExporter(unittest.TestCase):
         base.add_telemetry_processor(callback_function)
         base.add_telemetry_processor(callback_function2)
         envelope = Envelope(data=Data(base_type="type1"))
-        base.apply_telemetry_processors([envelope])
+        base._apply_telemetry_processors([envelope])
         self.assertEqual(envelope.data.base_type, "type1_world_world2")
 
     def test_telemetry_processor_apply_exception(self):
@@ -127,7 +127,7 @@ class TestBaseExporter(unittest.TestCase):
         base.add_telemetry_processor(callback_function)
         base.add_telemetry_processor(callback_function2)
         envelope = Envelope(data=Data(base_type="type1"))
-        base.apply_telemetry_processors([envelope])
+        base._apply_telemetry_processors([envelope])
         self.assertEqual(envelope.data.base_type, "type1_world2")
 
     def test_telemetry_processor_apply_not_accepted(self):
@@ -139,7 +139,7 @@ class TestBaseExporter(unittest.TestCase):
         base.add_telemetry_processor(callback_function)
         envelope = Envelope(data=Data(base_type="type1"))
         envelope2 = Envelope(data=Data(base_type="type2"))
-        envelopes = base.apply_telemetry_processors([envelope, envelope2])
+        envelopes = base._apply_telemetry_processors([envelope, envelope2])
         self.assertEqual(len(envelopes), 1)
         self.assertEqual(envelopes[0].data.base_type, "type2")
 

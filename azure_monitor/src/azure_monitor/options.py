@@ -51,15 +51,17 @@ class ExporterOptions(BaseObject):
         instrumentation_key: str = None,
         storage_maintenance_period: int = 60,
         storage_max_size: int = 100 * 1024 * 1024,
-        storage_path: str = os.path.join(
-            os.path.expanduser("~"),
-            ".opentelemetry",
-            ".azure",
-            os.path.basename(sys.argv[0]) or ".console",
-        ),
+        storage_path: str = None,
         storage_retention_period: int = 7 * 24 * 60 * 60,
         timeout: int = 10.0,  # networking timeout in seconds
     ) -> None:
+        if storage_path is None:
+            storage_path = os.path.join(
+                os.path.expanduser("~"),
+                ".opentelemetry",
+                ".azure",
+                os.path.basename(sys.argv[0]) or ".console",
+            )
         self.connection_string = connection_string
         self.instrumentation_key = instrumentation_key
         self.storage_maintenance_period = storage_maintenance_period

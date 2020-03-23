@@ -24,6 +24,12 @@ class ExportResult(Enum):
 
 # pylint: disable=broad-except
 class BaseExporter:
+    """Azure Monitor base exporter for OpenTelemetry.
+
+    Args:
+        options: Configuration options for the exporter
+    """
+
     def __init__(self, **options):
         self._telemetry_processors = []
         self.options = ExporterOptions(**options)
@@ -41,7 +47,9 @@ class BaseExporter:
 
         Telemetry processors will be called one by one before telemetry
         item is pushed for sending and in the order they were added.
-        :param processor: The processor to add.
+
+        Args:
+            processor: Processor to add
         """
         self._telemetry_processors.append(processor)
 
@@ -49,7 +57,7 @@ class BaseExporter:
         """Removes all telemetry processors"""
         self._telemetry_processors = []
 
-    def apply_telemetry_processors(
+    def _apply_telemetry_processors(
         self, envelopes: typing.List[Envelope]
     ) -> typing.List[Envelope]:
         """Applies all telemetry processors in the order they were added.
@@ -59,7 +67,9 @@ class BaseExporter:
         throw exceptions and fail, but the applying of all telemetry processors
         will proceed (not fast fail). Processors also return True if envelope
         should be included for exporting, False otherwise.
-        :param envelopes: The envelopes to apply each processor to.
+
+        Args:
+            envelopes: The envelopes to apply each processor to.
         """
         filtered_envelopes = []
         for envelope in envelopes:

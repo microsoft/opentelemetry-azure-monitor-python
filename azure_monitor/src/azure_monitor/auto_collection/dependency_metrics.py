@@ -22,6 +22,13 @@ def dependency_patch(*args, **kwargs) -> None:
 
 
 class DependencyMetrics:
+    """Starts auto collection of dependency metrics, including "Outgoing Requests per second" metric.
+
+    Args:
+        meter: OpenTelemetry Meter
+        label_set: OpenTelemetry label set
+    """
+
     def __init__(self, meter: Meter, label_set: LabelSet):
         self._meter = meter
         self._label_set = label_set
