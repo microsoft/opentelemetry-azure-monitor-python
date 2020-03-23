@@ -15,9 +15,7 @@ import sys
 from os import listdir
 from os.path import isdir, join
 
-source_dirs = [
-    os.path.abspath("../azure_monitor/src/"),
-]
+source_dirs = [os.path.abspath("../azure_monitor/src/")]
 
 
 sys.path[:0] = source_dirs
@@ -25,12 +23,12 @@ sys.path[:0] = source_dirs
 
 # -- Project information -----------------------------------------------------
 
-project = 'OpenTelemetry Azure Monitor Python'
-copyright = '2020, Microsoft'
-author = 'Microsoft'
+project = "OpenTelemetry Azure Monitor Python"
+copyright = "2020, Microsoft"
+author = "Microsoft"
 
 # The full version, including alpha/beta/rc tags
-release = '0.0.1b'
+release = "0.0.1b"
 
 
 # -- General configuration ---------------------------------------------------
@@ -57,15 +55,17 @@ extensions = [
 ]
 
 
-intersphinx_mapping = {'python': ('https://opentelemetry-python.readthedocs.io/en/stable',None)}
+intersphinx_mapping = {
+    "python": ("https://opentelemetry-python.readthedocs.io/en/stable", None)
+}
 
 # Add any paths that contain templates here, relative to this directory.
-templates_path = ['_templates']
+templates_path = ["_templates"]
 
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
 # This pattern also affects html_static_path and html_extra_path.
-exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
+exclude_patterns = ["_build", "Thumbs.db", ".DS_Store"]
 
 
 # -- Options for HTML output -------------------------------------------------
@@ -73,9 +73,9 @@ exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
 #
-html_theme = 'sphinx_rtd_theme'
+html_theme = "sphinx_rtd_theme"
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
-html_static_path = ['_static']
+html_static_path = ["_static"]
