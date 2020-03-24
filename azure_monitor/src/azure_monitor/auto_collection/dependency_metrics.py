@@ -22,7 +22,7 @@ def dependency_patch(*args, **kwargs) -> None:
 
 
 class DependencyMetrics:
-    """Starts auto collection of dependency metrics, including 
+    """Starts auto collection of dependency metrics, including
     "Outgoing Requests per second" metric.
 
     Args:
