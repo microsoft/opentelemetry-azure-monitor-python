@@ -53,6 +53,15 @@ def server_patch(*args, **kwargs):
 
 
 class RequestMetrics:
+    """Starts auto collection of request metrics, including
+    "Incoming Requests Average Execution Time" and
+    "Incoming Requests Average Execution Rate" metrics.
+
+    Args:
+        meter: OpenTelemetry Meter
+        label_set: OpenTelemetry label set
+    """
+
     def __init__(self, meter: Meter, label_set: LabelSet):
         self._meter = meter
         self._label_set = label_set

@@ -21,12 +21,18 @@ logger = logging.getLogger(__name__)
 
 
 class AzureMonitorSpanExporter(BaseExporter, SpanExporter):
+    """Azure Monitor span exporter for OpenTelemetry.
+
+    Args:
+        options: :doc:`export.options` to allow configuration for the exporter
+    """
+
     def export(self, spans: Sequence[Span]) -> SpanExportResult:
-        envelopes = list(map(self.span_to_envelope, spans))
+        envelopes = list(map(self._span_to_envelope, spans))
         envelopes = list(
             map(
                 lambda x: x.to_dict(),
-                self.apply_telemetry_processors(envelopes),
+                self._apply_telemetry_processors(envelopes),
             )
         )
         try:
@@ -43,7 +49,7 @@ class AzureMonitorSpanExporter(BaseExporter, SpanExporter):
 
     # pylint: disable=too-many-statements
     # pylint: disable=too-many-branches
-    def span_to_envelope(self, span: Span) -> protocol.Envelope:
+    def _span_to_envelope(self, span: Span) -> protocol.Envelope:
         if not span:
             return None
         envelope = protocol.Envelope(
