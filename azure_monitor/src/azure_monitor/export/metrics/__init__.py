@@ -26,14 +26,20 @@ logger = logging.getLogger(__name__)
 
 
 class AzureMonitorMetricsExporter(BaseExporter, MetricsExporter):
+    """Azure Monitor metrics exporter for OpenTelemetry.
+
+    Args:
+        options: :doc:`export.options` to allow configuration for the exporter
+    """
+
     def export(
         self, metric_records: Sequence[MetricRecord]
     ) -> MetricsExportResult:
-        envelopes = list(map(self.metric_to_envelope, metric_records))
+        envelopes = list(map(self._metric_to_envelope, metric_records))
         envelopes = list(
             map(
                 lambda x: x.to_dict(),
-                self.apply_telemetry_processors(envelopes),
+                self._apply_telemetry_processors(envelopes),
             )
         )
         try:
@@ -48,7 +54,7 @@ class AzureMonitorMetricsExporter(BaseExporter, MetricsExporter):
             logger.exception("Exception occurred while exporting the data.")
             return get_metrics_export_result(ExportResult.FAILED_NOT_RETRYABLE)
 
-    def metric_to_envelope(
+    def _metric_to_envelope(
         self, metric_record: MetricRecord
     ) -> protocol.Envelope:
 

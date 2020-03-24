@@ -113,7 +113,7 @@ class TestAzureMetricsExporter(unittest.TestCase):
 
     def test_metric_to_envelope_none(self):
         exporter = AzureMonitorMetricsExporter()
-        self.assertIsNone(exporter.metric_to_envelope(None))
+        self.assertIsNone(exporter._metric_to_envelope(None))
 
     def test_metric_to_envelope(self):
         aggregator = CounterAggregator()
@@ -123,7 +123,7 @@ class TestAzureMetricsExporter(unittest.TestCase):
             aggregator, self._test_label_set, self._test_metric
         )
         exporter = AzureMonitorMetricsExporter()
-        envelope = exporter.metric_to_envelope(record)
+        envelope = exporter._metric_to_envelope(record)
         self.assertIsInstance(envelope, Envelope)
         self.assertEqual(envelope.ver, 1)
         self.assertEqual(envelope.name, "Microsoft.ApplicationInsights.Metric")
@@ -163,7 +163,7 @@ class TestAzureMetricsExporter(unittest.TestCase):
         aggregator.take_checkpoint()
         record = MetricRecord(aggregator, self._test_label_set, self._test_obs)
         exporter = AzureMonitorMetricsExporter()
-        envelope = exporter.metric_to_envelope(record)
+        envelope = exporter._metric_to_envelope(record)
         self.assertIsInstance(envelope, Envelope)
         self.assertEqual(envelope.ver, 1)
         self.assertEqual(envelope.name, "Microsoft.ApplicationInsights.Metric")
@@ -209,7 +209,7 @@ class TestAzureMetricsExporter(unittest.TestCase):
             aggregator, self._test_label_set, self._test_measure
         )
         exporter = AzureMonitorMetricsExporter()
-        envelope = exporter.metric_to_envelope(record)
+        envelope = exporter._metric_to_envelope(record)
         self.assertIsInstance(envelope, Envelope)
         self.assertEqual(envelope.ver, 1)
         self.assertEqual(envelope.name, "Microsoft.ApplicationInsights.Metric")

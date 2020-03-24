@@ -22,6 +22,14 @@ def dependency_patch(*args, **kwargs) -> None:
 
 
 class DependencyMetrics:
+    """Starts auto collection of dependency metrics, including
+    "Outgoing Requests per second" metric.
+
+    Args:
+        meter: OpenTelemetry Meter
+        label_set: OpenTelemetry label set
+    """
+
     def __init__(self, meter: Meter, label_set: LabelSet):
         self._meter = meter
         self._label_set = label_set
@@ -39,8 +47,8 @@ class DependencyMetrics:
         """ Track Dependency rate
 
         Calculated by obtaining the number of outgoing requests made
-        using the requests library within an elapsed time and dividing that
-        value over the elapsed time.
+        using the requests library within an elapsed time and dividing
+        that value over the elapsed time.
         """
         current_count = dependency_map.get("count", 0)
         current_time = time.time()
