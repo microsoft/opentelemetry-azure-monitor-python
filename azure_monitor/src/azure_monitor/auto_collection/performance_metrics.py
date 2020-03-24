@@ -11,9 +11,10 @@ PROCESS = psutil.Process()
 
 
 class PerformanceMetrics:
-    """Starts auto collection of performance metrics, including "Processor time as a percentage",
-    "Amount of available memory in bytes", "Process CPU usage as a percentage" and "Amount of memory
-    process has used in bytes metrics".
+    """Starts auto collection of performance metrics, including
+    "Processor time as a percentage", "Amount of available memory
+    in bytes", "Process CPU usage as a percentage" and "Amount of
+    memory process has used in bytes" metrics.
 
     Args:
         meter: OpenTelemetry Meter

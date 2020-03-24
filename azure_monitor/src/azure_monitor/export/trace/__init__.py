@@ -24,7 +24,7 @@ class AzureMonitorSpanExporter(BaseExporter, SpanExporter):
     """Azure Monitor span exporter for OpenTelemetry.
 
     Args:
-        options: Configuration options for the exporter
+        options: :doc:`export.options` to allow configuration for the exporter
     """
 
     def export(self, spans: Sequence[Span]) -> SpanExportResult:

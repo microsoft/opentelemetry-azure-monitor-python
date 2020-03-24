@@ -53,8 +53,9 @@ def server_patch(*args, **kwargs):
 
 
 class RequestMetrics:
-    """Starts auto collection of request metrics, including "Incoming Requests Average Execution Time"
-    and "Incoming Requests Average Execution Rate" metrics.
+    """Starts auto collection of request metrics, including 
+    "Incoming Requests Average Execution Time" and 
+    "Incoming Requests Average Execution Rate" metrics.
 
     Args:
         meter: OpenTelemetry Meter

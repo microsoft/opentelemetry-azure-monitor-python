@@ -29,7 +29,7 @@ class AzureMonitorMetricsExporter(BaseExporter, MetricsExporter):
     """Azure Monitor metrics exporter for OpenTelemetry.
 
     Args:
-        options: Configuration options for the exporter
+        options: :doc:`export.options` to allow configuration for the exporter
     """
 
     def export(

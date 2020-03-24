@@ -18,7 +18,8 @@ __all__ = [
 
 
 class AutoCollection:
-    """Starts auto collection of standard metrics, including performance, dependency and request metrics.
+    """Starts auto collection of standard metrics, including performance,
+    dependency and request metrics.
 
     Args:
         meter: OpenTelemetry Meter
