@@ -4,7 +4,8 @@ from opentelemetry import metrics
 from opentelemetry.sdk.metrics import MeterProvider
 from opentelemetry.sdk.metrics.export.controller import PushController
 
-from azure_monitor import AutoCollection, AzureMonitorMetricsExporter
+from azure_monitor import AzureMonitorMetricsExporter
+from azure_monitor.sdk.auto_collection import AutoCollection
 
 metrics.set_meter_provider(MeterProvider())
 meter = metrics.get_meter(__name__)

@@ -200,6 +200,49 @@ class TestAzureMetricsExporter(unittest.TestCase):
         self.assertIsNotNone(envelope.tags["ai.device.type"])
         self.assertIsNotNone(envelope.tags["ai.internal.sdkVersion"])
 
+    def test_observer_to_envelope_value_none(self):
+        aggregator = ObserverAggregator()
+        aggregator.update(None)
+        aggregator.take_checkpoint()
+        record = MetricRecord(aggregator, self._test_label_set, self._test_obs)
+        exporter = AzureMonitorMetricsExporter()
+        envelope = exporter._metric_to_envelope(record)
+        self.assertIsInstance(envelope, Envelope)
+        self.assertEqual(envelope.ver, 1)
+        self.assertEqual(envelope.name, "Microsoft.ApplicationInsights.Metric")
+        # TODO: implement last updated timestamp for observer
+        # self.assertEqual(
+        #     envelope.time,
+        #     ns_to_iso_str(
+        #         record.metric.bind(
+        #             record.label_set
+        #         ).last_update_timestamp
+        #     ),
+        # )
+        self.assertEqual(envelope.sample_rate, None)
+        self.assertEqual(envelope.seq, None)
+        self.assertEqual(envelope.ikey, "1234abcd-5678-4efa-8abc-1234567890ab")
+        self.assertEqual(envelope.flags, None)
+
+        self.assertIsInstance(envelope.data, Data)
+        self.assertIsInstance(envelope.data.base_data, MetricData)
+        self.assertEqual(envelope.data.base_data.ver, 2)
+        self.assertEqual(len(envelope.data.base_data.metrics), 1)
+        self.assertIsInstance(envelope.data.base_data.metrics[0], DataPoint)
+        self.assertEqual(envelope.data.base_data.metrics[0].ns, "testdesc")
+        self.assertEqual(envelope.data.base_data.metrics[0].name, "testname")
+        self.assertEqual(envelope.data.base_data.metrics[0].value, 0)
+        self.assertEqual(
+            envelope.data.base_data.properties["environment"], "staging"
+        )
+        self.assertIsNotNone(envelope.tags["ai.cloud.role"])
+        self.assertIsNotNone(envelope.tags["ai.cloud.roleInstance"])
+        self.assertIsNotNone(envelope.tags["ai.device.id"])
+        self.assertIsNotNone(envelope.tags["ai.device.locale"])
+        self.assertIsNotNone(envelope.tags["ai.device.osVersion"])
+        self.assertIsNotNone(envelope.tags["ai.device.type"])
+        self.assertIsNotNone(envelope.tags["ai.internal.sdkVersion"])
+
     @mock.patch("azure_monitor.export.metrics.logger")
     def test_measure_to_envelope(self, logger_mock):
         aggregator = MinMaxSumCountAggregator()

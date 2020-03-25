@@ -9,7 +9,7 @@ import requests
 from opentelemetry import metrics
 from opentelemetry.sdk.metrics import MeterProvider, Observer
 
-from azure_monitor.auto_collection import DependencyMetrics, dependency_metrics
+from azure_monitor.sdk.auto_collection import dependency_metrics
 
 ORIGINAL_FUNCTION = requests.Session.request
 ORIGINAL_CONS = HTTPServer.__init__
@@ -27,6 +27,8 @@ class TestDependencyMetrics(unittest.TestCase):
     @classmethod
     def tearDown(cls):
         metrics._METER_PROVIDER = None
+        requests.Session.request = ORIGINAL_FUNCTION
+        dependency_metrics.ORIGINAL_CONSTRUCTOR = ORIGINAL_CONS
 
     def setUp(self):
         dependency_metrics.dependency_map.clear()
@@ -35,7 +37,7 @@ class TestDependencyMetrics(unittest.TestCase):
 
     def test_constructor(self):
         mock_meter = mock.Mock()
-        metrics_collector = DependencyMetrics(
+        metrics_collector = dependency_metrics.DependencyMetrics(
             meter=mock_meter, label_set=self._test_label_set
         )
         self.assertEqual(metrics_collector._meter, mock_meter)
@@ -49,10 +51,10 @@ class TestDependencyMetrics(unittest.TestCase):
             value_type=int,
         )
 
-    @mock.patch("azure_monitor.auto_collection.dependency_metrics.time")
+    @mock.patch("azure_monitor.sdk.auto_collection.dependency_metrics.time")
     def test_track_dependency_rate(self, time_mock):
         time_mock.time.return_value = 100
-        metrics_collector = DependencyMetrics(
+        metrics_collector = dependency_metrics.DependencyMetrics(
             meter=self._meter, label_set=self._test_label_set
         )
         obs = Observer(
@@ -68,10 +70,10 @@ class TestDependencyMetrics(unittest.TestCase):
         metrics_collector._track_dependency_rate(obs)
         self.assertEqual(obs.aggregators[self._test_label_set].current, 2)
 
-    @mock.patch("azure_monitor.auto_collection.dependency_metrics.time")
+    @mock.patch("azure_monitor.sdk.auto_collection.dependency_metrics.time")
     def test_track_dependency_rate_time_none(self, time_mock):
         time_mock.time.return_value = 100
-        metrics_collector = DependencyMetrics(
+        metrics_collector = dependency_metrics.DependencyMetrics(
             meter=self._meter, label_set=self._test_label_set
         )
         dependency_metrics.dependency_map["last_time"] = None
@@ -86,10 +88,10 @@ class TestDependencyMetrics(unittest.TestCase):
         metrics_collector._track_dependency_rate(obs)
         self.assertEqual(obs.aggregators[self._test_label_set].current, 0)
 
-    @mock.patch("azure_monitor.auto_collection.dependency_metrics.time")
+    @mock.patch("azure_monitor.sdk.auto_collection.dependency_metrics.time")
     def test_track_dependency_rate_error(self, time_mock):
         time_mock.time.return_value = 100
-        metrics_collector = DependencyMetrics(
+        metrics_collector = dependency_metrics.DependencyMetrics(
             meter=self._meter, label_set=self._test_label_set
         )
         dependency_metrics.dependency_map["last_time"] = 100
@@ -105,10 +107,22 @@ class TestDependencyMetrics(unittest.TestCase):
         metrics_collector._track_dependency_rate(obs)
         self.assertEqual(obs.aggregators[self._test_label_set].current, 5)
 
-    def test_dependency_patch(self):
-        dependency_metrics.ORIGINAL_REQUEST = lambda x: None
+    @mock.patch(
+        "azure_monitor.sdk.auto_collection.dependency_metrics.ORIGINAL_REQUEST"
+    )
+    def test_dependency_patch(self, request_mock):
         session = requests.Session()
-        result = dependency_metrics.dependency_patch(session)
-
+        dependency_metrics.dependency_patch(session)
         self.assertEqual(dependency_metrics.dependency_map["count"], 1)
-        self.assertIsNone(result)
+        request_mock.assert_called_with(session)
+
+    @mock.patch(
+        "azure_monitor.sdk.auto_collection.dependency_metrics.ORIGINAL_REQUEST"
+    )
+    @mock.patch("azure_monitor.sdk.auto_collection.dependency_metrics.context")
+    def test_dependency_patch_suppress(self, context_mock, request_mock):
+        context_mock.get_value.return_value = {}
+        session = requests.Session()
+        dependency_metrics.dependency_patch(session)
+        self.assertEqual(dependency_metrics.dependency_map.get("count"), None)
+        request_mock.assert_called_with(session)

@@ -27,7 +27,7 @@ The package is available on PyPI, and can installed via pip:
     :name: documentation
 
     azure_monitor/export/main
-    azure_monitor/auto-collection/main
+    azure_monitor/sdk/auto-collection/main
 
 
 Indices and tables
