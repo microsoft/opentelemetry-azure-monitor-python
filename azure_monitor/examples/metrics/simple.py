@@ -9,7 +9,7 @@ from azure_monitor import AzureMonitorMetricsExporter
 metrics.set_meter_provider(MeterProvider())
 meter = metrics.get_meter(__name__)
 exporter = AzureMonitorMetricsExporter(
-    # connection_string="InstrumentationKey=<INSTRUMENTATION KEY HERE>"
+    connection_string="InstrumentationKey=<INSTRUMENTATION KEY HERE>"
 )
 controller = PushController(meter, exporter, 5)
 
