@@ -8,7 +8,7 @@ from unittest import mock
 from opentelemetry import metrics
 from opentelemetry.sdk.metrics import MeterProvider, Observer
 
-from azure_monitor.auto_collection import PerformanceMetrics
+from azure_monitor.sdk.auto_collection import PerformanceMetrics
 
 
 def throw(exc_type, *args, **kwargs):
@@ -111,10 +111,10 @@ class TestPerformanceMetrics(unittest.TestCase):
         performance_metrics_collector._track_memory(obs)
         self.assertEqual(obs.aggregators[self._test_label_set].current, 100)
 
-    @mock.patch("azure_monitor.auto_collection.performance_metrics.psutil")
+    @mock.patch("azure_monitor.sdk.auto_collection.performance_metrics.psutil")
     def test_track_process_cpu(self, psutil_mock):
         with mock.patch(
-            "azure_monitor.auto_collection.performance_metrics.PROCESS"
+            "azure_monitor.sdk.auto_collection.performance_metrics.PROCESS"
         ) as process_mock:
             performance_metrics_collector = PerformanceMetrics(
                 meter=self._meter, label_set=self._test_label_set
@@ -134,10 +134,10 @@ class TestPerformanceMetrics(unittest.TestCase):
                 obs.aggregators[self._test_label_set].current, 22.2
             )
 
-    @mock.patch("azure_monitor.auto_collection.performance_metrics.logger")
+    @mock.patch("azure_monitor.sdk.auto_collection.performance_metrics.logger")
     def test_track_process_cpu_exception(self, logger_mock):
         with mock.patch(
-            "azure_monitor.auto_collection.performance_metrics.psutil"
+            "azure_monitor.sdk.auto_collection.performance_metrics.psutil"
         ) as psutil_mock:
             performance_metrics_collector = PerformanceMetrics(
                 meter=self._meter, label_set=self._test_label_set
@@ -156,7 +156,7 @@ class TestPerformanceMetrics(unittest.TestCase):
 
     def test_track_process_memory(self):
         with mock.patch(
-            "azure_monitor.auto_collection.performance_metrics.PROCESS"
+            "azure_monitor.sdk.auto_collection.performance_metrics.PROCESS"
         ) as process_mock:
             performance_metrics_collector = PerformanceMetrics(
                 meter=self._meter, label_set=self._test_label_set
@@ -177,10 +177,10 @@ class TestPerformanceMetrics(unittest.TestCase):
                 obs.aggregators[self._test_label_set].current, 100
             )
 
-    @mock.patch("azure_monitor.auto_collection.performance_metrics.logger")
+    @mock.patch("azure_monitor.sdk.auto_collection.performance_metrics.logger")
     def test_track_process_memory_exception(self, logger_mock):
         with mock.patch(
-            "azure_monitor.auto_collection.performance_metrics.PROCESS",
+            "azure_monitor.sdk.auto_collection.performance_metrics.PROCESS",
             throw(Exception),
         ):
             performance_metrics_collector = PerformanceMetrics(

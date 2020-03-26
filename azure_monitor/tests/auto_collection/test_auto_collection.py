@@ -7,7 +7,7 @@ from unittest import mock
 from opentelemetry import metrics
 from opentelemetry.sdk.metrics import MeterProvider
 
-from azure_monitor.auto_collection import AutoCollection
+from azure_monitor.sdk.auto_collection import AutoCollection
 
 
 # pylint: disable=protected-access
@@ -24,12 +24,14 @@ class TestAutoCollection(unittest.TestCase):
         metrics._METER_PROVIDER = None
 
     @mock.patch(
-        "azure_monitor.auto_collection.PerformanceMetrics", autospec=True
+        "azure_monitor.sdk.auto_collection.PerformanceMetrics", autospec=True
     )
     @mock.patch(
-        "azure_monitor.auto_collection.DependencyMetrics", autospec=True
+        "azure_monitor.sdk.auto_collection.DependencyMetrics", autospec=True
     )
-    @mock.patch("azure_monitor.auto_collection.RequestMetrics", autospec=True)
+    @mock.patch(
+        "azure_monitor.sdk.auto_collection.RequestMetrics", autospec=True
+    )
     def test_constructor(
         self, mock_performance, mock_dependencies, mock_requests
     ):

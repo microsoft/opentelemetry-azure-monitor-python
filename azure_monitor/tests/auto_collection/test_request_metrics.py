@@ -9,7 +9,7 @@ import requests
 from opentelemetry import metrics
 from opentelemetry.sdk.metrics import MeterProvider, Observer
 
-from azure_monitor.auto_collection import RequestMetrics, request_metrics
+from azure_monitor.sdk.auto_collection import request_metrics
 
 ORIGINAL_FUNCTION = requests.Session.request
 ORIGINAL_CONS = HTTPServer.__init__
@@ -35,7 +35,7 @@ class TestRequestMetrics(unittest.TestCase):
 
     def test_constructor(self):
         mock_meter = mock.Mock()
-        request_metrics_collector = RequestMetrics(
+        request_metrics_collector = request_metrics.RequestMetrics(
             meter=mock_meter, label_set=self._test_label_set
         )
         self.assertEqual(request_metrics_collector._meter, mock_meter)
@@ -64,7 +64,7 @@ class TestRequestMetrics(unittest.TestCase):
         )
 
     def test_track_request_duration(self):
-        request_metrics_collector = RequestMetrics(
+        request_metrics_collector = request_metrics.RequestMetrics(
             meter=self._meter, label_set=self._test_label_set
         )
         request_metrics.requests_map["duration"] = 0.1
@@ -82,7 +82,7 @@ class TestRequestMetrics(unittest.TestCase):
         self.assertEqual(obs.aggregators[self._test_label_set].current, 20)
 
     def test_track_request_duration_error(self):
-        request_metrics_collector = RequestMetrics(
+        request_metrics_collector = request_metrics.RequestMetrics(
             meter=self._meter, label_set=self._test_label_set
         )
         request_metrics.requests_map["duration"] = 0.1
@@ -99,9 +99,9 @@ class TestRequestMetrics(unittest.TestCase):
         request_metrics_collector._track_request_duration(obs)
         self.assertEqual(obs.aggregators[self._test_label_set].current, 0)
 
-    @mock.patch("azure_monitor.auto_collection.request_metrics.time")
+    @mock.patch("azure_monitor.sdk.auto_collection.request_metrics.time")
     def test_track_request_rate(self, time_mock):
-        request_metrics_collector = RequestMetrics(
+        request_metrics_collector = request_metrics.RequestMetrics(
             meter=self._meter, label_set=self._test_label_set
         )
         time_mock.time.return_value = 100
@@ -118,10 +118,10 @@ class TestRequestMetrics(unittest.TestCase):
         request_metrics_collector._track_request_rate(obs)
         self.assertEqual(obs.aggregators[self._test_label_set].current, 2)
 
-    @mock.patch("azure_monitor.auto_collection.request_metrics.time")
+    @mock.patch("azure_monitor.sdk.auto_collection.request_metrics.time")
     def test_track_request_rate_time_none(self, time_mock):
         time_mock.time.return_value = 100
-        request_metrics_collector = RequestMetrics(
+        request_metrics_collector = request_metrics.RequestMetrics(
             meter=self._meter, label_set=self._test_label_set
         )
         request_metrics.requests_map["last_time"] = None
@@ -136,9 +136,9 @@ class TestRequestMetrics(unittest.TestCase):
         request_metrics_collector._track_request_rate(obs)
         self.assertEqual(obs.aggregators[self._test_label_set].current, 0)
 
-    @mock.patch("azure_monitor.auto_collection.request_metrics.time")
+    @mock.patch("azure_monitor.sdk.auto_collection.request_metrics.time")
     def test_track_request_rate_error(self, time_mock):
-        request_metrics_collector = RequestMetrics(
+        request_metrics_collector = request_metrics.RequestMetrics(
             meter=self._meter, label_set=self._test_label_set
         )
         time_mock.time.return_value = 100
@@ -168,7 +168,7 @@ class TestRequestMetrics(unittest.TestCase):
     def test_server_patch(self):
         request_metrics.ORIGINAL_CONSTRUCTOR = lambda x, y, z: None
         with mock.patch(
-            "azure_monitor.auto_collection.request_metrics.request_patch"
+            "azure_monitor.sdk.auto_collection.request_metrics.request_patch"
         ) as request_mock:
             handler = mock.Mock()
             handler.do_DELETE.return_value = None
@@ -191,7 +191,7 @@ class TestRequestMetrics(unittest.TestCase):
     def test_server_patch_no_methods(self):
         request_metrics.ORIGINAL_CONSTRUCTOR = lambda x, y, z: None
         with mock.patch(
-            "azure_monitor.auto_collection.request_metrics.request_patch"
+            "azure_monitor.sdk.auto_collection.request_metrics.request_patch"
         ) as request_mock:
             handler = mock.Mock()
             result = request_metrics.server_patch(None, None, handler)
