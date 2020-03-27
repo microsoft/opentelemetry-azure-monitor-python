@@ -52,12 +52,16 @@ class TestAzureExporter(unittest.TestCase):
     def test_constructor(self):
         """Test the constructor."""
         exporter = AzureMonitorSpanExporter(
-            instrumentation_key="4321abcd-5678-4efa-8abc-1234567890ab"
+            instrumentation_key="4321abcd-5678-4efa-8abc-1234567890ab",
+            storage_path=os.path.join(TEST_FOLDER, self.id()),
         )
         self.assertIsInstance(exporter.options, ExporterOptions)
         self.assertEqual(
             exporter.options.instrumentation_key,
             "4321abcd-5678-4efa-8abc-1234567890ab",
+        )
+        self.assertEqual(
+            exporter.options.storage_path, os.path.join(TEST_FOLDER, self.id())
         )
 
     def test_export_empty(self):
@@ -154,15 +158,17 @@ class TestAzureExporter(unittest.TestCase):
             self.assertEqual(result, SpanExportResult.FAILED_NOT_RETRYABLE)
 
     def test_span_to_envelope_none(self):
-        exporter = AzureMonitorSpanExporter()
+        exporter = AzureMonitorSpanExporter(
+            storage_path=os.path.join(TEST_FOLDER, self.id())
+        )
         self.assertIsNone(exporter._span_to_envelope(None))
 
     # pylint: disable=too-many-statements
     def test_span_to_envelope(self):
-        options = {
-            "instrumentation_key": "12345678-1234-5678-abcd-12345678abcd"
-        }
-        exporter = AzureMonitorSpanExporter(**options)
+        exporter = AzureMonitorSpanExporter(
+            instrumentation_key="12345678-1234-5678-abcd-12345678abcd",
+            storage_path=os.path.join(TEST_FOLDER, self.id()),
+        )
 
         parent_span = Span(
             name="test",

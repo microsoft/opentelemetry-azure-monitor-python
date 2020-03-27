@@ -77,19 +77,19 @@ class TestBaseExporter(unittest.TestCase):
             BaseExporter(something_else=6)
 
     def test_telemetry_processor_add(self):
-        base = BaseExporter()
+        base = BaseExporter(storage_path=os.path.join(TEST_FOLDER, self.id()))
         base.add_telemetry_processor(lambda: True)
         self.assertEqual(len(base._telemetry_processors), 1)
 
     def test_telemetry_processor_clear(self):
-        base = BaseExporter()
+        base = BaseExporter(storage_path=os.path.join(TEST_FOLDER, self.id()))
         base.add_telemetry_processor(lambda: True)
         self.assertEqual(len(base._telemetry_processors), 1)
         base.clear_telemetry_processors()
         self.assertEqual(len(base._telemetry_processors), 0)
 
     def test_telemetry_processor_apply(self):
-        base = BaseExporter()
+        base = BaseExporter(storage_path=os.path.join(TEST_FOLDER, self.id()))
 
         def callback_function(envelope):
             envelope.data.base_type += "_world"
@@ -100,7 +100,7 @@ class TestBaseExporter(unittest.TestCase):
         self.assertEqual(envelope.data.base_type, "type1_world")
 
     def test_telemetry_processor_apply_multiple(self):
-        base = BaseExporter()
+        base = BaseExporter(storage_path=os.path.join(TEST_FOLDER, self.id()))
         base._telemetry_processors = []
 
         def callback_function(envelope):
@@ -116,7 +116,7 @@ class TestBaseExporter(unittest.TestCase):
         self.assertEqual(envelope.data.base_type, "type1_world_world2")
 
     def test_telemetry_processor_apply_exception(self):
-        base = BaseExporter()
+        base = BaseExporter(storage_path=os.path.join(TEST_FOLDER, self.id()))
 
         def callback_function(envelope):
             raise ValueError()
@@ -131,7 +131,7 @@ class TestBaseExporter(unittest.TestCase):
         self.assertEqual(envelope.data.base_type, "type1_world2")
 
     def test_telemetry_processor_apply_not_accepted(self):
-        base = BaseExporter()
+        base = BaseExporter(storage_path=os.path.join(TEST_FOLDER, self.id()))
 
         def callback_function(envelope):
             return envelope.data.base_type == "type2"
@@ -177,7 +177,7 @@ class TestBaseExporter(unittest.TestCase):
             exporter._transmit_from_storage()
         self.assertTrue(exporter.storage.get())
 
-    def test_transmit_response_exception(self):
+    def test_(self):
         exporter = BaseExporter(
             storage_path=os.path.join(TEST_FOLDER, self.id())
         )
