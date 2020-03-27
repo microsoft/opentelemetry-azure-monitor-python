@@ -23,6 +23,7 @@ from azure_monitor.protocol import Data, DataPoint, Envelope, MetricData
 TEST_FOLDER = os.path.abspath(".test.exporter.trace")
 STORAGE_PATH = os.path.join(TEST_FOLDER)
 
+
 # pylint: disable=invalid-name
 def setUpModule():
     os.makedirs(TEST_FOLDER)
