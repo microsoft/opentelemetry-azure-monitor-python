@@ -10,6 +10,11 @@
 pip install opentelemetry-azure-monitor-exporter
 ```
 
+## Documentation
+
+The online documentation is available at https://opentelemetry-azure-monitor-python.readthedocs.io/.
+
+
 ## Usage
 
 ### Trace
