@@ -161,6 +161,9 @@ time.sleep(100)
 # References
 
 [Azure Monitor](https://docs.microsoft.com/azure/azure-monitor/)
+
 [OpenTelemetry Project](https://opentelemetry.io/)
+
 [OpenTelemetry Python Client](https://github.com/open-telemetry/opentelemetry-python)
+
 [Azure Monitor Python Gitter](https://gitter.im/Microsoft/azure-monitor-python)
