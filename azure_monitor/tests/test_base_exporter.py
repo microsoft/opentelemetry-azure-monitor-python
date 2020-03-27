@@ -19,7 +19,8 @@ from azure_monitor.export import (
 from azure_monitor.options import ExporterOptions
 from azure_monitor.protocol import Data, Envelope
 
-TEST_FOLDER = os.path.abspath(".test.exporter")
+TEST_FOLDER = os.path.abspath(".test.exporter.base")
+STORAGE_PATH = os.path.join(TEST_FOLDER)
 
 
 # pylint: disable=invalid-name
@@ -47,6 +48,19 @@ class TestBaseExporter(unittest.TestCase):
         os.environ[
             "APPINSIGHTS_INSTRUMENTATIONKEY"
         ] = "1234abcd-5678-4efa-8abc-1234567890ab"
+        cls._base = BaseExporter(storage_path=STORAGE_PATH)
+
+    def setUp(self):
+        for filename in os.listdir(STORAGE_PATH):
+            file_path = os.path.join(STORAGE_PATH, filename)
+            try:
+                if os.path.isfile(file_path) or os.path.islink(file_path):
+                    os.unlink(file_path)
+                elif os.path.isdir(file_path):
+                    shutil.rmtree(file_path)
+            except Exception as e:
+                print("Failed to delete %s. Reason: %s" % (file_path, e))
+        self._base.clear_telemetry_processors()
 
     def test_constructor(self):
         """Test the constructor."""
@@ -77,19 +91,19 @@ class TestBaseExporter(unittest.TestCase):
             BaseExporter(something_else=6)
 
     def test_telemetry_processor_add(self):
-        base = BaseExporter(storage_path=os.path.join(TEST_FOLDER, self.id()))
+        base = self._base
         base.add_telemetry_processor(lambda: True)
         self.assertEqual(len(base._telemetry_processors), 1)
 
     def test_telemetry_processor_clear(self):
-        base = BaseExporter(storage_path=os.path.join(TEST_FOLDER, self.id()))
+        base = self._base
         base.add_telemetry_processor(lambda: True)
         self.assertEqual(len(base._telemetry_processors), 1)
         base.clear_telemetry_processors()
         self.assertEqual(len(base._telemetry_processors), 0)
 
     def test_telemetry_processor_apply(self):
-        base = BaseExporter(storage_path=os.path.join(TEST_FOLDER, self.id()))
+        base = self._base
 
         def callback_function(envelope):
             envelope.data.base_type += "_world"
@@ -100,7 +114,7 @@ class TestBaseExporter(unittest.TestCase):
         self.assertEqual(envelope.data.base_type, "type1_world")
 
     def test_telemetry_processor_apply_multiple(self):
-        base = BaseExporter(storage_path=os.path.join(TEST_FOLDER, self.id()))
+        base = self._base
         base._telemetry_processors = []
 
         def callback_function(envelope):
@@ -116,7 +130,7 @@ class TestBaseExporter(unittest.TestCase):
         self.assertEqual(envelope.data.base_type, "type1_world_world2")
 
     def test_telemetry_processor_apply_exception(self):
-        base = BaseExporter(storage_path=os.path.join(TEST_FOLDER, self.id()))
+        base = self._base
 
         def callback_function(envelope):
             raise ValueError()
@@ -131,7 +145,7 @@ class TestBaseExporter(unittest.TestCase):
         self.assertEqual(envelope.data.base_type, "type1_world2")
 
     def test_telemetry_processor_apply_not_accepted(self):
-        base = BaseExporter(storage_path=os.path.join(TEST_FOLDER, self.id()))
+        base = self._base
 
         def callback_function(envelope):
             return envelope.data.base_type == "type2"

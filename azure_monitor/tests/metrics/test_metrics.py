@@ -21,7 +21,7 @@ from azure_monitor.options import ExporterOptions
 from azure_monitor.protocol import Data, DataPoint, Envelope, MetricData
 
 TEST_FOLDER = os.path.abspath(".test.exporter.trace")
-
+STORAGE_PATH = os.path.join(TEST_FOLDER)
 
 # pylint: disable=invalid-name
 def setUpModule():
@@ -47,6 +47,7 @@ class TestAzureMetricsExporter(unittest.TestCase):
         os.environ[
             "APPINSIGHTS_INSTRUMENTATIONKEY"
         ] = "1234abcd-5678-4efa-8abc-1234567890ab"
+        cls._exporter = AzureMonitorMetricsExporter(storage_path=STORAGE_PATH)
 
         metrics.set_meter_provider(MeterProvider())
         cls._meter = metrics.get_meter(__name__)
@@ -68,6 +69,17 @@ class TestAzureMetricsExporter(unittest.TestCase):
         kvp = {"environment": "staging"}
         cls._test_label_set = cls._meter.get_label_set(kvp)
 
+    def setUp(self):
+        for filename in os.listdir(STORAGE_PATH):
+            file_path = os.path.join(STORAGE_PATH, filename)
+            try:
+                if os.path.isfile(file_path) or os.path.islink(file_path):
+                    os.unlink(file_path)
+                elif os.path.isdir(file_path):
+                    shutil.rmtree(file_path)
+            except Exception as e:
+                print("Failed to delete %s. Reason: %s" % (file_path, e))
+
     @classmethod
     def tearDownClass(cls):
         metrics._METER_PROVIDER = None
@@ -88,9 +100,7 @@ class TestAzureMetricsExporter(unittest.TestCase):
         record = MetricRecord(
             CounterAggregator(), self._test_label_set, self._test_metric
         )
-        exporter = AzureMonitorMetricsExporter(
-            storage_path=os.path.join(TEST_FOLDER, self.id())
-        )
+        exporter = self._exporter
         with mock.patch(
             "azure_monitor.export.metrics.AzureMonitorMetricsExporter._transmit"
         ) as transmit:  # noqa: E501
@@ -102,9 +112,7 @@ class TestAzureMetricsExporter(unittest.TestCase):
         record = MetricRecord(
             CounterAggregator(), self._test_label_set, self._test_metric
         )
-        exporter = AzureMonitorMetricsExporter(
-            storage_path=os.path.join(TEST_FOLDER, self.id())
-        )
+        exporter = self._exporter
         with mock.patch(
             "azure_monitor.export.metrics.AzureMonitorMetricsExporter._transmit"
         ) as transmit:  # noqa: E501
@@ -120,9 +128,7 @@ class TestAzureMetricsExporter(unittest.TestCase):
         record = MetricRecord(
             CounterAggregator(), self._test_label_set, self._test_metric
         )
-        exporter = AzureMonitorMetricsExporter(
-            storage_path=os.path.join(TEST_FOLDER, self.id())
-        )
+        exporter = self._exporter
         with mock.patch(
             "azure_monitor.export.metrics.AzureMonitorMetricsExporter._transmit",
             throw(Exception),
@@ -132,9 +138,7 @@ class TestAzureMetricsExporter(unittest.TestCase):
             self.assertEqual(logger_mock.exception.called, True)
 
     def test_metric_to_envelope_none(self):
-        exporter = AzureMonitorMetricsExporter(
-            storage_path=os.path.join(TEST_FOLDER, self.id())
-        )
+        exporter = self._exporter
         self.assertIsNone(exporter._metric_to_envelope(None))
 
     def test_metric_to_envelope(self):
@@ -144,9 +148,7 @@ class TestAzureMetricsExporter(unittest.TestCase):
         record = MetricRecord(
             aggregator, self._test_label_set, self._test_metric
         )
-        exporter = AzureMonitorMetricsExporter(
-            storage_path=os.path.join(TEST_FOLDER, self.id())
-        )
+        exporter = self._exporter
         envelope = exporter._metric_to_envelope(record)
         self.assertIsInstance(envelope, Envelope)
         self.assertEqual(envelope.ver, 1)
@@ -186,9 +188,7 @@ class TestAzureMetricsExporter(unittest.TestCase):
         aggregator.update(123)
         aggregator.take_checkpoint()
         record = MetricRecord(aggregator, self._test_label_set, self._test_obs)
-        exporter = AzureMonitorMetricsExporter(
-            storage_path=os.path.join(TEST_FOLDER, self.id())
-        )
+        exporter = self._exporter
         envelope = exporter._metric_to_envelope(record)
         self.assertIsInstance(envelope, Envelope)
         self.assertEqual(envelope.ver, 1)
@@ -231,9 +231,7 @@ class TestAzureMetricsExporter(unittest.TestCase):
         aggregator.update(None)
         aggregator.take_checkpoint()
         record = MetricRecord(aggregator, self._test_label_set, self._test_obs)
-        exporter = AzureMonitorMetricsExporter(
-            storage_path=os.path.join(TEST_FOLDER, self.id())
-        )
+        exporter = self._exporter
         envelope = exporter._metric_to_envelope(record)
         self.assertIsInstance(envelope, Envelope)
         self.assertEqual(envelope.ver, 1)
@@ -279,9 +277,7 @@ class TestAzureMetricsExporter(unittest.TestCase):
         record = MetricRecord(
             aggregator, self._test_label_set, self._test_measure
         )
-        exporter = AzureMonitorMetricsExporter(
-            storage_path=os.path.join(TEST_FOLDER, self.id())
-        )
+        exporter = self._exporter
         envelope = exporter._metric_to_envelope(record)
         self.assertIsInstance(envelope, Envelope)
         self.assertEqual(envelope.ver, 1)

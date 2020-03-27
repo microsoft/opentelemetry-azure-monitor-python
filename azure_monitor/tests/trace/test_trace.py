@@ -19,6 +19,7 @@ from azure_monitor.export.trace import AzureMonitorSpanExporter
 from azure_monitor.options import ExporterOptions
 
 TEST_FOLDER = os.path.abspath(".test.exporter.trace")
+STORAGE_PATH = os.path.join(TEST_FOLDER)
 
 
 # pylint: disable=invalid-name
@@ -48,6 +49,18 @@ class TestAzureExporter(unittest.TestCase):
         os.environ[
             "APPINSIGHTS_INSTRUMENTATIONKEY"
         ] = "1234abcd-5678-4efa-8abc-1234567890ab"
+        cls._exporter = AzureMonitorSpanExporter(storage_path=STORAGE_PATH)
+
+    def setUp(self):
+        for filename in os.listdir(STORAGE_PATH):
+            file_path = os.path.join(STORAGE_PATH, filename)
+            try:
+                if os.path.isfile(file_path) or os.path.islink(file_path):
+                    os.unlink(file_path)
+                elif os.path.isdir(file_path):
+                    shutil.rmtree(file_path)
+            except Exception as e:
+                print("Failed to delete %s. Reason: %s" % (file_path, e))
 
     def test_constructor(self):
         """Test the constructor."""
@@ -65,16 +78,12 @@ class TestAzureExporter(unittest.TestCase):
         )
 
     def test_export_empty(self):
-        exporter = AzureMonitorSpanExporter(
-            storage_path=os.path.join(TEST_FOLDER, self.id())
-        )
+        exporter = self._exporter
         exporter.export([])
         self.assertEqual(len(os.listdir(exporter.storage.path)), 0)
 
     def test_export_failure(self):
-        exporter = AzureMonitorSpanExporter(
-            storage_path=os.path.join(TEST_FOLDER, self.id())
-        )
+        exporter = self._exporter
         with mock.patch(
             "azure_monitor.export.trace.AzureMonitorSpanExporter._transmit"
         ) as transmit:  # noqa: E501
@@ -93,9 +102,7 @@ class TestAzureExporter(unittest.TestCase):
         self.assertIsNone(exporter.storage.get())
 
     def test_export_success(self):
-        exporter = AzureMonitorSpanExporter(
-            storage_path=os.path.join(TEST_FOLDER, self.id())
-        )
+        exporter = self._exporter
         test_span = Span(
             name="test",
             context=SpanContext(
@@ -126,9 +133,7 @@ class TestAzureExporter(unittest.TestCase):
         )
         test_span.start()
         test_span.end()
-        exporter = AzureMonitorSpanExporter(
-            storage_path=os.path.join(TEST_FOLDER, self.id())
-        )
+        exporter = self._exporter
         with mock.patch(
             "azure_monitor.export.trace.AzureMonitorSpanExporter._transmit",
             throw(Exception),
@@ -138,9 +143,7 @@ class TestAzureExporter(unittest.TestCase):
             self.assertEqual(logger_mock.exception.called, True)
 
     def test_export_not_retryable(self):
-        exporter = AzureMonitorSpanExporter(
-            storage_path=os.path.join(TEST_FOLDER, self.id())
-        )
+        exporter = self._exporter
         test_span = Span(
             name="test",
             context=SpanContext(
@@ -158,9 +161,7 @@ class TestAzureExporter(unittest.TestCase):
             self.assertEqual(result, SpanExportResult.FAILED_NOT_RETRYABLE)
 
     def test_span_to_envelope_none(self):
-        exporter = AzureMonitorSpanExporter(
-            storage_path=os.path.join(TEST_FOLDER, self.id())
-        )
+        exporter = self._exporter
         self.assertIsNone(exporter._span_to_envelope(None))
 
     # pylint: disable=too-many-statements
