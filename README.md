@@ -1,13 +1,13 @@
 # OpenTelemetry Azure Monitor SDKs and Exporters
 
 [![Gitter chat](https://img.shields.io/gitter/room/Microsoft/azure-monitor-python)](https://gitter.im/Microsoft/azure-monitor-python)
-[![Build status](https://travis-ci.org/microsoft/opentelemetry-azure-monitor-python.svg?branch=master)](https://travis-ci.org/microsoft/opentelemetry-exporters-python)
-[![PyPI version](https://badge.fury.io/py/opentelemetry-azure-monitor-exporter.svg)](https://badge.fury.io/py/opentelemetry-azure-monitor-exporter)
+[![Build status](https://travis-ci.org/microsoft/opentelemetry-azure-monitor-python.svg?branch=master)](https://travis-ci.org/microsoft/opentelemetry-azure-monitor-python)
+[![PyPI version](https://badge.fury.io/py/opentelemetry-azure-monitor.svg)](https://badge.fury.io/py/opentelemetry-azure-monitor)
 
 ## Installation
 
 ```sh
-pip install opentelemetry-azure-monitor-exporter
+pip install opentelemetry-azure-monitor
 ```
 
 ## Documentation
