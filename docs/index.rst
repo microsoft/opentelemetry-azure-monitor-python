@@ -19,7 +19,7 @@ The package is available on PyPI, and can installed via pip:
 
 .. code-block:: sh
 
-    pip install opentelemetry-azure-monitor-exporter
+    pip install opentelemetry-azure-monitor
 
 .. toctree::
     :maxdepth: 1
