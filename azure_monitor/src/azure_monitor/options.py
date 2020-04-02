@@ -50,7 +50,7 @@ class ExporterOptions(BaseObject):
         connection_string: str = None,
         instrumentation_key: str = None,
         storage_maintenance_period: int = 60,
-        storage_max_size: int = 100 * 1024 * 1024,
+        storage_max_size: int = 50 * 1024 * 1024,
         storage_path: str = None,
         storage_retention_period: int = 7 * 24 * 60 * 60,
         timeout: int = 10.0,  # networking timeout in seconds
