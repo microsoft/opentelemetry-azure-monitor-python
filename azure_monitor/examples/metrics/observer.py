@@ -14,6 +14,7 @@ exporter = AzureMonitorMetricsExporter(
 )
 controller = PushController(meter=meter, exporter=exporter, interval=2)
 
+
 # Callback to gather cpu usage
 def get_cpu_usage_callback(observer):
     for (number, percent) in enumerate(psutil.cpu_percent(percpu=True)):
@@ -29,6 +30,7 @@ meter.register_observer(
     value_type=float,
     label_keys=("cpu_number",),
 )
+
 
 # Callback to gather RAM memory usage
 def get_ram_usage_callback(observer):
