@@ -152,9 +152,9 @@ requests_counter = meter.create_metric(
     label_keys=("environment",),
 )
 
-testing_label_set = meter.get_label_set({"environment": "testing"})
+testing_labels = {"environment": "testing"}
 
-requests_counter.add(25, testing_label_set)
+requests_counter.add(25, testing_labels)
 time.sleep(100)
 ```
 
