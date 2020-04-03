@@ -40,12 +40,8 @@ class TestAutoCollection(unittest.TestCase):
         self.assertEqual(mock_dependencies.called, True)
         self.assertEqual(mock_requests.called, True)
         self.assertEqual(mock_performance.call_args[0][0], self._meter)
-        self.assertEqual(
-            mock_performance.call_args[0][1], self._test_labels
-        )
+        self.assertEqual(mock_performance.call_args[0][1], self._test_labels)
         self.assertEqual(mock_dependencies.call_args[0][0], self._meter)
-        self.assertEqual(
-            mock_dependencies.call_args[0][1], self._test_labels
-        )
+        self.assertEqual(mock_dependencies.call_args[0][1], self._test_labels)
         self.assertEqual(mock_requests.call_args[0][0], self._meter)
         self.assertEqual(mock_requests.call_args[0][1], self._test_labels)

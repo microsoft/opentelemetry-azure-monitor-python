@@ -1,7 +1,6 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 import psutil
-
 from opentelemetry import metrics
 from opentelemetry.sdk.metrics import MeterProvider
 from opentelemetry.sdk.metrics.export.controller import PushController
@@ -21,6 +20,7 @@ def get_cpu_usage_callback(observer):
         labels = {"cpu_number": str(number)}
         observer.observe(percent, labels)
 
+
 meter.register_observer(
     callback=get_cpu_usage_callback,
     name="cpu_percent",
@@ -34,6 +34,7 @@ meter.register_observer(
 def get_ram_usage_callback(observer):
     ram_percent = psutil.virtual_memory().percent
     observer.observe(ram_percent, {})
+
 
 meter.register_observer(
     callback=get_ram_usage_callback,

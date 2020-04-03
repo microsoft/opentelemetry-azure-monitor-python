@@ -67,7 +67,9 @@ class TestDependencyMetrics(unittest.TestCase):
         dependency_metrics.dependency_map["last_time"] = 98
         dependency_metrics.dependency_map["count"] = 4
         metrics_collector._track_dependency_rate(obs)
-        self.assertEqual(obs.aggregators[tuple(self._test_labels.items())].current, 2)
+        self.assertEqual(
+            obs.aggregators[tuple(self._test_labels.items())].current, 2
+        )
 
     @mock.patch("azure_monitor.sdk.auto_collection.dependency_metrics.time")
     def test_track_dependency_rate_time_none(self, time_mock):
@@ -85,7 +87,9 @@ class TestDependencyMetrics(unittest.TestCase):
             meter=self._meter,
         )
         metrics_collector._track_dependency_rate(obs)
-        self.assertEqual(obs.aggregators[tuple(self._test_labels.items())].current, 0)
+        self.assertEqual(
+            obs.aggregators[tuple(self._test_labels.items())].current, 0
+        )
 
     @mock.patch("azure_monitor.sdk.auto_collection.dependency_metrics.time")
     def test_track_dependency_rate_error(self, time_mock):
@@ -104,7 +108,9 @@ class TestDependencyMetrics(unittest.TestCase):
             meter=self._meter,
         )
         metrics_collector._track_dependency_rate(obs)
-        self.assertEqual(obs.aggregators[tuple(self._test_labels.items())].current, 5)
+        self.assertEqual(
+            obs.aggregators[tuple(self._test_labels.items())].current, 5
+        )
 
     @mock.patch(
         "azure_monitor.sdk.auto_collection.dependency_metrics.ORIGINAL_REQUEST"

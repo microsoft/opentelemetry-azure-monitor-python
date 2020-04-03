@@ -1,9 +1,9 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 import logging
+from typing import Dict
 
 import psutil
-from typing import Dict
 from opentelemetry.metrics import Meter
 
 logger = logging.getLogger(__name__)
@@ -84,9 +84,7 @@ class PerformanceMetrics:
             # CPU cores, the returned value of cpu_percent() can be > 100.0. We
             # normalize the cpu process using the number of logical CPUs
             cpu_count = psutil.cpu_count(logical=True)
-            observer.observe(
-                PROCESS.cpu_percent() / cpu_count, self._labels
-            )
+            observer.observe(PROCESS.cpu_percent() / cpu_count, self._labels)
         except Exception:  # pylint: disable=broad-except
             logger.exception("Error handling get process cpu usage.")
 

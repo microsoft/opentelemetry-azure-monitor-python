@@ -145,9 +145,7 @@ class TestAzureMetricsExporter(unittest.TestCase):
         aggregator = CounterAggregator()
         aggregator.update(123)
         aggregator.take_checkpoint()
-        record = MetricRecord(
-            aggregator, self._test_labels, self._test_metric
-        )
+        record = MetricRecord(aggregator, self._test_labels, self._test_metric)
         exporter = self._exporter
         envelope = exporter._metric_to_envelope(record)
         self.assertIsInstance(envelope, Envelope)

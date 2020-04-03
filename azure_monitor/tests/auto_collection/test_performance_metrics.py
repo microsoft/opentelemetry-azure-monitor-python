@@ -108,7 +108,9 @@ class TestPerformanceMetrics(unittest.TestCase):
             meter=self._meter,
         )
         performance_metrics_collector._track_memory(obs)
-        self.assertEqual(obs.aggregators[tuple(self._test_labels.items())].current, 100)
+        self.assertEqual(
+            obs.aggregators[tuple(self._test_labels.items())].current, 100
+        )
 
     @mock.patch("azure_monitor.sdk.auto_collection.performance_metrics.psutil")
     def test_track_process_cpu(self, psutil_mock):

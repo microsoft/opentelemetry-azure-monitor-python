@@ -2,6 +2,7 @@
 # Licensed under the MIT License.
 #
 from typing import Dict
+
 from opentelemetry.metrics import Meter
 
 from azure_monitor.sdk.auto_collection.dependency_metrics import (

@@ -2,9 +2,9 @@
 # Licensed under the MIT License.
 import threading
 import time
+from typing import Dict
 
 import requests
-from typing import Dict
 from opentelemetry import context
 from opentelemetry.metrics import Meter
 
