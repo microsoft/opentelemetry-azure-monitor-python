@@ -60,12 +60,12 @@ class AzureMonitorMetricsExporter(BaseExporter, MetricsExporter):
 
         if not metric_record:
             return None
-        # TODO: Opentelemetry does not have last updated timestamp for observer
-        # type metrics yet.
+        # TODO: Opentelemetry has timestamp for Observer, awaiting release
+        # TODO: Timestamp info is also moved into aggregators
         _time = time_ns()
         if isinstance(metric_record.metric, Metric):
             _time = metric_record.metric.bind(
-                metric_record.label_set
+                dict(metric_record.labels)
             ).last_update_timestamp
         envelope = protocol.Envelope(
             ikey=self.options.instrumentation_key,
@@ -93,7 +93,7 @@ class AzureMonitorMetricsExporter(BaseExporter, MetricsExporter):
         )
 
         properties = {}
-        for label_tuple in metric_record.label_set.labels:
+        for label_tuple in metric_record.labels:
             properties[label_tuple[0]] = label_tuple[1]
         data = protocol.MetricData(metrics=[data_point], properties=properties)
         envelope.data = protocol.Data(base_data=data, base_type="MetricData")

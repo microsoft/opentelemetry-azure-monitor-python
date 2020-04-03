@@ -14,10 +14,10 @@ exporter = AzureMonitorMetricsExporter(
 )
 controller = PushController(meter, exporter, 5)
 
-testing_label_set = meter.get_label_set({"environment": "testing"})
+testing_label_set = {"environment": "testing"}
 
 # Automatically collect standard metrics
-auto_collection = AutoCollection(meter=meter, label_set=testing_label_set)
+auto_collection = AutoCollection(meter=meter, labels=testing_label_set)
 
 # To configure a separate export interval specific for standard metrics
 # meter_standard = metrics.get_meter(__name__ + "_standard")
