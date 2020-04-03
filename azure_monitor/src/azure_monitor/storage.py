@@ -187,16 +187,17 @@ class LocalFileStorage:
 
     def _check_storage_size(self):
         size = 0
+        # pylint: disable=unused-variable
         for dirpath, dirnames, filenames in os.walk(self.path):
-            for f in filenames:
-                fp = os.path.join(dirpath, f)
+            for filename in filenames:
+                path = os.path.join(dirpath, filename)
                 # skip if it is symbolic link
-                if not os.path.islink(fp):
+                if not os.path.islink(path):
                     try:
-                        size += os.path.getsize(fp)
+                        size += os.path.getsize(path)
                     except OSError:
                         logger.error(
-                            "Path %s does not exist or is " "inaccessible.", fp
+                            "Path %s does not exist or is " "inaccessible.", path
                         )
                         continue
                     if size >= self.max_size:
