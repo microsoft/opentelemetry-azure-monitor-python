@@ -187,16 +187,19 @@ class LocalFileStorage:
 
     def _check_storage_size(self):
         size = 0
+        # pylint: disable=unused-variable
         for dirpath, dirnames, filenames in os.walk(self.path):
-            for f in filenames:
-                fp = os.path.join(dirpath, f)
+            for filename in filenames:
+                path = os.path.join(dirpath, filename)
                 # skip if it is symbolic link
-                if not os.path.islink(fp):
+                if not os.path.islink(path):
                     try:
-                        size += os.path.getsize(fp)
+                        size += os.path.getsize(path)
                     except OSError:
-                        logger.error("Path %s does not exist or is "
-                            "inaccessible.", fp)
+                        logger.error(
+                            "Path %s does not exist or is " "inaccessible.",
+                            path,
+                        )
                         continue
                     if size >= self.max_size:
                         logger.warning(
@@ -204,7 +207,7 @@ class LocalFileStorage:
                             "reached. Currently at %fKB. Telemetry will be "
                             "lost. Please consider increasing the value of "
                             "'storage_max_size' in exporter config.",
-                            format(size/1024)
+                            format(size / 1024),
                         )
                         return False
         return True

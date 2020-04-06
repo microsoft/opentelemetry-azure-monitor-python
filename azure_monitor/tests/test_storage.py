@@ -110,7 +110,7 @@ class TestLocalFileStorage(unittest.TestCase):
 
     def test_put_max_size(self):
         test_input = (1, 2, 3)
-        with LocalFileStorage(os.path.join(TEST_FOLDER, 'asd')) as stor:
+        with LocalFileStorage(os.path.join(TEST_FOLDER, "asd")) as stor:
             size_mock = mock.Mock()
             size_mock.return_value = False
             stor._check_storage_size = size_mock
@@ -119,34 +119,34 @@ class TestLocalFileStorage(unittest.TestCase):
 
     def test_check_storage_size_full(self):
         test_input = (1, 2, 3)
-        with LocalFileStorage(os.path.join(TEST_FOLDER, 'asd2'), 1) as stor:
+        with LocalFileStorage(os.path.join(TEST_FOLDER, "asd2"), 1) as stor:
             stor.put(test_input)
             self.assertFalse(stor._check_storage_size())
 
     def test_check_storage_size_not_full(self):
         test_input = (1, 2, 3)
-        with LocalFileStorage(os.path.join(TEST_FOLDER, 'asd3'), 1000) as stor:
+        with LocalFileStorage(os.path.join(TEST_FOLDER, "asd3"), 1000) as stor:
             stor.put(test_input)
             self.assertTrue(stor._check_storage_size())
 
     def test_check_storage_size_no_files(self):
-        with LocalFileStorage(os.path.join(TEST_FOLDER, 'asd3'), 1000) as stor:
+        with LocalFileStorage(os.path.join(TEST_FOLDER, "asd3"), 1000) as stor:
             self.assertTrue(stor._check_storage_size())
 
     def test_check_storage_size_links(self):
         test_input = (1, 2, 3)
-        with LocalFileStorage(os.path.join(TEST_FOLDER, 'asd4'), 1000) as stor:
+        with LocalFileStorage(os.path.join(TEST_FOLDER, "asd4"), 1000) as stor:
             stor.put(test_input)
-            with mock.patch('os.path.islink') as os_mock:
+            with mock.patch("os.path.islink") as os_mock:
                 os_mock.return_value = True
             self.assertTrue(stor._check_storage_size())
 
     def test_check_storage_size_error(self):
         test_input = (1, 2, 3)
-        with LocalFileStorage(os.path.join(TEST_FOLDER, 'asd5'), 1) as stor:
-            with mock.patch('os.path.getsize', side_effect=throw(OSError)):
+        with LocalFileStorage(os.path.join(TEST_FOLDER, "asd5"), 1) as stor:
+            with mock.patch("os.path.getsize", side_effect=throw(OSError)):
                 stor.put(test_input)
-                with mock.patch('os.path.islink') as os_mock:
+                with mock.patch("os.path.islink") as os_mock:
                     os_mock.return_value = True
                 self.assertTrue(stor._check_storage_size())
 

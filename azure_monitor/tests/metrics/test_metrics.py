@@ -67,8 +67,7 @@ class TestAzureMetricsExporter(unittest.TestCase):
             Counter,
             ["environment"],
         )
-        kvp = {"environment": "staging"}
-        cls._test_label_set = cls._meter.get_label_set(kvp)
+        cls._test_labels = tuple({"environment": "staging"}.items())
 
     def setUp(self):
         for filename in os.listdir(STORAGE_PATH):
@@ -99,7 +98,7 @@ class TestAzureMetricsExporter(unittest.TestCase):
 
     def test_export(self,):
         record = MetricRecord(
-            CounterAggregator(), self._test_label_set, self._test_metric
+            CounterAggregator(), self._test_labels, self._test_metric
         )
         exporter = self._exporter
         with mock.patch(
@@ -111,7 +110,7 @@ class TestAzureMetricsExporter(unittest.TestCase):
 
     def test_export_failed_retryable(self):
         record = MetricRecord(
-            CounterAggregator(), self._test_label_set, self._test_metric
+            CounterAggregator(), self._test_labels, self._test_metric
         )
         exporter = self._exporter
         with mock.patch(
@@ -127,7 +126,7 @@ class TestAzureMetricsExporter(unittest.TestCase):
     @mock.patch("azure_monitor.export.metrics.logger")
     def test_export_exception(self, logger_mock):
         record = MetricRecord(
-            CounterAggregator(), self._test_label_set, self._test_metric
+            CounterAggregator(), self._test_labels, self._test_metric
         )
         exporter = self._exporter
         with mock.patch(
@@ -146,9 +145,7 @@ class TestAzureMetricsExporter(unittest.TestCase):
         aggregator = CounterAggregator()
         aggregator.update(123)
         aggregator.take_checkpoint()
-        record = MetricRecord(
-            aggregator, self._test_label_set, self._test_metric
-        )
+        record = MetricRecord(aggregator, self._test_labels, self._test_metric)
         exporter = self._exporter
         envelope = exporter._metric_to_envelope(record)
         self.assertIsInstance(envelope, Envelope)
@@ -157,7 +154,7 @@ class TestAzureMetricsExporter(unittest.TestCase):
         self.assertEqual(
             envelope.time,
             ns_to_iso_str(
-                record.metric.bind(record.label_set).last_update_timestamp
+                record.metric.bind(dict(record.labels)).last_update_timestamp
             ),
         )
         self.assertEqual(envelope.sample_rate, None)
@@ -188,7 +185,8 @@ class TestAzureMetricsExporter(unittest.TestCase):
         aggregator = ObserverAggregator()
         aggregator.update(123)
         aggregator.take_checkpoint()
-        record = MetricRecord(aggregator, self._test_label_set, self._test_obs)
+        record = MetricRecord(aggregator, self._test_labels, self._test_obs)
+        print(record.labels)
         exporter = self._exporter
         envelope = exporter._metric_to_envelope(record)
         self.assertIsInstance(envelope, Envelope)
@@ -231,7 +229,7 @@ class TestAzureMetricsExporter(unittest.TestCase):
         aggregator = ObserverAggregator()
         aggregator.update(None)
         aggregator.take_checkpoint()
-        record = MetricRecord(aggregator, self._test_label_set, self._test_obs)
+        record = MetricRecord(aggregator, self._test_labels, self._test_obs)
         exporter = self._exporter
         envelope = exporter._metric_to_envelope(record)
         self.assertIsInstance(envelope, Envelope)
@@ -259,6 +257,7 @@ class TestAzureMetricsExporter(unittest.TestCase):
         self.assertEqual(envelope.data.base_data.metrics[0].ns, "testdesc")
         self.assertEqual(envelope.data.base_data.metrics[0].name, "testname")
         self.assertEqual(envelope.data.base_data.metrics[0].value, 0)
+        print(envelope.data.base_data.properties)
         self.assertEqual(
             envelope.data.base_data.properties["environment"], "staging"
         )
@@ -276,7 +275,7 @@ class TestAzureMetricsExporter(unittest.TestCase):
         aggregator.update(123)
         aggregator.take_checkpoint()
         record = MetricRecord(
-            aggregator, self._test_label_set, self._test_measure
+            aggregator, self._test_labels, self._test_measure
         )
         exporter = self._exporter
         envelope = exporter._metric_to_envelope(record)
@@ -286,7 +285,7 @@ class TestAzureMetricsExporter(unittest.TestCase):
         self.assertEqual(
             envelope.time,
             ns_to_iso_str(
-                record.metric.bind(record.label_set).last_update_timestamp
+                record.metric.bind(dict(record.labels)).last_update_timestamp
             ),
         )
         self.assertEqual(envelope.sample_rate, None)

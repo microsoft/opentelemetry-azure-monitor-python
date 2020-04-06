@@ -1,10 +1,10 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 import logging
+from typing import Dict
 
 import psutil
 from opentelemetry.metrics import Meter
-from opentelemetry.sdk.metrics import LabelSet
 
 logger = logging.getLogger(__name__)
 PROCESS = psutil.Process()
@@ -18,12 +18,12 @@ class PerformanceMetrics:
 
     Args:
         meter: OpenTelemetry Meter
-        label_set: OpenTelemetry label set
+        labels: Dictionary of labels
     """
 
-    def __init__(self, meter: Meter, label_set: LabelSet):
+    def __init__(self, meter: Meter, labels: Dict[str, str]):
         self._meter = meter
-        self._label_set = label_set
+        self._labels = labels
         # Create performance metrics
         meter.register_observer(
             callback=self._track_cpu,
@@ -63,7 +63,7 @@ class PerformanceMetrics:
         from 0.0 to 100.0 inclusive.
         """
         cpu_times_percent = psutil.cpu_times_percent()
-        observer.observe(100.0 - cpu_times_percent.idle, self._label_set)
+        observer.observe(100.0 - cpu_times_percent.idle, self._labels)
 
     def _track_memory(self, observer) -> None:
         """ Track Memory
@@ -71,7 +71,7 @@ class PerformanceMetrics:
         Available memory is defined as memory that can be given instantly to
         processes without the system going into swap.
         """
-        observer.observe(psutil.virtual_memory().available, self._label_set)
+        observer.observe(psutil.virtual_memory().available, self._labels)
 
     def _track_process_cpu(self, observer) -> None:
         """ Track Process CPU time
@@ -84,9 +84,7 @@ class PerformanceMetrics:
             # CPU cores, the returned value of cpu_percent() can be > 100.0. We
             # normalize the cpu process using the number of logical CPUs
             cpu_count = psutil.cpu_count(logical=True)
-            observer.observe(
-                PROCESS.cpu_percent() / cpu_count, self._label_set
-            )
+            observer.observe(PROCESS.cpu_percent() / cpu_count, self._labels)
         except Exception:  # pylint: disable=broad-except
             logger.exception("Error handling get process cpu usage.")
 
@@ -97,6 +95,6 @@ class PerformanceMetrics:
         processes without the system going into swap.
         """
         try:
-            observer.observe(PROCESS.memory_info().rss, self._label_set)
+            observer.observe(PROCESS.memory_info().rss, self._labels)
         except Exception:  # pylint: disable=broad-except
             logger.exception("Error handling get process private bytes.")
