@@ -57,6 +57,10 @@ class LiveMetricsManager(threading.Thread):
                 self._ping = LiveMetricsPing(self._instrumentation_key)
 
     def shutdown(self):
+        if self._ping:
+            self._ping.shutdown()
+        if self._post:
+            self._post.shutdown()
         self.thread_event.set()
 
 

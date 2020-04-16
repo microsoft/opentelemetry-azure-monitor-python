@@ -14,7 +14,7 @@ from azure_monitor.sdk.auto_collection.live_metrics.manager import (
 
 
 # pylint: disable=protected-access
-class TestAutoCollection(unittest.TestCase):
+class TestLiveMetricsManager(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         metrics.set_meter_provider(MeterProvider())
@@ -25,15 +25,25 @@ class TestAutoCollection(unittest.TestCase):
         testing_labels = {"environment": "testing"}
         cls._test_metric.add(5, testing_labels)
         cls._instrumentation_key = "99c42f65-1656-4c41-afde-bd86b709a4a7"
+        cls._manager = None
 
     @classmethod
     def tearDownClass(cls):
         metrics._METER_PROVIDER = None
 
+    def tearDown(self):
+        self._manager.shutdown()
+
     def test_constructor(self):
         """Test the constructor."""
-        # LiveMetricsManager(
-        #     meter=self._meter, instrumentation_key=self._instrumentation_key
-        # )
-        # time.sleep(200)
-        # self.assertEqual(True, False)
+        with mock.patch("requests.post"):
+            self._manager = LiveMetricsManager(
+                meter=self._meter,
+                instrumentation_key=self._instrumentation_key,
+            )
+            self.assertFalse(self._manager._is_user_subscribed)
+            self.assertEqual(
+                self._manager._instrumentation_key, self._instrumentation_key
+            )
+            self.assertEqual(self._manager._meter, self._meter)
+
