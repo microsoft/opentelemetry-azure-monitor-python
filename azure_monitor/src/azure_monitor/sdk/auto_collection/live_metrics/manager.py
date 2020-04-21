@@ -4,6 +4,7 @@
 import threading
 import time
 
+from opentelemetry.context import attach, detach, set_value
 from opentelemetry.sdk.metrics.export import MetricsExportResult
 
 from azure_monitor.sdk.auto_collection import live_metrics
@@ -21,6 +22,11 @@ MAIN_INTERVAL = 2
 
 
 class LiveMetricsManager(threading.Thread):
+    """Live Metrics Manager
+
+    It will start Live Metrics process when instantiated,
+    responsible for switching between ping and post actions.
+    """
 
     daemon = True
 
@@ -65,6 +71,10 @@ class LiveMetricsManager(threading.Thread):
 
 
 class LiveMetricsPing(threading.Thread):
+    """Ping to Live Metrics service
+
+    Ping to determine if user is subscribed and live metrics need to be send.
+    """
 
     daemon = True
 
@@ -88,7 +98,9 @@ class LiveMetricsPing(threading.Thread):
         envelope = live_metrics.create_metric_envelope(
             self.instrumentation_key
         )
+        token = attach(set_value("suppress_instrumentation", True))
         response = self.sender.ping(envelope)
+        detach(token)
         if response.ok:
             if not self.last_send_succeeded:
                 self.interval = PING_INTERVAL
@@ -111,6 +123,10 @@ class LiveMetricsPing(threading.Thread):
 
 
 class LiveMetricsPost(threading.Thread):
+    """Post to Live Metrics service
+
+    Post to send live metrics data when user is subscribed.
+    """
 
     daemon = True
 
@@ -133,7 +149,9 @@ class LiveMetricsPost(threading.Thread):
 
     def post(self):
         self.meter.collect()
+        token = attach(set_value("suppress_instrumentation", True))
         result = self.exporter.export(self.meter.batcher.checkpoint_set())
+        detach(token)
         self.meter.batcher.finished_collection()
         if result == MetricsExportResult.SUCCESS:
             self.last_request_success_time = time.time()

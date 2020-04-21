@@ -33,7 +33,7 @@ class TestLiveMetricsExporter(unittest.TestCase):
         exporter = LiveMetricsExporter(
             instrumentation_key=self._instrumentation_key
         )
-        self.assertEqual(exporter._subscribed, True)
+        self.assertEqual(exporter.subscribed, True)
         self.assertEqual(
             exporter._instrumentation_key, self._instrumentation_key
         )

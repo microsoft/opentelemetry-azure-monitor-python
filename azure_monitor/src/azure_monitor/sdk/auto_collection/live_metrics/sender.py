@@ -7,7 +7,7 @@ import time
 
 import requests
 
-from azure_monitor.sdk.auto_collection.live_metrics import LiveMetricEnvelope
+from azure_monitor.protocol import LiveMetricEnvelope
 
 DEFAULT_LIVEMETRICS_ENDPOINT = "https://rt.services.visualstudio.com"
 LIVE_METRICS_TRANSMISSION_TIME_HEADER = "x-ms-qps-transmission-time"
@@ -16,6 +16,11 @@ logger = logging.getLogger(__name__)
 
 
 class LiveMetricsSender:
+    """Live Metrics Sender
+
+    Send HTTP requests to Live Metrics service
+    """
+
     def __init__(self, instrumentation_key: str):
         self._endpoint = DEFAULT_LIVEMETRICS_ENDPOINT
         self._instrumentation_key = instrumentation_key

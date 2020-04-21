@@ -14,7 +14,7 @@ from opentelemetry.sdk.metrics.export import (
 
 from azure_monitor.protocol import Envelope
 from azure_monitor.sdk.auto_collection import live_metrics
-from azure_monitor.sdk.auto_collection.live_metrics import (
+from azure_monitor.protocol import (
     LiveMetric,
     LiveMetricDocument,
     LiveMetricDocumentProperty,
@@ -28,10 +28,15 @@ logger = logging.getLogger(__name__)
 
 
 class LiveMetricsExporter(MetricsExporter):
+    """Live Metrics Exporter
+
+    Export data to Azure Live Metrics service and determine if user is subscribed.
+    """
+
     def __init__(self, instrumentation_key):
         self._instrumentation_key = instrumentation_key
         self._sender = LiveMetricsSender(self._instrumentation_key)
-        self._subscribed = True
+        self.subscribed = True
         self._document_envelopes = collections.deque()
 
     def add_document(self, envelope: Envelope):
@@ -44,7 +49,7 @@ class LiveMetricsExporter(MetricsExporter):
         try:
             response = self._sender.post(envelope)
             if response.ok:
-                self._subscribed = (
+                self.subscribed = (
                     response.headers.get(
                         live_metrics.LIVE_METRICS_SUBSCRIBED_HEADER
                     )
