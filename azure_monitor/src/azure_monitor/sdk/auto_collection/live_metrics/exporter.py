@@ -12,14 +12,14 @@ from opentelemetry.sdk.metrics.export import (
     MetricsExportResult,
 )
 
-from azure_monitor.protocol import Envelope
-from azure_monitor.sdk.auto_collection import live_metrics
 from azure_monitor.protocol import (
+    Envelope,
     LiveMetric,
     LiveMetricDocument,
     LiveMetricDocumentProperty,
     LiveMetricEnvelope,
 )
+from azure_monitor.sdk.auto_collection import live_metrics
 from azure_monitor.sdk.auto_collection.live_metrics.sender import (
     LiveMetricsSender,
 )

@@ -4,11 +4,11 @@
 import unittest
 from unittest import mock
 
+import requests
 from opentelemetry import metrics
 from opentelemetry.sdk.metrics import Counter, MeterProvider
 from opentelemetry.sdk.metrics.export import MetricRecord, MetricsExportResult
 from opentelemetry.sdk.metrics.export.aggregate import CounterAggregator
-import requests
 
 from azure_monitor.protocol import Envelope
 from azure_monitor.sdk.auto_collection.live_metrics.exporter import (

@@ -159,8 +159,8 @@ class LiveMetricsPost(threading.Thread):
                 self.interval = POST_INTERVAL
                 self.last_send_succeeded = True
 
-            if self.exporter.subscribed:
-                self.is_user_subscribed = True
+            if not self.exporter.subscribed:
+                self.is_user_subscribed = False
         else:
             self.last_send_succeeded = False
             if time.time() >= self.last_request_success_time + 60:
