@@ -15,6 +15,7 @@ from azure_monitor.sdk.auto_collection.live_metrics.exporter import (
     LiveMetricsExporter,
 )
 
+
 def throw(exc_type, *args, **kwargs):
     def func(*_args, **_kwargs):
         raise exc_type(*args, **kwargs)
@@ -94,7 +95,8 @@ class TestLiveMetricsExporter(unittest.TestCase):
             instrumentation_key=self._instrumentation_key
         )
         with mock.patch(
-            "azure_monitor.sdk.auto_collection.live_metrics.sender.LiveMetricsSender.post" , throw(Exception)
+            "azure_monitor.sdk.auto_collection.live_metrics.sender.LiveMetricsSender.post",
+            throw(Exception),
         ):
             result = exporter.export([record])
             self.assertEqual(result, MetricsExportResult.FAILED_NOT_RETRYABLE)
