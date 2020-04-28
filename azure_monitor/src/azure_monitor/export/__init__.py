@@ -144,6 +144,7 @@ class BaseExporter:
                         for error in data["errors"]:
                             if error["statusCode"] in (
                                 429,  # Too Many Requests
+                                439,  # Too Many Requests over extended time
                                 500,  # Internal Server Error
                                 503,  # Service Unavailable
                             ):
@@ -172,6 +173,7 @@ class BaseExporter:
             if response.status_code in (
                 206,  # Partial Content
                 429,  # Too Many Requests
+                439,  # Too Many Requests over extended time
                 500,  # Internal Server Error
                 503,  # Service Unavailable
             ):
