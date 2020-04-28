@@ -26,6 +26,7 @@ from azure_monitor.sdk.auto_collection.live_metrics.sender import (
 
 logger = logging.getLogger(__name__)
 
+
 # pylint: disable=no-self-use
 # pylint: disable=too-many-statements
 class LiveMetricsExporter(MetricsExporter):
