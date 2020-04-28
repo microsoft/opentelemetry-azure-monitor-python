@@ -29,6 +29,7 @@ logger = logging.getLogger(__name__)
 
 # pylint: disable=no-self-use
 # pylint: disable=too-many-statements
+# pylint: disable=too-many-return-statements
 class LiveMetricsExporter(MetricsExporter):
     """Live Metrics Exporter
 
@@ -113,34 +114,34 @@ class LiveMetricsExporter(MetricsExporter):
     def _get_live_metric_type(self, base_type: str) -> str:
         if base_type == "EventData":
             return "EventTelemetryDocument"
-        elif base_type == "ExceptionData":
+        if base_type == "ExceptionData":
             return "ExceptionTelemetryDocument"
-        elif base_type == "MessageData":
+        if base_type == "MessageData":
             return "TraceTelemetryDocument"
-        elif base_type == "MetricData":
+        if base_type == "MetricData":
             return "MetricTelemetryDocument"
-        elif base_type == "RequestData":
+        if base_type == "RequestData":
             return "RequestTelemetryDocument"
-        elif base_type == "RemoteDependencyData":
+        if base_type == "RemoteDependencyData":
             return "DependencyTelemetryDocument"
-        elif base_type == "AvailabilityData":
+        if base_type == "AvailabilityData":
             return "AvailabilityTelemetryDocument"
         return ""
 
     def _get_live_metric_document_type(self, base_type: str) -> str:
         if base_type == "EventData":
             return "Event"
-        elif base_type == "ExceptionData":
+        if base_type == "ExceptionData":
             return "Exception"
-        elif base_type == "MessageData":
+        if base_type == "MessageData":
             return "Trace"
-        elif base_type == "MetricData":
+        if base_type == "MetricData":
             return "Metric"
-        elif base_type == "RequestData":
+        if base_type == "RequestData":
             return "Request"
-        elif base_type == "RemoteDependencyData":
+        if base_type == "RemoteDependencyData":
             return "RemoteDependency"
-        elif base_type == "AvailabilityData":
+        if base_type == "AvailabilityData":
             return "Availability"
         return ""
 
