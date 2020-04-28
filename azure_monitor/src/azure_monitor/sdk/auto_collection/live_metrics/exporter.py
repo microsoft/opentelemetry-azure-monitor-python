@@ -26,7 +26,8 @@ from azure_monitor.sdk.auto_collection.live_metrics.sender import (
 
 logger = logging.getLogger(__name__)
 
-
+# pylint: disable=no-self-use
+# pylint: disable=too-many-statements
 class LiveMetricsExporter(MetricsExporter):
     """Live Metrics Exporter
 
@@ -123,6 +124,7 @@ class LiveMetricsExporter(MetricsExporter):
             return "DependencyTelemetryDocument"
         elif base_type == "AvailabilityData":
             return "AvailabilityTelemetryDocument"
+        return ""
 
     def _get_live_metric_document_type(self, base_type: str) -> str:
         if base_type == "EventData":
@@ -139,6 +141,7 @@ class LiveMetricsExporter(MetricsExporter):
             return "RemoteDependency"
         elif base_type == "AvailabilityData":
             return "Availability"
+        return ""
 
     def _get_aggregated_properties(
         self, envelope: Envelope

@@ -114,6 +114,7 @@ class LocalFileStorage:
     def __exit__(self, type, value, traceback):
         self.close()
 
+    # pylint: disable=unused-variable
     def _maintenance_routine(self, silent=False):
         try:
             if not os.path.isdir(self.path):

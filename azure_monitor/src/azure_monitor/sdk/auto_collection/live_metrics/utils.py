@@ -2,10 +2,9 @@
 # Licensed under the MIT License.
 #
 import time
-import typing
 import uuid
 
-from azure_monitor.protocol import BaseObject, LiveMetricEnvelope
+from azure_monitor.protocol import LiveMetricEnvelope
 from azure_monitor.utils import azure_monitor_context
 
 DEFAULT_LIVEMETRICS_ENDPOINT = "https://rt.services.visualstudio.com"

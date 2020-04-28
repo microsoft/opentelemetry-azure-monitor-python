@@ -166,6 +166,7 @@ class TestLiveMetricsManager(unittest.TestCase):
             self.assertEqual(self._post.interval, 60)
 
 
+# pylint: disable=invalid-name
 class MockResponse:
     def __init__(self, status_code, text, headers):
         self.status_code = status_code
