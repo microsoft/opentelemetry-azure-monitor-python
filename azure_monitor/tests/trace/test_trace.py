@@ -18,7 +18,7 @@ from azure_monitor.export import ExportResult
 from azure_monitor.export.trace import AzureMonitorSpanExporter
 from azure_monitor.options import ExporterOptions
 
-TEST_FOLDER = os.path.abspath(".test.exporter.trace")
+TEST_FOLDER = os.path.abspath(".test")
 STORAGE_PATH = os.path.join(TEST_FOLDER)
 
 

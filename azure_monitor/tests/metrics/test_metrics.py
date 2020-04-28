@@ -20,7 +20,7 @@ from azure_monitor.export.metrics import AzureMonitorMetricsExporter
 from azure_monitor.options import ExporterOptions
 from azure_monitor.protocol import Data, DataPoint, Envelope, MetricData
 
-TEST_FOLDER = os.path.abspath(".test.exporter.trace")
+TEST_FOLDER = os.path.abspath(".test")
 STORAGE_PATH = os.path.join(TEST_FOLDER)
 
 
