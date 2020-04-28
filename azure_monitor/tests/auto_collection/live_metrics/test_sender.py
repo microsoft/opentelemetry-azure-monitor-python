@@ -4,7 +4,7 @@
 import unittest
 from unittest import mock
 
-from azure_monitor.sdk.auto_collection.live_metrics import LiveMetricEnvelope
+from azure_monitor.protocol import LiveMetricEnvelope
 from azure_monitor.sdk.auto_collection.live_metrics.sender import (
     LiveMetricsSender,
 )
@@ -20,9 +20,6 @@ class TestLiveMetricsSender(unittest.TestCase):
         """Test the constructor."""
         sender = LiveMetricsSender(
             instrumentation_key=self._instrumentation_key
-        )
-        self.assertEqual(
-            sender._endpoint, "https://rt.services.visualstudio.com"
         )
         self.assertEqual(
             sender._instrumentation_key, self._instrumentation_key

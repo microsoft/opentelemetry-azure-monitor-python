@@ -6,8 +6,11 @@ import unittest
 from unittest import mock
 
 from opentelemetry import metrics
-from opentelemetry.sdk.metrics import Counter, Measure, MeterProvider
+from opentelemetry.sdk.metrics import Counter, MeterProvider
 
+from azure_monitor.sdk.auto_collection.live_metrics.exporter import (
+    LiveMetricsExporter,
+)
 from azure_monitor.sdk.auto_collection.live_metrics.manager import (
     LiveMetricsManager,
     LiveMetricsPing,
@@ -124,6 +127,7 @@ class TestLiveMetricsManager(unittest.TestCase):
                 200, None, {"x-ms-qps-subscribed": "false"}
             )
             self._post = LiveMetricsPost(
+                exporter=LiveMetricsExporter(self._instrumentation_key),
                 meter=self._meter,
                 instrumentation_key=self._instrumentation_key,
             )
@@ -140,6 +144,7 @@ class TestLiveMetricsManager(unittest.TestCase):
                 200, None, {"x-ms-qps-subscribed": "true"}
             )
             self._post = LiveMetricsPost(
+                exporter=LiveMetricsExporter(self._instrumentation_key),
                 meter=self._meter,
                 instrumentation_key=self._instrumentation_key,
             )
@@ -151,6 +156,7 @@ class TestLiveMetricsManager(unittest.TestCase):
         with mock.patch("requests.post") as request:
             request.return_value = MockResponse(400, None, {})
             self._post = LiveMetricsPost(
+                exporter=LiveMetricsExporter(self._instrumentation_key),
                 meter=self._meter,
                 instrumentation_key=self._instrumentation_key,
             )

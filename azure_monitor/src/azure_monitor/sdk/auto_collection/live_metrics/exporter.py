@@ -19,7 +19,7 @@ from azure_monitor.protocol import (
     LiveMetricDocumentProperty,
     LiveMetricEnvelope,
 )
-from azure_monitor.sdk.auto_collection import live_metrics
+from azure_monitor.sdk.auto_collection.live_metrics import utils
 from azure_monitor.sdk.auto_collection.live_metrics.sender import (
     LiveMetricsSender,
 )
@@ -50,9 +50,7 @@ class LiveMetricsExporter(MetricsExporter):
             response = self._sender.post(envelope)
             if response.ok:
                 self.subscribed = (
-                    response.headers.get(
-                        live_metrics.LIVE_METRICS_SUBSCRIBED_HEADER
-                    )
+                    response.headers.get(utils.LIVE_METRICS_SUBSCRIBED_HEADER)
                     == "true"
                 )
                 return MetricsExportResult.SUCCESS
@@ -66,9 +64,7 @@ class LiveMetricsExporter(MetricsExporter):
         self, metric_records: typing.Sequence[MetricRecord]
     ) -> LiveMetricEnvelope:
 
-        envelope = live_metrics.create_metric_envelope(
-            self._instrumentation_key
-        )
+        envelope = utils.create_metric_envelope(self._instrumentation_key)
         envelope.documents = self._get_live_metric_documents()
         envelope.metrics = []
 

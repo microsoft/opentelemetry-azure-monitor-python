@@ -15,6 +15,12 @@ from azure_monitor.sdk.auto_collection.live_metrics.exporter import (
     LiveMetricsExporter,
 )
 
+def throw(exc_type, *args, **kwargs):
+    def func(*_args, **_kwargs):
+        raise exc_type(*args, **kwargs)
+
+    return func
+
 
 # pylint: disable=protected-access
 class TestLiveMetricsExporter(unittest.TestCase):
@@ -77,5 +83,18 @@ class TestLiveMetricsExporter(unittest.TestCase):
             response = requests.Response()
             response.status_code = 400
             request.return_value = response
+            result = exporter.export([record])
+            self.assertEqual(result, MetricsExportResult.FAILED_NOT_RETRYABLE)
+
+    def test_export_exception(self):
+        record = MetricRecord(
+            CounterAggregator(), self._test_labels, self._test_metric
+        )
+        exporter = LiveMetricsExporter(
+            instrumentation_key=self._instrumentation_key
+        )
+        with mock.patch(
+            "azure_monitor.sdk.auto_collection.live_metrics.sender.LiveMetricsSender.post" , throw(Exception)
+        ):
             result = exporter.export([record])
             self.assertEqual(result, MetricsExportResult.FAILED_NOT_RETRYABLE)

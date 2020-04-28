@@ -7,7 +7,7 @@ import time
 from opentelemetry.context import attach, detach, set_value
 from opentelemetry.sdk.metrics.export import MetricsExportResult
 
-from azure_monitor.sdk.auto_collection import live_metrics
+from azure_monitor.sdk.auto_collection.live_metrics import utils
 from azure_monitor.sdk.auto_collection.live_metrics.exporter import (
     LiveMetricsExporter,
 )
@@ -15,10 +15,14 @@ from azure_monitor.sdk.auto_collection.live_metrics.sender import (
     LiveMetricsSender,
 )
 
-FALLBACK_INTERVAL = 60
-PING_INTERVAL = 5
-POST_INTERVAL = 1
-MAIN_INTERVAL = 2
+# Interval for failures threshold reached in seconds
+FALLBACK_INTERVAL = 60.0
+# Ping interval for succesful requests in seconds
+PING_INTERVAL = 5.0
+# Post interval for succesful requests in seconds
+POST_INTERVAL = 1.0
+# Main process interval (Manager) in seconds
+MAIN_INTERVAL = 2.0
 
 
 class LiveMetricsManager(threading.Thread):
@@ -37,6 +41,7 @@ class LiveMetricsManager(threading.Thread):
         self._instrumentation_key = instrumentation_key
         self._is_user_subscribed = False
         self._meter = meter
+        self._exporter = LiveMetricsExporter(self._instrumentation_key)
         self._post = None
         self._ping = LiveMetricsPing(self._instrumentation_key)
         self.start()
@@ -53,7 +58,7 @@ class LiveMetricsManager(threading.Thread):
                 self._ping.shutdown()
                 self._ping = None
                 self._post = LiveMetricsPost(
-                    self._meter, self._instrumentation_key
+                    self._meter, self._exporter, self._instrumentation_key
                 )
         if self._post:
             if not self._post.is_user_subscribed:
@@ -95,9 +100,7 @@ class LiveMetricsPing(threading.Thread):
             self.ping()
 
     def ping(self):
-        envelope = live_metrics.create_metric_envelope(
-            self.instrumentation_key
-        )
+        envelope = utils.create_metric_envelope(self.instrumentation_key)
         token = attach(set_value("suppress_instrumentation", True))
         response = self.sender.ping(envelope)
         detach(token)
@@ -107,15 +110,13 @@ class LiveMetricsPing(threading.Thread):
                 self.last_send_succeeded = True
             self.last_request_success_time = time.time()
             if (
-                response.headers.get(
-                    live_metrics.LIVE_METRICS_SUBSCRIBED_HEADER
-                )
+                response.headers.get(utils.LIVE_METRICS_SUBSCRIBED_HEADER)
                 == "true"
             ):
                 self.is_user_subscribed = True
         else:
             self.last_send_succeeded = False
-            if time.time() >= self.last_request_success_time + 20:
+            if time.time() >= self.last_request_success_time + 60:
                 self.interval = FALLBACK_INTERVAL
 
     def shutdown(self):
@@ -130,7 +131,7 @@ class LiveMetricsPost(threading.Thread):
 
     daemon = True
 
-    def __init__(self, meter, instrumentation_key):
+    def __init__(self, meter, exporter, instrumentation_key):
         super().__init__()
         self.instrumentation_key = instrumentation_key
         self.meter = meter
@@ -139,7 +140,7 @@ class LiveMetricsPost(threading.Thread):
         self.is_user_subscribed = True
         self.last_send_succeeded = False
         self.last_request_success_time = time.time()
-        self.exporter = LiveMetricsExporter(self.instrumentation_key)
+        self.exporter = exporter
         self.start()
 
     def run(self):
@@ -163,7 +164,7 @@ class LiveMetricsPost(threading.Thread):
                 self.is_user_subscribed = False
         else:
             self.last_send_succeeded = False
-            if time.time() >= self.last_request_success_time + 60:
+            if time.time() >= self.last_request_success_time + 20:
                 self.interval = FALLBACK_INTERVAL
 
     def shutdown(self):

@@ -8,9 +8,7 @@ import time
 import requests
 
 from azure_monitor.protocol import LiveMetricEnvelope
-
-DEFAULT_LIVEMETRICS_ENDPOINT = "https://rt.services.visualstudio.com"
-LIVE_METRICS_TRANSMISSION_TIME_HEADER = "x-ms-qps-transmission-time"
+from azure_monitor.sdk.auto_collection.live_metrics import utils
 
 logger = logging.getLogger(__name__)
 
@@ -22,7 +20,6 @@ class LiveMetricsSender:
     """
 
     def __init__(self, instrumentation_key: str):
-        self._endpoint = DEFAULT_LIVEMETRICS_ENDPOINT
         self._instrumentation_key = instrumentation_key
 
     def ping(self, envelope: LiveMetricEnvelope):
@@ -34,7 +31,9 @@ class LiveMetricsSender:
     def _send_request(self, data: str, request_type: str) -> requests.Response:
         try:
             url = "{0}/QuickPulseService.svc/{1}?ikey={2}".format(
-                self._endpoint, request_type, self._instrumentation_key
+                utils.DEFAULT_LIVEMETRICS_ENDPOINT,
+                request_type,
+                self._instrumentation_key,
             )
             response = requests.post(
                 url=url,
@@ -42,11 +41,12 @@ class LiveMetricsSender:
                 headers={
                     "Expect": "100-continue",
                     "Content-Type": "application/json; charset=utf-8",
-                    LIVE_METRICS_TRANSMISSION_TIME_HEADER: str(
+                    utils.LIVE_METRICS_TRANSMISSION_TIME_HEADER: str(
                         round(time.time()) * 1000
                     ),
                 },
             )
-        except Exception as ex:
+        except requests.exceptions.HTTPError as ex:
             logger.warning("Failed to send live metrics: %s.", ex)
+            return ex.response
         return response
