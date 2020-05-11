@@ -22,6 +22,7 @@ def create_metric_envelope(instrumentation_key: str):
         machine_name=azure_monitor_context.get("ai.device.id"),
         metrics=None,
         stream_id=STREAM_ID,
+        # TODO: Fix issue with incorrect time
         timestamp="/Date({0})/".format(str(int(time.time()) * 1000)),
         version=azure_monitor_context.get("ai.internal.sdkVersion"),
     )

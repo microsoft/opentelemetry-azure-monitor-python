@@ -41,12 +41,13 @@ class LiveMetricsSender:
                 headers={
                     "Expect": "100-continue",
                     "Content-Type": "application/json; charset=utf-8",
+                    # TODO: Fix issue with incorrect time
                     utils.LIVE_METRICS_TRANSMISSION_TIME_HEADER: str(
                         round(time.time()) * 1000
                     ),
                 },
             )
-        except requests.exceptions.HTTPError as ex:
-            logger.warning("Failed to send live metrics: %s.", ex)
+        except requests.exceptions.RequestException as ex:
+            logger.warning("Failed to send live metrics: %s.", ex.strerror)
             return ex.response
         return response
