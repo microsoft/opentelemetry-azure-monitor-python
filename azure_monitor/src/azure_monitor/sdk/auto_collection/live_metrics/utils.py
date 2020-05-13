@@ -2,10 +2,10 @@
 # Licensed under the MIT License.
 #
 import uuid
+from datetime import datetime
 
 from azure_monitor.protocol import LiveMetricEnvelope
 from azure_monitor.utils import azure_monitor_context
-from datetime import datetime
 
 DEFAULT_LIVEMETRICS_ENDPOINT = "https://rt.services.visualstudio.com"
 LIVE_METRICS_SUBSCRIBED_HEADER = "x-ms-qps-subscribed"
