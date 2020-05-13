@@ -29,4 +29,6 @@ def create_metric_envelope(instrumentation_key: str):
 
 
 def calculate_ticks_since_epoch():
-    return (datetime.utcnow() - datetime(1, 1, 1)).total_seconds() * 10000000
+    return round(
+        (datetime.utcnow() - datetime(1, 1, 1)).total_seconds() * 10000000
+        )
