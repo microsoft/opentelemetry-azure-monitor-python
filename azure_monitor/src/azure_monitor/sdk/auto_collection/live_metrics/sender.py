@@ -3,7 +3,6 @@
 #
 import json
 import logging
-import time
 
 import requests
 
@@ -41,9 +40,8 @@ class LiveMetricsSender:
                 headers={
                     "Expect": "100-continue",
                     "Content-Type": "application/json; charset=utf-8",
-                    # TODO: Fix issue with incorrect time
                     utils.LIVE_METRICS_TRANSMISSION_TIME_HEADER: str(
-                        round(time.time()) * 1000
+                        utils.calculate_ticks_since_epoch()
                     ),
                 },
             )
