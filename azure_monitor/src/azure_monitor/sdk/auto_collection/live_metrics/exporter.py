@@ -61,7 +61,7 @@ class LiveMetricsExporter(MetricsExporter):
         except Exception:  # pylint: disable=broad-except
             logger.exception("Exception occurred while exporting the data.")
 
-        return MetricsExportResult.FAILED_NOT_RETRYABLE
+        return MetricsExportResult.FAILURE
 
     def _metric_to_live_metrics_envelope(
         self, metric_records: typing.Sequence[MetricRecord]

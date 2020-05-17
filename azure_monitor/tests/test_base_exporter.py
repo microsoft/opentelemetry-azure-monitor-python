@@ -354,11 +354,11 @@ class TestBaseExporter(unittest.TestCase):
         )
         self.assertEqual(
             get_trace_export_result(ExportResult.FAILED_NOT_RETRYABLE),
-            SpanExportResult.FAILED_NOT_RETRYABLE,
+            SpanExportResult.FAILURE,
         )
         self.assertEqual(
             get_trace_export_result(ExportResult.FAILED_RETRYABLE),
-            SpanExportResult.FAILED_RETRYABLE,
+            SpanExportResult.FAILURE,
         )
         self.assertEqual(get_trace_export_result(None), None)
 
@@ -369,11 +369,11 @@ class TestBaseExporter(unittest.TestCase):
         )
         self.assertEqual(
             get_metrics_export_result(ExportResult.FAILED_NOT_RETRYABLE),
-            MetricsExportResult.FAILED_NOT_RETRYABLE,
+            MetricsExportResult.FAILURE,
         )
         self.assertEqual(
             get_metrics_export_result(ExportResult.FAILED_RETRYABLE),
-            MetricsExportResult.FAILED_RETRYABLE,
+            MetricsExportResult.FAILURE,
         )
         self.assertEqual(get_metrics_export_result(None), None)
 
