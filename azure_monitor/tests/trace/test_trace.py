@@ -142,7 +142,7 @@ class TestAzureExporter(unittest.TestCase):
             throw(Exception),
         ):  # noqa: E501
             result = exporter.export([test_span])
-            self.assertEqual(result, SpanExportResult.FAILED_NOT_RETRYABLE)
+            self.assertEqual(result, SpanExportResult.FAILURE)
             self.assertEqual(logger_mock.exception.called, True)
 
     def test_export_not_retryable(self):
@@ -162,7 +162,7 @@ class TestAzureExporter(unittest.TestCase):
         ) as transmit:  # noqa: E501
             transmit.return_value = ExportResult.FAILED_NOT_RETRYABLE
             result = exporter.export([test_span])
-            self.assertEqual(result, SpanExportResult.FAILED_NOT_RETRYABLE)
+            self.assertEqual(result, SpanExportResult.FAILURE)
 
     def test_span_to_envelope_none(self):
         exporter = self._exporter
