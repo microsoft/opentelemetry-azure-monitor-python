@@ -96,8 +96,12 @@ class TestAzureMetricsExporter(unittest.TestCase):
             "4321abcd-5678-4efa-8abc-1234567890ab",
         )
 
-    @mock.patch("azure_monitor.export.metrics.AzureMonitorMetricsExporter._transmit")
-    @mock.patch("azure_monitor.export.metrics.AzureMonitorMetricsExporter._metric_to_envelope")
+    @mock.patch(
+        "azure_monitor.export.metrics.AzureMonitorMetricsExporter._transmit"
+    )
+    @mock.patch(
+        "azure_monitor.export.metrics.AzureMonitorMetricsExporter._metric_to_envelope"
+    )
     def test_export(self, mte, transmit):
         record = MetricRecord(
             CounterAggregator(), self._test_labels, self._test_metric
@@ -108,8 +112,12 @@ class TestAzureMetricsExporter(unittest.TestCase):
         result = exporter.export([record])
         self.assertEqual(result, MetricsExportResult.SUCCESS)
 
-    @mock.patch("azure_monitor.export.metrics.AzureMonitorMetricsExporter._transmit")
-    @mock.patch("azure_monitor.export.metrics.AzureMonitorMetricsExporter._metric_to_envelope")
+    @mock.patch(
+        "azure_monitor.export.metrics.AzureMonitorMetricsExporter._transmit"
+    )
+    @mock.patch(
+        "azure_monitor.export.metrics.AzureMonitorMetricsExporter._metric_to_envelope"
+    )
     def test_export_failed_retryable(self, mte, transmit):
         record = MetricRecord(
             CounterAggregator(), self._test_labels, self._test_metric
@@ -124,8 +132,12 @@ class TestAzureMetricsExporter(unittest.TestCase):
         self.assertEqual(storage_mock.call_count, 1)
 
     @mock.patch("azure_monitor.export.metrics.logger")
-    @mock.patch("azure_monitor.export.metrics.AzureMonitorMetricsExporter._transmit")
-    @mock.patch("azure_monitor.export.metrics.AzureMonitorMetricsExporter._metric_to_envelope")
+    @mock.patch(
+        "azure_monitor.export.metrics.AzureMonitorMetricsExporter._transmit"
+    )
+    @mock.patch(
+        "azure_monitor.export.metrics.AzureMonitorMetricsExporter._metric_to_envelope"
+    )
     def test_export_exception(self, mte, transmit, logger_mock):
         record = MetricRecord(
             CounterAggregator(), self._test_labels, self._test_metric
@@ -152,10 +164,7 @@ class TestAzureMetricsExporter(unittest.TestCase):
         self.assertEqual(envelope.ver, 1)
         self.assertEqual(envelope.name, "Microsoft.ApplicationInsights.Metric")
         self.assertEqual(
-            envelope.time,
-            ns_to_iso_str(
-                aggregator.last_update_timestamp
-            ),
+            envelope.time, ns_to_iso_str(aggregator.last_update_timestamp)
         )
         self.assertEqual(envelope.sample_rate, None)
         self.assertEqual(envelope.seq, None)
@@ -193,8 +202,7 @@ class TestAzureMetricsExporter(unittest.TestCase):
         self.assertEqual(envelope.ver, 1)
         self.assertEqual(envelope.name, "Microsoft.ApplicationInsights.Metric")
         self.assertEqual(
-            envelope.time,
-            ns_to_iso_str(aggregator.last_update_timestamp),
+            envelope.time, ns_to_iso_str(aggregator.last_update_timestamp)
         )
         self.assertEqual(envelope.sample_rate, None)
         self.assertEqual(envelope.seq, None)
@@ -231,8 +239,7 @@ class TestAzureMetricsExporter(unittest.TestCase):
         self.assertEqual(envelope.ver, 1)
         self.assertEqual(envelope.name, "Microsoft.ApplicationInsights.Metric")
         self.assertEqual(
-            envelope.time,
-            ns_to_iso_str(aggregator.last_update_timestamp),
+            envelope.time, ns_to_iso_str(aggregator.last_update_timestamp)
         )
         self.assertEqual(envelope.sample_rate, None)
         self.assertEqual(envelope.seq, None)
@@ -273,10 +280,7 @@ class TestAzureMetricsExporter(unittest.TestCase):
         self.assertEqual(envelope.ver, 1)
         self.assertEqual(envelope.name, "Microsoft.ApplicationInsights.Metric")
         self.assertEqual(
-            envelope.time,
-            ns_to_iso_str(
-                aggregator.last_update_timestamp
-            ),
+            envelope.time, ns_to_iso_str(aggregator.last_update_timestamp)
         )
         self.assertEqual(envelope.sample_rate, None)
         self.assertEqual(envelope.seq, None)

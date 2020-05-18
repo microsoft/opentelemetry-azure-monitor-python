@@ -187,8 +187,10 @@ class BaseExporter:
 def get_trace_export_result(result: ExportResult) -> SpanExportResult:
     if result == ExportResult.SUCCESS:
         return SpanExportResult.SUCCESS
-    if result == ExportResult.FAILED_RETRYABLE or \
-        result == ExportResult.FAILED_NOT_RETRYABLE:
+    if (
+        result == ExportResult.FAILED_RETRYABLE
+        or result == ExportResult.FAILED_NOT_RETRYABLE
+    ):
         return SpanExportResult.FAILURE
     return None
 
@@ -196,7 +198,9 @@ def get_trace_export_result(result: ExportResult) -> SpanExportResult:
 def get_metrics_export_result(result: ExportResult) -> MetricsExportResult:
     if result == ExportResult.SUCCESS:
         return MetricsExportResult.SUCCESS
-    if result == ExportResult.FAILED_RETRYABLE or \
-        result == ExportResult.FAILED_NOT_RETRYABLE:
+    if (
+        result == ExportResult.FAILED_RETRYABLE
+        or result == ExportResult.FAILED_NOT_RETRYABLE
+    ):
         return MetricsExportResult.FAILURE
     return None

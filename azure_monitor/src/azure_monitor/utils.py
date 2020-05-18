@@ -13,7 +13,9 @@ import pkg_resources
 from azure_monitor.version import __version__ as ext_version
 
 # Workaround for missing version file
-opentelemetry_version = pkg_resources.get_distribution("opentelemetry-sdk").version
+opentelemetry_version = pkg_resources.get_distribution(
+    "opentelemetry-sdk"
+).version
 
 azure_monitor_context = {
     "ai.cloud.role": os.path.basename(sys.argv[0]) or "Python Application",
