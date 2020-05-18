@@ -96,46 +96,58 @@ class TestAzureMetricsExporter(unittest.TestCase):
             "4321abcd-5678-4efa-8abc-1234567890ab",
         )
 
-    def test_export(self,):
+    @mock.patch(
+        "azure_monitor.export.metrics.AzureMonitorMetricsExporter._transmit"
+    )
+    @mock.patch(
+        "azure_monitor.export.metrics.AzureMonitorMetricsExporter._metric_to_envelope"
+    )
+    def test_export(self, mte, transmit):
         record = MetricRecord(
             CounterAggregator(), self._test_labels, self._test_metric
         )
         exporter = self._exporter
-        with mock.patch(
-            "azure_monitor.export.metrics.AzureMonitorMetricsExporter._transmit"
-        ) as transmit:  # noqa: E501
-            transmit.return_value = ExportResult.SUCCESS
-            result = exporter.export([record])
-            self.assertEqual(result, MetricsExportResult.SUCCESS)
+        mte.return_value = []
+        transmit.return_value = ExportResult.SUCCESS
+        result = exporter.export([record])
+        self.assertEqual(result, MetricsExportResult.SUCCESS)
 
-    def test_export_failed_retryable(self):
+    @mock.patch(
+        "azure_monitor.export.metrics.AzureMonitorMetricsExporter._transmit"
+    )
+    @mock.patch(
+        "azure_monitor.export.metrics.AzureMonitorMetricsExporter._metric_to_envelope"
+    )
+    def test_export_failed_retryable(self, mte, transmit):
         record = MetricRecord(
             CounterAggregator(), self._test_labels, self._test_metric
         )
         exporter = self._exporter
-        with mock.patch(
-            "azure_monitor.export.metrics.AzureMonitorMetricsExporter._transmit"
-        ) as transmit:  # noqa: E501
-            transmit.return_value = ExportResult.FAILED_RETRYABLE
-            storage_mock = mock.Mock()
-            exporter.storage.put = storage_mock
-            result = exporter.export([record])
-            self.assertEqual(result, MetricsExportResult.FAILED_RETRYABLE)
-            self.assertEqual(storage_mock.call_count, 1)
+        transmit.return_value = ExportResult.FAILED_RETRYABLE
+        mte.return_value = []
+        storage_mock = mock.Mock()
+        exporter.storage.put = storage_mock
+        result = exporter.export([record])
+        self.assertEqual(result, MetricsExportResult.FAILURE)
+        self.assertEqual(storage_mock.call_count, 1)
 
     @mock.patch("azure_monitor.export.metrics.logger")
-    def test_export_exception(self, logger_mock):
+    @mock.patch(
+        "azure_monitor.export.metrics.AzureMonitorMetricsExporter._transmit"
+    )
+    @mock.patch(
+        "azure_monitor.export.metrics.AzureMonitorMetricsExporter._metric_to_envelope"
+    )
+    def test_export_exception(self, mte, transmit, logger_mock):
         record = MetricRecord(
             CounterAggregator(), self._test_labels, self._test_metric
         )
         exporter = self._exporter
-        with mock.patch(
-            "azure_monitor.export.metrics.AzureMonitorMetricsExporter._transmit",
-            throw(Exception),
-        ):  # noqa: E501
-            result = exporter.export([record])
-            self.assertEqual(result, MetricsExportResult.FAILED_NOT_RETRYABLE)
-            self.assertEqual(logger_mock.exception.called, True)
+        mte.return_value = []
+        transmit.side_effect = throw(Exception)
+        result = exporter.export([record])
+        self.assertEqual(result, MetricsExportResult.FAILURE)
+        self.assertEqual(logger_mock.exception.called, True)
 
     def test_metric_to_envelope_none(self):
         exporter = self._exporter
@@ -152,10 +164,7 @@ class TestAzureMetricsExporter(unittest.TestCase):
         self.assertEqual(envelope.ver, 1)
         self.assertEqual(envelope.name, "Microsoft.ApplicationInsights.Metric")
         self.assertEqual(
-            envelope.time,
-            ns_to_iso_str(
-                record.metric.bind(dict(record.labels)).last_update_timestamp
-            ),
+            envelope.time, ns_to_iso_str(aggregator.last_update_timestamp)
         )
         self.assertEqual(envelope.sample_rate, None)
         self.assertEqual(envelope.seq, None)
@@ -192,15 +201,9 @@ class TestAzureMetricsExporter(unittest.TestCase):
         self.assertIsInstance(envelope, Envelope)
         self.assertEqual(envelope.ver, 1)
         self.assertEqual(envelope.name, "Microsoft.ApplicationInsights.Metric")
-        # TODO: implement last updated timestamp for observer
-        # self.assertEqual(
-        #     envelope.time,
-        #     ns_to_iso_str(
-        #         record.metric.bind(
-        #             record.label_set
-        #         ).last_update_timestamp
-        #     ),
-        # )
+        self.assertEqual(
+            envelope.time, ns_to_iso_str(aggregator.last_update_timestamp)
+        )
         self.assertEqual(envelope.sample_rate, None)
         self.assertEqual(envelope.seq, None)
         self.assertEqual(envelope.ikey, "1234abcd-5678-4efa-8abc-1234567890ab")
@@ -235,15 +238,9 @@ class TestAzureMetricsExporter(unittest.TestCase):
         self.assertIsInstance(envelope, Envelope)
         self.assertEqual(envelope.ver, 1)
         self.assertEqual(envelope.name, "Microsoft.ApplicationInsights.Metric")
-        # TODO: implement last updated timestamp for observer
-        # self.assertEqual(
-        #     envelope.time,
-        #     ns_to_iso_str(
-        #         record.metric.bind(
-        #             record.label_set
-        #         ).last_update_timestamp
-        #     ),
-        # )
+        self.assertEqual(
+            envelope.time, ns_to_iso_str(aggregator.last_update_timestamp)
+        )
         self.assertEqual(envelope.sample_rate, None)
         self.assertEqual(envelope.seq, None)
         self.assertEqual(envelope.ikey, "1234abcd-5678-4efa-8abc-1234567890ab")
@@ -283,10 +280,7 @@ class TestAzureMetricsExporter(unittest.TestCase):
         self.assertEqual(envelope.ver, 1)
         self.assertEqual(envelope.name, "Microsoft.ApplicationInsights.Metric")
         self.assertEqual(
-            envelope.time,
-            ns_to_iso_str(
-                record.metric.bind(dict(record.labels)).last_update_timestamp
-            ),
+            envelope.time, ns_to_iso_str(aggregator.last_update_timestamp)
         )
         self.assertEqual(envelope.sample_rate, None)
         self.assertEqual(envelope.seq, None)

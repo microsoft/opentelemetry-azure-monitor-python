@@ -85,7 +85,7 @@ class TestLiveMetricsExporter(unittest.TestCase):
             response.status_code = 400
             request.return_value = response
             result = exporter.export([record])
-            self.assertEqual(result, MetricsExportResult.FAILED_NOT_RETRYABLE)
+            self.assertEqual(result, MetricsExportResult.FAILURE)
 
     def test_export_exception(self):
         record = MetricRecord(
@@ -99,4 +99,4 @@ class TestLiveMetricsExporter(unittest.TestCase):
             throw(Exception),
         ):
             result = exporter.export([record])
-            self.assertEqual(result, MetricsExportResult.FAILED_NOT_RETRYABLE)
+            self.assertEqual(result, MetricsExportResult.FAILURE)
