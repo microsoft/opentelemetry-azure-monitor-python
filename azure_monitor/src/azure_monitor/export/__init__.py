@@ -144,6 +144,7 @@ class BaseExporter:
                         for error in data["errors"]:
                             if error["statusCode"] in (
                                 429,  # Too Many Requests
+                                439,  # Too Many Requests over extended time
                                 500,  # Internal Server Error
                                 503,  # Service Unavailable
                             ):
@@ -172,6 +173,7 @@ class BaseExporter:
             if response.status_code in (
                 206,  # Partial Content
                 429,  # Too Many Requests
+                439,  # Too Many Requests over extended time
                 500,  # Internal Server Error
                 503,  # Service Unavailable
             ):
@@ -185,18 +187,20 @@ class BaseExporter:
 def get_trace_export_result(result: ExportResult) -> SpanExportResult:
     if result == ExportResult.SUCCESS:
         return SpanExportResult.SUCCESS
-    if result == ExportResult.FAILED_RETRYABLE:
-        return SpanExportResult.FAILED_RETRYABLE
-    if result == ExportResult.FAILED_NOT_RETRYABLE:
-        return SpanExportResult.FAILED_NOT_RETRYABLE
+    if result in (
+        ExportResult.FAILED_RETRYABLE,
+        ExportResult.FAILED_NOT_RETRYABLE,
+    ):
+        return SpanExportResult.FAILURE
     return None
 
 
 def get_metrics_export_result(result: ExportResult) -> MetricsExportResult:
     if result == ExportResult.SUCCESS:
         return MetricsExportResult.SUCCESS
-    if result == ExportResult.FAILED_RETRYABLE:
-        return MetricsExportResult.FAILED_RETRYABLE
-    if result == ExportResult.FAILED_NOT_RETRYABLE:
-        return MetricsExportResult.FAILED_NOT_RETRYABLE
+    if result in (
+        ExportResult.FAILED_RETRYABLE,
+        ExportResult.FAILED_NOT_RETRYABLE,
+    ):
+        return MetricsExportResult.FAILURE
     return None

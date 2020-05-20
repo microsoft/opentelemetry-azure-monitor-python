@@ -5,8 +5,8 @@
 # pylint: disable=no-name-in-module
 import requests
 from opentelemetry import trace
-from opentelemetry.ext import http_requests
-from opentelemetry.ext.wsgi import OpenTelemetryMiddleware
+from opentelemetry.ext.flask import FlaskInstrumentor
+from opentelemetry.ext.requests import RequestsInstrumentor
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import BatchExportSpanProcessor
 
@@ -29,9 +29,13 @@ trace.get_tracer_provider().add_span_processor(span_processor)
 # Integrations are the glue that binds the OpenTelemetry API and the
 # frameworks and libraries that are used together, automatically creating
 # Spans and propagating context as appropriate.
-http_requests.enable(trace.get_tracer_provider())
+
+# Enable instrumentation in the requests library.
+RequestsInstrumentor().instrument()
+
 app = flask.Flask(__name__)
-app.wsgi_app = OpenTelemetryMiddleware(app.wsgi_app)
+# Enable instrumentation in the flask library.
+FlaskInstrumentor().instrument_app(app)
 
 
 @app.route("/")

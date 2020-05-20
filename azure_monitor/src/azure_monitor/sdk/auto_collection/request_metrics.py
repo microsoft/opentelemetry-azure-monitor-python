@@ -4,8 +4,9 @@ import logging
 import threading
 import time
 from http.server import HTTPServer
+from typing import Dict
 
-from opentelemetry.metrics import LabelSet, Meter
+from opentelemetry.metrics import Meter
 
 logger = logging.getLogger(__name__)
 
@@ -59,12 +60,12 @@ class RequestMetrics:
 
     Args:
         meter: OpenTelemetry Meter
-        label_set: OpenTelemetry label set
+        labels: Dictionary of labels
     """
 
-    def __init__(self, meter: Meter, label_set: LabelSet):
+    def __init__(self, meter: Meter, labels: Dict[str, str]):
         self._meter = meter
-        self._label_set = label_set
+        self._labels = labels
         # Patch the HTTPServer handler to track request information
         HTTPServer.__init__ = server_patch
 
@@ -102,13 +103,11 @@ class RequestMetrics:
             requests_map["last_average_duration"] = result
             requests_map["last_duration"] = requests_map.get("duration", 0)
             # Convert to milliseconds
-            observer.observe(int(result * 1000.0), self._label_set)
+            observer.observe(int(result * 1000.0), self._labels)
         except ZeroDivisionError:
             # If interval_count is 0, exporter call made too close to previous
             # Return the previous result if this is the case
-            observer.observe(
-                int(last_average_duration * 1000.0), self._label_set
-            )
+            observer.observe(int(last_average_duration * 1000.0), self._labels)
 
     def _track_request_rate(self, observer) -> None:
         """ Track Request execution rate
@@ -134,8 +133,8 @@ class RequestMetrics:
             requests_map["last_time"] = current_time
             requests_map["last_count"] = requests_map.get("count", 0)
             requests_map["last_rate"] = result
-            observer.observe(int(result), self._label_set)
+            observer.observe(int(result), self._labels)
         except ZeroDivisionError:
             # If elapsed_seconds is 0, exporter call made too close to previous
             # Return the previous result if this is the case
-            observer.observe(int(last_rate), self._label_set)
+            observer.observe(int(last_rate), self._labels)

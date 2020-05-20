@@ -21,8 +21,7 @@ class TestRequestMetrics(unittest.TestCase):
     def setUpClass(cls):
         metrics.set_meter_provider(MeterProvider())
         cls._meter = metrics.get_meter(__name__)
-        kvp = {"environment": "staging"}
-        cls._test_label_set = cls._meter.get_label_set(kvp)
+        cls._test_labels = {"environment": "staging"}
 
     @classmethod
     def tearDown(cls):
@@ -36,12 +35,10 @@ class TestRequestMetrics(unittest.TestCase):
     def test_constructor(self):
         mock_meter = mock.Mock()
         request_metrics_collector = request_metrics.RequestMetrics(
-            meter=mock_meter, label_set=self._test_label_set
+            meter=mock_meter, labels=self._test_labels
         )
         self.assertEqual(request_metrics_collector._meter, mock_meter)
-        self.assertEqual(
-            request_metrics_collector._label_set, self._test_label_set
-        )
+        self.assertEqual(request_metrics_collector._labels, self._test_labels)
 
         self.assertEqual(mock_meter.register_observer.call_count, 2)
 
@@ -65,7 +62,7 @@ class TestRequestMetrics(unittest.TestCase):
 
     def test_track_request_duration(self):
         request_metrics_collector = request_metrics.RequestMetrics(
-            meter=self._meter, label_set=self._test_label_set
+            meter=self._meter, labels=self._test_labels
         )
         request_metrics.requests_map["duration"] = 0.1
         request_metrics.requests_map["count"] = 10
@@ -79,11 +76,13 @@ class TestRequestMetrics(unittest.TestCase):
             meter=self._meter,
         )
         request_metrics_collector._track_request_duration(obs)
-        self.assertEqual(obs.aggregators[self._test_label_set].current, 20)
+        self.assertEqual(
+            obs.aggregators[tuple(self._test_labels.items())].current, 20
+        )
 
     def test_track_request_duration_error(self):
         request_metrics_collector = request_metrics.RequestMetrics(
-            meter=self._meter, label_set=self._test_label_set
+            meter=self._meter, labels=self._test_labels
         )
         request_metrics.requests_map["duration"] = 0.1
         request_metrics.requests_map["count"] = 10
@@ -97,12 +96,14 @@ class TestRequestMetrics(unittest.TestCase):
             meter=self._meter,
         )
         request_metrics_collector._track_request_duration(obs)
-        self.assertEqual(obs.aggregators[self._test_label_set].current, 0)
+        self.assertEqual(
+            obs.aggregators[tuple(self._test_labels.items())].current, 0
+        )
 
     @mock.patch("azure_monitor.sdk.auto_collection.request_metrics.time")
     def test_track_request_rate(self, time_mock):
         request_metrics_collector = request_metrics.RequestMetrics(
-            meter=self._meter, label_set=self._test_label_set
+            meter=self._meter, labels=self._test_labels
         )
         time_mock.time.return_value = 100
         request_metrics.requests_map["last_time"] = 98
@@ -116,13 +117,15 @@ class TestRequestMetrics(unittest.TestCase):
             meter=self._meter,
         )
         request_metrics_collector._track_request_rate(obs)
-        self.assertEqual(obs.aggregators[self._test_label_set].current, 2)
+        self.assertEqual(
+            obs.aggregators[tuple(self._test_labels.items())].current, 2
+        )
 
     @mock.patch("azure_monitor.sdk.auto_collection.request_metrics.time")
     def test_track_request_rate_time_none(self, time_mock):
         time_mock.time.return_value = 100
         request_metrics_collector = request_metrics.RequestMetrics(
-            meter=self._meter, label_set=self._test_label_set
+            meter=self._meter, labels=self._test_labels
         )
         request_metrics.requests_map["last_time"] = None
         obs = Observer(
@@ -134,12 +137,14 @@ class TestRequestMetrics(unittest.TestCase):
             meter=self._meter,
         )
         request_metrics_collector._track_request_rate(obs)
-        self.assertEqual(obs.aggregators[self._test_label_set].current, 0)
+        self.assertEqual(
+            obs.aggregators[tuple(self._test_labels.items())].current, 0
+        )
 
     @mock.patch("azure_monitor.sdk.auto_collection.request_metrics.time")
     def test_track_request_rate_error(self, time_mock):
         request_metrics_collector = request_metrics.RequestMetrics(
-            meter=self._meter, label_set=self._test_label_set
+            meter=self._meter, labels=self._test_labels
         )
         time_mock.time.return_value = 100
         request_metrics.requests_map["last_rate"] = 5
@@ -153,7 +158,9 @@ class TestRequestMetrics(unittest.TestCase):
             meter=self._meter,
         )
         request_metrics_collector._track_request_rate(obs)
-        self.assertEqual(obs.aggregators[self._test_label_set].current, 5)
+        self.assertEqual(
+            obs.aggregators[tuple(self._test_labels.items())].current, 5
+        )
 
     def test_request_patch(self):
         map = request_metrics.requests_map  # pylint: disable=redefined-builtin

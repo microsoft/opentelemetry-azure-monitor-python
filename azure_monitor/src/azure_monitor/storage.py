@@ -3,10 +3,13 @@
 
 import datetime
 import json
+import logging
 import os
 import random
 
 from azure_monitor.utils import PeriodicTask
+
+logger = logging.getLogger(__name__)
 
 
 def _fmt(timestamp):
@@ -81,7 +84,7 @@ class LocalFileStorage:
     def __init__(
         self,
         path,
-        max_size=100 * 1024 * 1024,  # 100MB
+        max_size=50 * 1024 * 1024,  # 50MiB
         maintenance_period=60,  # 1 minute
         retention_period=7 * 24 * 60 * 60,  # 7 days
         write_timeout=60,  # 1 minute
@@ -111,6 +114,7 @@ class LocalFileStorage:
     def __exit__(self, type, value, traceback):
         self.close()
 
+    # pylint: disable=unused-variable
     def _maintenance_routine(self, silent=False):
         try:
             if not os.path.isdir(self.path):
@@ -119,6 +123,7 @@ class LocalFileStorage:
             if not silent:
                 raise
         try:
+            # pylint: disable=unused-variable
             for blob in self.gets():
                 pass
         except Exception:
@@ -167,6 +172,8 @@ class LocalFileStorage:
         return None
 
     def put(self, data, lease_period=0, silent=False):
+        if not self._check_storage_size():
+            return None
         blob = LocalFileBlob(
             os.path.join(
                 self.path,
@@ -179,3 +186,30 @@ class LocalFileStorage:
             )
         )
         return blob.put(data, lease_period=lease_period, silent=silent)
+
+    def _check_storage_size(self):
+        size = 0
+        # pylint: disable=unused-variable
+        for dirpath, dirnames, filenames in os.walk(self.path):
+            for filename in filenames:
+                path = os.path.join(dirpath, filename)
+                # skip if it is symbolic link
+                if not os.path.islink(path):
+                    try:
+                        size += os.path.getsize(path)
+                    except OSError:
+                        logger.error(
+                            "Path %s does not exist or is " "inaccessible.",
+                            path,
+                        )
+                        continue
+                    if size >= self.max_size:
+                        logger.warning(
+                            "Persistent storage max capacity has been "
+                            "reached. Currently at %fKB. Telemetry will be "
+                            "lost. Please consider increasing the value of "
+                            "'storage_max_size' in exporter config.",
+                            format(size / 1024),
+                        )
+                        return False
+        return True

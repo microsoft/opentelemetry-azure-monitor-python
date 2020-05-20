@@ -1,8 +1,7 @@
-# OpenTelemetry Azure Monitor SDKs and Exporters
+# OpenTelemetry Azure Monitor
 
 [![Gitter chat](https://img.shields.io/gitter/room/Microsoft/azure-monitor-python)](https://gitter.im/Microsoft/azure-monitor-python)
 [![Build status](https://travis-ci.org/microsoft/opentelemetry-azure-monitor-python.svg?branch=master)](https://travis-ci.org/microsoft/opentelemetry-azure-monitor-python)
-[![PyPI version](https://badge.fury.io/py/opentelemetry-azure-monitor.svg)](https://badge.fury.io/py/opentelemetry-azure-monitor)
 
 ## Installation
 
@@ -14,8 +13,8 @@ pip install opentelemetry-azure-monitor
 
 The online documentation is available at https://opentelemetry-azure-monitor-python.readthedocs.io/.
 
-
 ## Usage
+
 
 ### Trace
 
@@ -68,7 +67,7 @@ import requests
 
 from azure_monitor import AzureMonitorSpanExporter
 from opentelemetry import trace
-from opentelemetry.ext import http_requests
+from opentelemetry.ext.requests import RequestsInstrumentor
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import BatchExportSpanProcessor
 
@@ -81,7 +80,7 @@ exporter = AzureMonitorSpanExporter(
 span_processor = BatchExportSpanProcessor(exporter)
 tracer_provider.add_span_processor(span_processor)
 
-http_requests.enable(tracer_provider)
+RequestsInstrumentor().instrument()
 response = requests.get(url="https://azure.microsoft.com/")
 ```
 
@@ -129,8 +128,6 @@ This example shows how to track a counter metric and send it as telemetry every 
 * Alternatively, you can specify your `connection string` in an environment variable ``APPLICATIONINSIGHTS_CONNECTION_STRING``.
 
 ```python
-import time
-
 from azure_monitor import AzureMonitorMetricsExporter
 from opentelemetry import metrics
 from opentelemetry.sdk.metrics import Counter, MeterProvider
@@ -152,18 +149,8 @@ requests_counter = meter.create_metric(
     label_keys=("environment",),
 )
 
-testing_label_set = meter.get_label_set({"environment": "testing"})
+testing_labels = {"environment": "testing"}
 
-requests_counter.add(25, testing_label_set)
-time.sleep(100)
+requests_counter.add(25, testing_labels)
+input("...")
 ```
-
-# References
-
-[Azure Monitor](https://docs.microsoft.com/azure/azure-monitor/)
-
-[OpenTelemetry Project](https://opentelemetry.io/)
-
-[OpenTelemetry Python Client](https://github.com/open-telemetry/opentelemetry-python)
-
-[Azure Monitor Python Gitter](https://gitter.im/Microsoft/azure-monitor-python)

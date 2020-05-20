@@ -19,7 +19,7 @@ from azure_monitor.export import (
 from azure_monitor.options import ExporterOptions
 from azure_monitor.protocol import Data, Envelope
 
-TEST_FOLDER = os.path.abspath(".test.exporter.base")
+TEST_FOLDER = os.path.abspath(".test")
 STORAGE_PATH = os.path.join(TEST_FOLDER)
 
 
@@ -191,7 +191,7 @@ class TestBaseExporter(unittest.TestCase):
             exporter._transmit_from_storage()
         self.assertTrue(exporter.storage.get())
 
-    def test_(self):
+    def test_transmission(self):
         exporter = BaseExporter(
             storage_path=os.path.join(TEST_FOLDER, self.id())
         )
@@ -316,6 +316,18 @@ class TestBaseExporter(unittest.TestCase):
             exporter._transmit_from_storage()
         self.assertEqual(len(os.listdir(exporter.storage.path)), 0)
 
+    def test_transmission_439(self):
+        exporter = BaseExporter(
+            storage_path=os.path.join(TEST_FOLDER, self.id())
+        )
+        envelopes_to_export = map(lambda x: x.to_dict(), tuple([Envelope()]))
+        exporter.storage.put(envelopes_to_export)
+        with mock.patch("requests.post") as post:
+            post.return_value = MockResponse(439, "{}")
+            exporter._transmit_from_storage()
+        self.assertIsNone(exporter.storage.get())
+        self.assertEqual(len(os.listdir(exporter.storage.path)), 1)
+
     def test_transmission_500(self):
         exporter = BaseExporter(
             storage_path=os.path.join(TEST_FOLDER, self.id())
@@ -342,11 +354,11 @@ class TestBaseExporter(unittest.TestCase):
         )
         self.assertEqual(
             get_trace_export_result(ExportResult.FAILED_NOT_RETRYABLE),
-            SpanExportResult.FAILED_NOT_RETRYABLE,
+            SpanExportResult.FAILURE,
         )
         self.assertEqual(
             get_trace_export_result(ExportResult.FAILED_RETRYABLE),
-            SpanExportResult.FAILED_RETRYABLE,
+            SpanExportResult.FAILURE,
         )
         self.assertEqual(get_trace_export_result(None), None)
 
@@ -357,11 +369,11 @@ class TestBaseExporter(unittest.TestCase):
         )
         self.assertEqual(
             get_metrics_export_result(ExportResult.FAILED_NOT_RETRYABLE),
-            MetricsExportResult.FAILED_NOT_RETRYABLE,
+            MetricsExportResult.FAILURE,
         )
         self.assertEqual(
             get_metrics_export_result(ExportResult.FAILED_RETRYABLE),
-            MetricsExportResult.FAILED_RETRYABLE,
+            MetricsExportResult.FAILURE,
         )
         self.assertEqual(get_metrics_export_result(None), None)
 

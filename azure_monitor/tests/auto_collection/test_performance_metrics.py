@@ -24,8 +24,7 @@ class TestPerformanceMetrics(unittest.TestCase):
     def setUpClass(cls):
         metrics.set_meter_provider(MeterProvider())
         cls._meter = metrics.get_meter(__name__)
-        kvp = {"environment": "staging"}
-        cls._test_label_set = cls._meter.get_label_set(kvp)
+        cls._test_labels = {"environment": "staging"}
 
     @classmethod
     def tearDownClass(cls):
@@ -34,11 +33,11 @@ class TestPerformanceMetrics(unittest.TestCase):
     def test_constructor(self):
         mock_meter = mock.Mock()
         performance_metrics_collector = PerformanceMetrics(
-            meter=mock_meter, label_set=self._test_label_set
+            meter=mock_meter, labels=self._test_labels
         )
         self.assertEqual(performance_metrics_collector._meter, mock_meter)
         self.assertEqual(
-            performance_metrics_collector._label_set, self._test_label_set
+            performance_metrics_collector._labels, self._test_labels
         )
         self.assertEqual(mock_meter.register_observer.call_count, 4)
         reg_obs_calls = mock_meter.register_observer.call_args_list
@@ -73,7 +72,7 @@ class TestPerformanceMetrics(unittest.TestCase):
 
     def test_track_cpu(self):
         performance_metrics_collector = PerformanceMetrics(
-            meter=self._meter, label_set=self._test_label_set
+            meter=self._meter, labels=self._test_labels
         )
         with mock.patch("psutil.cpu_times_percent") as processor_mock:
             cpu = collections.namedtuple("cpu", "idle")
@@ -89,13 +88,13 @@ class TestPerformanceMetrics(unittest.TestCase):
             )
             performance_metrics_collector._track_cpu(obs)
             self.assertEqual(
-                obs.aggregators[self._test_label_set].current, 5.5
+                obs.aggregators[tuple(self._test_labels.items())].current, 5.5
             )
 
     @mock.patch("psutil.virtual_memory")
     def test_track_memory(self, psutil_mock):
         performance_metrics_collector = PerformanceMetrics(
-            meter=self._meter, label_set=self._test_label_set
+            meter=self._meter, labels=self._test_labels
         )
         memory = collections.namedtuple("memory", "available")
         vmem = memory(available=100)
@@ -109,7 +108,9 @@ class TestPerformanceMetrics(unittest.TestCase):
             meter=self._meter,
         )
         performance_metrics_collector._track_memory(obs)
-        self.assertEqual(obs.aggregators[self._test_label_set].current, 100)
+        self.assertEqual(
+            obs.aggregators[tuple(self._test_labels.items())].current, 100
+        )
 
     @mock.patch("azure_monitor.sdk.auto_collection.performance_metrics.psutil")
     def test_track_process_cpu(self, psutil_mock):
@@ -117,7 +118,7 @@ class TestPerformanceMetrics(unittest.TestCase):
             "azure_monitor.sdk.auto_collection.performance_metrics.PROCESS"
         ) as process_mock:
             performance_metrics_collector = PerformanceMetrics(
-                meter=self._meter, label_set=self._test_label_set
+                meter=self._meter, labels=self._test_labels
             )
             process_mock.cpu_percent.return_value = 44.4
             psutil_mock.cpu_count.return_value = 2
@@ -131,7 +132,7 @@ class TestPerformanceMetrics(unittest.TestCase):
             )
             performance_metrics_collector._track_process_cpu(obs)
             self.assertEqual(
-                obs.aggregators[self._test_label_set].current, 22.2
+                obs.aggregators[tuple(self._test_labels.items())].current, 22.2
             )
 
     @mock.patch("azure_monitor.sdk.auto_collection.performance_metrics.logger")
@@ -140,7 +141,7 @@ class TestPerformanceMetrics(unittest.TestCase):
             "azure_monitor.sdk.auto_collection.performance_metrics.psutil"
         ) as psutil_mock:
             performance_metrics_collector = PerformanceMetrics(
-                meter=self._meter, label_set=self._test_label_set
+                meter=self._meter, labels=self._test_labels
             )
             psutil_mock.cpu_count.return_value = None
             obs = Observer(
@@ -159,7 +160,7 @@ class TestPerformanceMetrics(unittest.TestCase):
             "azure_monitor.sdk.auto_collection.performance_metrics.PROCESS"
         ) as process_mock:
             performance_metrics_collector = PerformanceMetrics(
-                meter=self._meter, label_set=self._test_label_set
+                meter=self._meter, labels=self._test_labels
             )
             memory = collections.namedtuple("memory", "rss")
             pmem = memory(rss=100)
@@ -174,7 +175,7 @@ class TestPerformanceMetrics(unittest.TestCase):
             )
             performance_metrics_collector._track_process_memory(obs)
             self.assertEqual(
-                obs.aggregators[self._test_label_set].current, 100
+                obs.aggregators[tuple(self._test_labels.items())].current, 100
             )
 
     @mock.patch("azure_monitor.sdk.auto_collection.performance_metrics.logger")
@@ -184,7 +185,7 @@ class TestPerformanceMetrics(unittest.TestCase):
             throw(Exception),
         ):
             performance_metrics_collector = PerformanceMetrics(
-                meter=self._meter, label_set=self._test_label_set
+                meter=self._meter, labels=self._test_labels
             )
             obs = Observer(
                 callback=performance_metrics_collector._track_process_memory,

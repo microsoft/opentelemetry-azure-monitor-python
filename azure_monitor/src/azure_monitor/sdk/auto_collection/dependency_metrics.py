@@ -2,11 +2,11 @@
 # Licensed under the MIT License.
 import threading
 import time
+from typing import Dict
 
 import requests
 from opentelemetry import context
 from opentelemetry.metrics import Meter
-from opentelemetry.sdk.metrics import LabelSet
 
 dependency_map = dict()
 _dependency_lock = threading.Lock()
@@ -30,12 +30,12 @@ class DependencyMetrics:
 
     Args:
         meter: OpenTelemetry Meter
-        label_set: OpenTelemetry label set
+        labels: Dictionary of labels
     """
 
-    def __init__(self, meter: Meter, label_set: LabelSet):
+    def __init__(self, meter: Meter, labels: Dict[str, str]):
         self._meter = meter
-        self._label_set = label_set
+        self._labels = labels
         # Patch requests
         requests.Session.request = dependency_patch
         meter.register_observer(
@@ -70,8 +70,8 @@ class DependencyMetrics:
             dependency_map["last_time"] = current_time
             dependency_map["last_count"] = current_count
             dependency_map["last_result"] = result
-            observer.observe(int(result), self._label_set)
+            observer.observe(int(result), self._labels)
         except ZeroDivisionError:
             # If elapsed_seconds is 0, exporter call made too close to previous
             # Return the previous result if this is the case
-            observer.observe(int(last_result), self._label_set)
+            observer.observe(int(last_result), self._labels)

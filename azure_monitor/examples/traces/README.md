@@ -2,7 +2,7 @@
 ## Installation
 
 ```sh
-$ pip install opentelemetry-azure-monitor-exporter
+$ pip install opentelemetry-azure-monitor
 ```
 
 ## Run the Applications

@@ -5,7 +5,7 @@
 # pylint: disable=no-name-in-module
 import requests
 from opentelemetry import trace
-from opentelemetry.ext import http_requests
+from opentelemetry.ext.requests import RequestsInstrumentor
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import SimpleExportSpanProcessor
 
@@ -13,7 +13,7 @@ from azure_monitor import AzureMonitorSpanExporter
 
 trace.set_tracer_provider(TracerProvider())
 
-http_requests.enable(trace.get_tracer_provider())
+RequestsInstrumentor().instrument()
 span_processor = SimpleExportSpanProcessor(
     AzureMonitorSpanExporter(
         connection_string="InstrumentationKey=<INSTRUMENTATION KEY HERE>"

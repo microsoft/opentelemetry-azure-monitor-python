@@ -18,7 +18,7 @@ from azure_monitor.export import ExportResult
 from azure_monitor.export.trace import AzureMonitorSpanExporter
 from azure_monitor.options import ExporterOptions
 
-TEST_FOLDER = os.path.abspath(".test.exporter.trace")
+TEST_FOLDER = os.path.abspath(".test")
 STORAGE_PATH = os.path.join(TEST_FOLDER)
 
 
@@ -92,6 +92,7 @@ class TestAzureExporter(unittest.TestCase):
                 context=SpanContext(
                     trace_id=36873507687745823477771305566750195431,
                     span_id=12030755672171557338,
+                    is_remote=False,
                 ),
             )
             test_span.start()
@@ -108,6 +109,7 @@ class TestAzureExporter(unittest.TestCase):
             context=SpanContext(
                 trace_id=36873507687745823477771305566750195431,
                 span_id=12030755672171557338,
+                is_remote=False,
             ),
         )
         test_span.start()
@@ -129,6 +131,7 @@ class TestAzureExporter(unittest.TestCase):
             context=SpanContext(
                 trace_id=36873507687745823477771305566750195431,
                 span_id=12030755672171557338,
+                is_remote=False,
             ),
         )
         test_span.start()
@@ -139,7 +142,7 @@ class TestAzureExporter(unittest.TestCase):
             throw(Exception),
         ):  # noqa: E501
             result = exporter.export([test_span])
-            self.assertEqual(result, SpanExportResult.FAILED_NOT_RETRYABLE)
+            self.assertEqual(result, SpanExportResult.FAILURE)
             self.assertEqual(logger_mock.exception.called, True)
 
     def test_export_not_retryable(self):
@@ -149,6 +152,7 @@ class TestAzureExporter(unittest.TestCase):
             context=SpanContext(
                 trace_id=36873507687745823477771305566750195431,
                 span_id=12030755672171557338,
+                is_remote=False,
             ),
         )
         test_span.start()
@@ -158,7 +162,7 @@ class TestAzureExporter(unittest.TestCase):
         ) as transmit:  # noqa: E501
             transmit.return_value = ExportResult.FAILED_NOT_RETRYABLE
             result = exporter.export([test_span])
-            self.assertEqual(result, SpanExportResult.FAILED_NOT_RETRYABLE)
+            self.assertEqual(result, SpanExportResult.FAILURE)
 
     def test_span_to_envelope_none(self):
         exporter = self._exporter
@@ -176,6 +180,7 @@ class TestAzureExporter(unittest.TestCase):
             context=SpanContext(
                 trace_id=36873507687745823477771305566750195431,
                 span_id=12030755672171557338,
+                is_remote=False,
             ),
         )
 
@@ -188,6 +193,7 @@ class TestAzureExporter(unittest.TestCase):
             context=SpanContext(
                 trace_id=36873507687745823477771305566750195431,
                 span_id=12030755672171557337,
+                is_remote=False,
             ),
             parent=parent_span,
             sampler=None,
@@ -237,6 +243,7 @@ class TestAzureExporter(unittest.TestCase):
             context=SpanContext(
                 trace_id=36873507687745823477771305566750195431,
                 span_id=12030755672171557337,
+                is_remote=False,
             ),
             parent=parent_span,
             sampler=None,
@@ -275,6 +282,7 @@ class TestAzureExporter(unittest.TestCase):
             context=SpanContext(
                 trace_id=36873507687745823477771305566750195431,
                 span_id=12030755672171557337,
+                is_remote=False,
             ),
             parent=parent_span,
             sampler=None,
@@ -323,6 +331,7 @@ class TestAzureExporter(unittest.TestCase):
             context=SpanContext(
                 trace_id=36873507687745823477771305566750195431,
                 span_id=12030755672171557337,
+                is_remote=False,
             ),
             parent=parent_span,
             sampler=None,
@@ -376,6 +385,7 @@ class TestAzureExporter(unittest.TestCase):
             context=SpanContext(
                 trace_id=36873507687745823477771305566750195431,
                 span_id=12030755672171557337,
+                is_remote=False,
             ),
             parent=parent_span,
             sampler=None,
@@ -429,6 +439,7 @@ class TestAzureExporter(unittest.TestCase):
             context=SpanContext(
                 trace_id=36873507687745823477771305566750195431,
                 span_id=12030755672171557337,
+                is_remote=False,
             ),
             parent=parent_span,
             sampler=None,
@@ -472,6 +483,7 @@ class TestAzureExporter(unittest.TestCase):
             context=SpanContext(
                 trace_id=36873507687745823477771305566750195431,
                 span_id=12030755672171557337,
+                is_remote=False,
             ),
             parent=None,
             sampler=None,
@@ -510,6 +522,7 @@ class TestAzureExporter(unittest.TestCase):
             context=SpanContext(
                 trace_id=36873507687745823477771305566750195431,
                 span_id=12030755672171557337,
+                is_remote=False,
             ),
             parent=parent_span,
             sampler=None,
@@ -543,6 +556,7 @@ class TestAzureExporter(unittest.TestCase):
                 context=SpanContext(
                     trace_id=36873507687745823477771305566750195432,
                     span_id=12030755672171557338,
+                    is_remote=False,
                 )
             )
         )
@@ -551,6 +565,7 @@ class TestAzureExporter(unittest.TestCase):
             context=SpanContext(
                 trace_id=36873507687745823477771305566750195431,
                 span_id=12030755672171557337,
+                is_remote=False,
             ),
             parent=parent_span,
             sampler=None,
@@ -582,6 +597,7 @@ class TestAzureExporter(unittest.TestCase):
             context=SpanContext(
                 trace_id=36873507687745823477771305566750195431,
                 span_id=12030755672171557337,
+                is_remote=False,
             ),
             parent=parent_span,
             sampler=None,
@@ -609,6 +625,7 @@ class TestAzureExporter(unittest.TestCase):
             context=SpanContext(
                 trace_id=36873507687745823477771305566750195431,
                 span_id=12030755672171557337,
+                is_remote=False,
             ),
             parent=parent_span,
             sampler=None,
@@ -636,6 +653,7 @@ class TestAzureExporter(unittest.TestCase):
             context=SpanContext(
                 trace_id=36873507687745823477771305566750195431,
                 span_id=12030755672171557337,
+                is_remote=False,
             ),
             parent=parent_span,
             sampler=None,
@@ -662,6 +680,7 @@ class TestAzureExporter(unittest.TestCase):
             context=SpanContext(
                 trace_id=36873507687745823477771305566750195431,
                 span_id=12030755672171557337,
+                is_remote=False,
             ),
             parent=parent_span,
             sampler=None,
@@ -688,6 +707,7 @@ class TestAzureExporter(unittest.TestCase):
             context=SpanContext(
                 trace_id=36873507687745823477771305566750195431,
                 span_id=12030755672171557337,
+                is_remote=False,
             ),
             parent=parent_span,
             sampler=None,
@@ -714,6 +734,7 @@ class TestAzureExporter(unittest.TestCase):
             context=SpanContext(
                 trace_id=36873507687745823477771305566750195431,
                 span_id=12030755672171557337,
+                is_remote=False,
             ),
             parent=parent_span,
             sampler=None,
@@ -741,6 +762,7 @@ class TestAzureExporter(unittest.TestCase):
             context=SpanContext(
                 trace_id=36873507687745823477771305566750195431,
                 span_id=12030755672171557337,
+                is_remote=False,
             ),
             parent=parent_span,
             sampler=None,
@@ -777,6 +799,7 @@ class TestAzureExporter(unittest.TestCase):
             context=SpanContext(
                 trace_id=36873507687745823477771305566750195431,
                 span_id=12030755672171557337,
+                is_remote=False,
             ),
             parent=parent_span,
             sampler=None,
@@ -804,6 +827,7 @@ class TestAzureExporter(unittest.TestCase):
             context=SpanContext(
                 trace_id=36873507687745823477771305566750195431,
                 span_id=12030755672171557337,
+                is_remote=False,
             ),
             parent=parent_span,
             sampler=None,
@@ -840,6 +864,7 @@ class TestAzureExporter(unittest.TestCase):
             context=SpanContext(
                 trace_id=36873507687745823477771305566750195431,
                 span_id=12030755672171557337,
+                is_remote=False,
             ),
             parent=parent_span,
             sampler=None,
@@ -873,6 +898,7 @@ class TestAzureExporter(unittest.TestCase):
             context=SpanContext(
                 trace_id=36873507687745823477771305566750195431,
                 span_id=12030755672171557337,
+                is_remote=False,
             ),
             parent=parent_span,
             sampler=None,

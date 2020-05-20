@@ -5,8 +5,7 @@ import logging
 from typing import Sequence
 from urllib.parse import urlparse
 
-from opentelemetry.metrics import Metric
-from opentelemetry.sdk.metrics import Counter, Observer
+from opentelemetry.sdk.metrics import Counter, Metric, Observer
 from opentelemetry.sdk.metrics.export import (
     MetricRecord,
     MetricsExporter,
@@ -36,12 +35,7 @@ class AzureMonitorMetricsExporter(BaseExporter, MetricsExporter):
         self, metric_records: Sequence[MetricRecord]
     ) -> MetricsExportResult:
         envelopes = list(map(self._metric_to_envelope, metric_records))
-        envelopes = list(
-            map(
-                lambda x: x.to_dict(),
-                self._apply_telemetry_processors(envelopes),
-            )
-        )
+        envelopes = self._apply_telemetry_processors(envelopes)
         try:
             result = self._transmit(envelopes)
             if result == ExportResult.FAILED_RETRYABLE:
@@ -60,17 +54,10 @@ class AzureMonitorMetricsExporter(BaseExporter, MetricsExporter):
 
         if not metric_record:
             return None
-        # TODO: Opentelemetry does not have last updated timestamp for observer
-        # type metrics yet.
-        _time = time_ns()
-        if isinstance(metric_record.metric, Metric):
-            _time = metric_record.metric.bind(
-                metric_record.label_set
-            ).last_update_timestamp
         envelope = protocol.Envelope(
             ikey=self.options.instrumentation_key,
             tags=dict(utils.azure_monitor_context),
-            time=ns_to_iso_str(_time),
+            time=ns_to_iso_str(metric_record.aggregator.last_update_timestamp),
         )
         envelope.name = "Microsoft.ApplicationInsights.Metric"
         value = 0
@@ -93,7 +80,7 @@ class AzureMonitorMetricsExporter(BaseExporter, MetricsExporter):
         )
 
         properties = {}
-        for label_tuple in metric_record.label_set.labels:
+        for label_tuple in metric_record.labels:
             properties[label_tuple[0]] = label_tuple[1]
         data = protocol.MetricData(metrics=[data_point], properties=properties)
         envelope.data = protocol.Data(base_data=data, base_type="MetricData")
