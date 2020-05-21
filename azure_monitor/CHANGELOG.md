@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+## 0.3b.1
+Released 2020-05-21
+
+- Fix metrics exporter serialization bug
+  ([#92](https://github.com/microsoft/opentelemetry-azure-monitor-python/pull/92))
+
 ## 0.3b.0
 Released 2020-05-19
 
