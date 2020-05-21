@@ -107,7 +107,7 @@ class TestAzureMetricsExporter(unittest.TestCase):
             CounterAggregator(), self._test_labels, self._test_metric
         )
         exporter = self._exporter
-        mte.return_value = []
+        mte.return_value = Envelope()
         transmit.return_value = ExportResult.SUCCESS
         result = exporter.export([record])
         self.assertEqual(result, MetricsExportResult.SUCCESS)
@@ -124,7 +124,7 @@ class TestAzureMetricsExporter(unittest.TestCase):
         )
         exporter = self._exporter
         transmit.return_value = ExportResult.FAILED_RETRYABLE
-        mte.return_value = []
+        mte.return_value = Envelope()
         storage_mock = mock.Mock()
         exporter.storage.put = storage_mock
         result = exporter.export([record])
@@ -143,7 +143,7 @@ class TestAzureMetricsExporter(unittest.TestCase):
             CounterAggregator(), self._test_labels, self._test_metric
         )
         exporter = self._exporter
-        mte.return_value = []
+        mte.return_value = Envelope()
         transmit.side_effect = throw(Exception)
         result = exporter.export([record])
         self.assertEqual(result, MetricsExportResult.FAILURE)
