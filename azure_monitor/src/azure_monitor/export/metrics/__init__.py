@@ -35,7 +35,12 @@ class AzureMonitorMetricsExporter(BaseExporter, MetricsExporter):
         self, metric_records: Sequence[MetricRecord]
     ) -> MetricsExportResult:
         envelopes = list(map(self._metric_to_envelope, metric_records))
-        envelopes = self._apply_telemetry_processors(envelopes)
+        envelopes = list(
+            map(
+                lambda x: x.to_dict(),
+                self._apply_telemetry_processors(envelopes),
+            )
+        )
         try:
             result = self._transmit(envelopes)
             if result == ExportResult.FAILED_RETRYABLE:
