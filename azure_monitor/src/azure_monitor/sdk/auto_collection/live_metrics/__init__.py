@@ -5,9 +5,6 @@ from typing import Dict
 
 from opentelemetry.metrics import Meter
 
-from azure_monitor.sdk.auto_collection.metrics_span_processor import (
-    AzureMetricsSpanProcessor,
-)
 from azure_monitor.sdk.auto_collection.live_metrics.dependency_metrics import (
     DependencyLiveMetrics,
 )
@@ -20,7 +17,9 @@ from azure_monitor.sdk.auto_collection.live_metrics.performance_metrics import (
 from azure_monitor.sdk.auto_collection.live_metrics.request_metrics import (
     RequestLiveMetrics,
 )
-
+from azure_monitor.sdk.auto_collection.metrics_span_processor import (
+    AzureMetricsSpanProcessor,
+)
 
 __all__ = [
     "LiveMetricsAutoCollection",

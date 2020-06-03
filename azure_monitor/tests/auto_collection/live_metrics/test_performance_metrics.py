@@ -45,7 +45,7 @@ class TestPerformanceLiveMetrics(unittest.TestCase):
         reg_obs_calls = mock_meter.register_observer.call_args_list
         reg_obs_calls[0].assert_called_with(
             callback=performance_metrics_collector._track_commited_memory,
-            name="\Memory\Committed Bytes",
+            name="\\Memory\\Committed Bytes",
             description="Amount of commited memory in bytes",
             unit="byte",
             value_type=int,

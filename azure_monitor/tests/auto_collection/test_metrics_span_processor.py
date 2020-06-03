@@ -7,11 +7,11 @@ from opentelemetry.sdk.trace import Span
 from opentelemetry.trace import SpanContext, SpanKind
 from opentelemetry.trace.status import Status, StatusCanonicalCode
 
-from azure_monitor.sdk.auto_collection.metrics_span_processor import (
-    AzureMetricsSpanProcessor,
-)
 from azure_monitor.sdk.auto_collection.live_metrics.exporter import (
     LiveMetricsExporter,
+)
+from azure_monitor.sdk.auto_collection.metrics_span_processor import (
+    AzureMetricsSpanProcessor,
 )
 
 
@@ -31,7 +31,7 @@ class TestAutoCollection(unittest.TestCase):
         self.assertEqual(span_processor._exporter, live_metrics_exporter)
 
     def test_ok_dependency(self):
-        """Test the fucntionality when Client Span is ended."""
+        """Test the functionality when Client Span is ended."""
         instrumentation_key = "TEST_IKEY"
         live_metrics_exporter = LiveMetricsExporter(instrumentation_key)
         span_processor = AzureMetricsSpanProcessor(live_metrics_exporter)
@@ -80,7 +80,7 @@ class TestAutoCollection(unittest.TestCase):
         self.assertEqual(span_processor.failed_dependency_count, 1)
 
     def test_ok_request(self):
-        """Test the fucntionality when Server Span is ended."""
+        """Test the functionality when Server Span is ended."""
         instrumentation_key = "TEST_IKEY"
         live_metrics_exporter = LiveMetricsExporter(instrumentation_key)
         span_processor = AzureMetricsSpanProcessor(live_metrics_exporter)

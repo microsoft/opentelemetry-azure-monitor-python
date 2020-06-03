@@ -24,7 +24,7 @@ class PerformanceLiveMetrics:
         # Create performance metrics
         meter.register_observer(
             callback=self._track_commited_memory,
-            name="\Memory\Committed Bytes",
+            name="\\Memory\\Committed Bytes",
             description="Amount of commited memory in bytes",
             unit="byte",
             value_type=int,

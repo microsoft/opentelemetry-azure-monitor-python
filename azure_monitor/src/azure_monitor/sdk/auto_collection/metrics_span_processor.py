@@ -2,8 +2,8 @@
 # Licensed under the MIT License.
 import logging
 
-from opentelemetry.trace import SpanKind
 from opentelemetry.sdk.trace import Span, SpanProcessor
+from opentelemetry.trace import SpanKind
 
 from azure_monitor.export import convert_span_to_envelope
 

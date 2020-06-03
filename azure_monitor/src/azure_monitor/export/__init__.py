@@ -7,10 +7,10 @@ from enum import Enum
 from urllib.parse import urlparse
 
 import requests
-from opentelemetry.trace import Span, SpanKind
-from opentelemetry.sdk.util import ns_to_iso_str
 from opentelemetry.sdk.metrics.export import MetricsExportResult
 from opentelemetry.sdk.trace.export import SpanExportResult
+from opentelemetry.sdk.util import ns_to_iso_str
+from opentelemetry.trace import Span, SpanKind
 from opentelemetry.trace.status import StatusCanonicalCode
 
 from azure_monitor import protocol, utils

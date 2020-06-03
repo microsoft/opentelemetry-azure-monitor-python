@@ -36,7 +36,7 @@ class RequestLiveMetrics:
 
         meter.register_observer(
             callback=self._track_request_failed_rate,
-            name="\ApplicationInsights\Requests Failed/Sec",
+            name="\\ApplicationInsights\\Requests Failed/Sec",
             description="Incoming Requests Failed Rate",
             unit="rps",
             value_type=int,

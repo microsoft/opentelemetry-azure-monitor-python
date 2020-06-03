@@ -50,7 +50,7 @@ class TestDependencyLiveMetrics(unittest.TestCase):
         )
         create_metric_calls[1].assert_called_with(
             callback=metrics_collector._track_failure_rate,
-            name="\\ApplicationInsights\\Dependency Calls Failed\/Sec",
+            name="\\ApplicationInsights\\Dependency Calls Failed/Sec",
             description="Failed Outgoing Requests per second",
             unit="rps",
             value_type=int,

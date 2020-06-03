@@ -16,7 +16,6 @@ from azure_monitor.sdk.auto_collection.performance_metrics import (
 )
 from azure_monitor.sdk.auto_collection.request_metrics import RequestMetrics
 
-
 __all__ = [
     "AutoCollection",
     "AzureMetricsSpanProcessor",

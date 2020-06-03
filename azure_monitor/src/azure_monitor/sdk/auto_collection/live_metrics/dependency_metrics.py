@@ -39,7 +39,7 @@ class DependencyLiveMetrics:
         )
         meter.register_observer(
             callback=self._track_failure_rate,
-            name="\\ApplicationInsights\\Dependency Calls Failed\/Sec",
+            name="\\ApplicationInsights\\Dependency Calls Failed/Sec",
             description="Failed Outgoing Requests per second",
             unit="rps",
             value_type=int,

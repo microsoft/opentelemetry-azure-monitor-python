@@ -13,8 +13,8 @@ from opentelemetry.trace.status import StatusCanonicalCode
 from azure_monitor import protocol, utils
 from azure_monitor.export import (
     BaseExporter,
-    convert_span_to_envelope,
     ExportResult,
+    convert_span_to_envelope,
     get_trace_export_result,
 )
 

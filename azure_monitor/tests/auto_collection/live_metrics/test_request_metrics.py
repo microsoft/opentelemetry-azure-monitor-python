@@ -44,7 +44,7 @@ class TestRequestMetrics(unittest.TestCase):
 
         create_metric_calls[0].assert_called_with(
             callback=request_metrics_collector._track_request_failed_rate,
-            name="\ApplicationInsights\Requests Failed/Sec",
+            name="\\ApplicationInsights\\Requests Failed/Sec",
             description="Incoming Requests Failed Rate",
             unit="rps",
             value_type=int,

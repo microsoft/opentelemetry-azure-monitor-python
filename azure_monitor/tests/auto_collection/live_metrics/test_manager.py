@@ -115,7 +115,7 @@ class TestLiveMetricsManager(unittest.TestCase):
             self._ping = LiveMetricsPing(
                 instrumentation_key=self._instrumentation_key
             )
-            self._ping.last_request_success_time = time.time() - 21
+            self._ping.last_request_success_time = time.time() - 60
             self._ping.ping()
             self.assertFalse(self._ping.last_send_succeeded)
             self.assertEqual(self._ping.interval, 60)
