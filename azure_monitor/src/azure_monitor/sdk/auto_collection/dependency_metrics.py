@@ -1,27 +1,15 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
-import threading
 import time
 from typing import Dict
 
-import requests
-from opentelemetry import context
 from opentelemetry.metrics import Meter
 
+from azure_monitor.sdk.auto_collection.metrics_span_processor import (
+    AzureMetricsSpanProcessor,
+)
+
 dependency_map = dict()
-_dependency_lock = threading.Lock()
-ORIGINAL_REQUEST = requests.Session.request
-
-
-def dependency_patch(*args, **kwargs) -> None:
-    result = ORIGINAL_REQUEST(*args, **kwargs)
-    # Only collect request metric if sent from non-exporter thread
-    if context.get_value("suppress_instrumentation") is None:
-        # We don't want multiple threads updating this at once
-        with _dependency_lock:
-            count = dependency_map.get("count", 0)
-            dependency_map["count"] = count + 1
-    return result
 
 
 class DependencyMetrics:
@@ -33,11 +21,16 @@ class DependencyMetrics:
         labels: Dictionary of labels
     """
 
-    def __init__(self, meter: Meter, labels: Dict[str, str]):
+    def __init__(
+        self,
+        meter: Meter,
+        labels: Dict[str, str],
+        span_processor: AzureMetricsSpanProcessor,
+    ):
         self._meter = meter
         self._labels = labels
-        # Patch requests
-        requests.Session.request = dependency_patch
+        self._span_processor = span_processor
+
         meter.register_observer(
             callback=self._track_dependency_rate,
             name="\\ApplicationInsights\\Dependency Calls/Sec",
@@ -53,7 +46,7 @@ class DependencyMetrics:
         using the requests library within an elapsed time and dividing
         that value over the elapsed time.
         """
-        current_count = dependency_map.get("count", 0)
+        current_count = self._span_processor.dependency_count
         current_time = time.time()
         last_count = dependency_map.get("last_count", 0)
         last_time = dependency_map.get("last_time")
