@@ -1,7 +1,6 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 #
-import collections
 import logging
 import typing
 
@@ -23,6 +22,9 @@ from azure_monitor.sdk.auto_collection.live_metrics import utils
 from azure_monitor.sdk.auto_collection.live_metrics.sender import (
     LiveMetricsSender,
 )
+from azure_monitor.sdk.auto_collection.metrics_span_processor import (
+    AzureMetricsSpanProcessor,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -36,14 +38,15 @@ class LiveMetricsExporter(MetricsExporter):
     Export data to Azure Live Metrics service and determine if user is subscribed.
     """
 
-    def __init__(self, instrumentation_key):
+    def __init__(
+        self,
+        instrumentation_key: str,
+        span_processor: AzureMetricsSpanProcessor,
+    ):
         self._instrumentation_key = instrumentation_key
+        self._span_processor = span_processor
         self._sender = LiveMetricsSender(self._instrumentation_key)
         self.subscribed = True
-        self._document_envelopes = collections.deque()
-
-    def add_document(self, envelope: Envelope):
-        self._document_envelopes.append(envelope)
 
     def export(
         self, metric_records: typing.Sequence[MetricRecord]
@@ -91,8 +94,8 @@ class LiveMetricsExporter(MetricsExporter):
         self,
     ) -> typing.Sequence[LiveMetricDocument]:
         live_metric_documents = []
-        while self._document_envelopes:
-            for envelope in self._document_envelopes.popleft():
+        while self._span_processor.documents:
+            for envelope in self._span_processor.documents.popleft():
                 base_type = envelope.data.baseType
                 if base_type:
                     document = LiveMetricDocument(

@@ -1,5 +1,6 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
+import collections
 import logging
 
 from opentelemetry.sdk.trace import Span, SpanProcessor
@@ -16,8 +17,9 @@ class AzureMetricsSpanProcessor(SpanProcessor):
     and failed dependencies/requests.
     """
 
-    def __init__(self, exporter=None):
-        self._exporter = exporter
+    def __init__(self, collect_documents: bool = False):
+        self._collect_documents = collect_documents
+        self.documents = collections.deque()
         self.request_count = 0
         self.dependency_count = 0
         self.failed_request_count = 0
@@ -37,10 +39,9 @@ class AzureMetricsSpanProcessor(SpanProcessor):
                 )
                 if not span.status.is_ok:
                     self.failed_request_count = self.failed_request_count + 1
-                    if self._exporter is not None:
-                        self._exporter.add_document(
-                            convert_span_to_envelope(span)
-                        )
+                    if self._collect_documents:
+                        self.documents.append(convert_span_to_envelope(span))
+
             elif span.kind == SpanKind.CLIENT:
                 self.dependency_count = self.dependency_count + 1
                 self.dependency_duration = self.dependency_duration + (
@@ -50,10 +51,8 @@ class AzureMetricsSpanProcessor(SpanProcessor):
                     self.failed_dependency_count = (
                         self.failed_dependency_count + 1
                     )
-                    if self._exporter is not None:
-                        self._exporter.add_document(
-                            convert_span_to_envelope(span)
-                        )
+                    if self._collect_documents:
+                        self.documents.append(convert_span_to_envelope(span))
 
         # pylint: disable=broad-except
         except Exception:

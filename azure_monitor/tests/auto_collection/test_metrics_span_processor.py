@@ -7,9 +7,6 @@ from opentelemetry.sdk.trace import Span
 from opentelemetry.trace import SpanContext, SpanKind
 from opentelemetry.trace.status import Status, StatusCanonicalCode
 
-from azure_monitor.sdk.auto_collection.live_metrics.exporter import (
-    LiveMetricsExporter,
-)
 from azure_monitor.sdk.auto_collection.metrics_span_processor import (
     AzureMetricsSpanProcessor,
 )
@@ -19,22 +16,17 @@ from azure_monitor.sdk.auto_collection.metrics_span_processor import (
 class TestAutoCollection(unittest.TestCase):
     def test_constructor(self):
         """Test the constructor."""
-        instrumentation_key = "TEST_IKEY"
-        live_metrics_exporter = LiveMetricsExporter(instrumentation_key)
-        span_processor = AzureMetricsSpanProcessor(live_metrics_exporter)
+        span_processor = AzureMetricsSpanProcessor()
         self.assertEqual(span_processor.dependency_count, 0)
         self.assertEqual(span_processor.dependency_duration, 0)
         self.assertEqual(span_processor.failed_dependency_count, 0)
         self.assertEqual(span_processor.request_count, 0)
         self.assertEqual(span_processor.request_duration, 0)
         self.assertEqual(span_processor.failed_request_count, 0)
-        self.assertEqual(span_processor._exporter, live_metrics_exporter)
 
     def test_ok_dependency(self):
         """Test the functionality when Client Span is ended."""
-        instrumentation_key = "TEST_IKEY"
-        live_metrics_exporter = LiveMetricsExporter(instrumentation_key)
-        span_processor = AzureMetricsSpanProcessor(live_metrics_exporter)
+        span_processor = AzureMetricsSpanProcessor()
         test_span = Span(
             name="test",
             kind=SpanKind.CLIENT,
@@ -56,9 +48,7 @@ class TestAutoCollection(unittest.TestCase):
 
     def test_failed_dependency(self):
         """Test the functionality when Client Span is ended."""
-        instrumentation_key = "TEST_IKEY"
-        live_metrics_exporter = LiveMetricsExporter(instrumentation_key)
-        span_processor = AzureMetricsSpanProcessor(live_metrics_exporter)
+        span_processor = AzureMetricsSpanProcessor()
         test_span = Span(
             name="test",
             kind=SpanKind.CLIENT,
@@ -81,9 +71,7 @@ class TestAutoCollection(unittest.TestCase):
 
     def test_ok_request(self):
         """Test the functionality when Server Span is ended."""
-        instrumentation_key = "TEST_IKEY"
-        live_metrics_exporter = LiveMetricsExporter(instrumentation_key)
-        span_processor = AzureMetricsSpanProcessor(live_metrics_exporter)
+        span_processor = AzureMetricsSpanProcessor()
         test_span = Span(
             name="test",
             kind=SpanKind.SERVER,
@@ -105,9 +93,7 @@ class TestAutoCollection(unittest.TestCase):
 
     def test_failed_request(self):
         """Test the functionality when Server Span is ended."""
-        instrumentation_key = "TEST_IKEY"
-        live_metrics_exporter = LiveMetricsExporter(instrumentation_key)
-        span_processor = AzureMetricsSpanProcessor(live_metrics_exporter)
+        span_processor = AzureMetricsSpanProcessor()
         test_span = Span(
             name="test",
             kind=SpanKind.SERVER,
