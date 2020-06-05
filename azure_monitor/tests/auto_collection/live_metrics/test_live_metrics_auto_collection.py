@@ -2,7 +2,6 @@
 # Licensed under the MIT License.
 
 import unittest
-from unittest import mock
 
 from opentelemetry import metrics
 from opentelemetry.sdk.metrics import MeterProvider

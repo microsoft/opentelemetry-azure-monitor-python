@@ -6,14 +6,14 @@ from unittest import mock
 
 import requests
 from opentelemetry import metrics
-from opentelemetry.sdk.metrics import Counter, MeterProvider, Observer
+from opentelemetry.sdk.metrics import Counter, MeterProvider
 from opentelemetry.sdk.metrics.export import MetricRecord, MetricsExportResult
 from opentelemetry.sdk.metrics.export.aggregate import (
     CounterAggregator,
     ObserverAggregator,
 )
 
-from azure_monitor.protocol import Envelope, LiveMetricEnvelope
+from azure_monitor.protocol import LiveMetricEnvelope
 from azure_monitor.sdk.auto_collection.live_metrics.exporter import (
     LiveMetricsExporter,
 )
@@ -61,16 +61,6 @@ class TestLiveMetricsExporter(unittest.TestCase):
         self.assertEqual(
             exporter._instrumentation_key, self._instrumentation_key
         )
-
-    # def test_add_document(self):
-    #     """Test adding a document."""
-    #     exporter = LiveMetricsExporter(
-    #         instrumentation_key=self._instrumentation_key,
-    #         span_processor=self._span_processor,
-    #     )
-    #     envelope = Envelope()
-    #     exporter.add_document(envelope)
-    #     self.assertEqual(exporter._document_envelopes.pop(), envelope)
 
     def test_export(self):
         """Test export."""
