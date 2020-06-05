@@ -6,11 +6,14 @@ from unittest import mock
 
 import requests
 from opentelemetry import metrics
-from opentelemetry.sdk.metrics import Counter, MeterProvider
+from opentelemetry.sdk.metrics import Counter, MeterProvider, Observer
 from opentelemetry.sdk.metrics.export import MetricRecord, MetricsExportResult
-from opentelemetry.sdk.metrics.export.aggregate import CounterAggregator
+from opentelemetry.sdk.metrics.export.aggregate import (
+    CounterAggregator,
+    ObserverAggregator,
+)
 
-from azure_monitor.protocol import Envelope
+from azure_monitor.protocol import Envelope, LiveMetricEnvelope
 from azure_monitor.sdk.auto_collection.live_metrics.exporter import (
     LiveMetricsExporter,
 )
@@ -35,6 +38,15 @@ class TestLiveMetricsExporter(unittest.TestCase):
         cls._meter = metrics.get_meter(__name__)
         cls._test_metric = cls._meter.create_metric(
             "testname", "testdesc", "unit", int, Counter, ["environment"]
+        )
+        cls._test_obs = cls._meter.register_observer(
+            lambda x: x,
+            "testname",
+            "testdesc",
+            "unit",
+            int,
+            Counter,
+            ["environment"],
         )
         cls._test_labels = tuple({"environment": "staging"}.items())
         cls._span_processor = AzureMetricsSpanProcessor()
@@ -109,3 +121,41 @@ class TestLiveMetricsExporter(unittest.TestCase):
         ):
             result = exporter.export([record])
             self.assertEqual(result, MetricsExportResult.FAILURE)
+
+    def test_live_metric_envelope_counter(self):
+        aggregator = ObserverAggregator()
+        aggregator.update(123)
+        aggregator.take_checkpoint()
+        record = MetricRecord(aggregator, self._test_labels, self._test_obs)
+        exporter = LiveMetricsExporter(
+            instrumentation_key=self._instrumentation_key,
+            span_processor=self._span_processor,
+        )
+
+        envelope = exporter._metric_to_live_metrics_envelope([record])
+        self.assertIsInstance(envelope, LiveMetricEnvelope)
+        self.assertEqual(
+            envelope.instrumentation_key,
+            "99c42f65-1656-4c41-afde-bd86b709a4a7",
+        )
+        self.assertEqual(envelope.documents, [])
+        self.assertEqual(envelope.metrics[0].name, "testname")
+        self.assertEqual(envelope.metrics[0].value, 123)
+        self.assertEqual(envelope.metrics[0].weight, 1)
+
+    def test_live_metric_envelope_observer(self):
+        aggregator = CounterAggregator()
+        aggregator.update(123)
+        aggregator.take_checkpoint()
+        record = MetricRecord(aggregator, self._test_labels, self._test_metric)
+        exporter = LiveMetricsExporter(
+            instrumentation_key=self._instrumentation_key,
+            span_processor=self._span_processor,
+        )
+
+        envelope = exporter._metric_to_live_metrics_envelope([record])
+        self.assertIsInstance(envelope, LiveMetricEnvelope)
+        self.assertEqual(envelope.documents, [])
+        self.assertEqual(envelope.metrics[0].name, "testname")
+        self.assertEqual(envelope.metrics[0].value, 123)
+        self.assertEqual(envelope.metrics[0].weight, 1)

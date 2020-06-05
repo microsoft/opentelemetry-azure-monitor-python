@@ -53,3 +53,6 @@ class LiveMetricsAutoCollection:
         self._manager = LiveMetricsManager(
             meter, instrumentation_key, span_processor
         )
+
+    def shutdown(self):
+        self._manager.shutdown()
