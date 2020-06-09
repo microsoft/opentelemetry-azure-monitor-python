@@ -95,22 +95,22 @@ class LiveMetricsExporter(MetricsExporter):
     ) -> typing.Sequence[LiveMetricDocument]:
         live_metric_documents = []
         while self._span_processor.documents:
-            for envelope in self._span_processor.documents.popleft():
-                base_type = envelope.data.baseType
-                if base_type:
-                    document = LiveMetricDocument(
-                        __type=self._get_live_metric_type(base_type),
-                        document_type=self._get_live_metric_document_type(
-                            base_type
-                        ),
-                        properties=self._get_aggregated_properties(envelope),
-                        version="1.0",
-                    )
-                    live_metric_documents.append(document)
-                else:
-                    logger.warning(
-                        "Document type invalid; not sending live metric document"
-                    )
+            envelope = self._span_processor.documents.popleft()
+            base_type = envelope.data.base_type
+            if base_type:
+                document = LiveMetricDocument(
+                    quickpulse_type=self._get_live_metric_type(base_type),
+                    document_type=self._get_live_metric_document_type(
+                        base_type
+                    ),
+                    properties=self._get_aggregated_properties(envelope),
+                    version="1.0",
+                )
+                live_metric_documents.append(document)
+            else:
+                logger.warning(
+                    "Document type invalid; not sending live metric document"
+                )
 
         return live_metric_documents
 
@@ -155,7 +155,7 @@ class LiveMetricsExporter(MetricsExporter):
         aggregated_properties = []
         measurements = (
             envelope.data.base_data.measurements
-            if envelope.data.base_data.measurements
+            if envelope.data.base_data and envelope.data.base_data.measurements
             else []
         )
         for key in measurements:
@@ -163,7 +163,7 @@ class LiveMetricsExporter(MetricsExporter):
             aggregated_properties.append(prop)
         properties = (
             envelope.data.base_data.properties
-            if envelope.data.base_data.properties
+            if envelope.data.base_data and envelope.data.base_data.properties
             else []
         )
         for key in properties:

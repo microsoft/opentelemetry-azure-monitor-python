@@ -84,9 +84,16 @@ class TestPerformanceMetrics(unittest.TestCase):
         self.assertEqual(
             performance_metrics_collector._labels, self._test_labels
         )
-        self.assertEqual(mock_meter.register_observer.call_count, 1)
+        self.assertEqual(mock_meter.register_observer.call_count, 2)
         reg_obs_calls = mock_meter.register_observer.call_args_list
         reg_obs_calls[0].assert_called_with(
+            callback=performance_metrics_collector._track_cpu,
+            name="\\Processor(_Total)\\% Processor Time",
+            description="Processor time as a percentage",
+            unit="percentage",
+            value_type=float,
+        )
+        reg_obs_calls[1].assert_called_with(
             callback=performance_metrics_collector._track_commited_memory,
             name="\\Memory\\Committed Bytes",
             description="Amount of commited memory in bytes",

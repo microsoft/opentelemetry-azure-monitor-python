@@ -43,4 +43,4 @@ class TestLiveMetricsAutoCollection(unittest.TestCase):
         self.assertIsNotNone(self._auto_collection._request_metrics)
         self.assertIsNotNone(self._auto_collection._manager)
         # Check observers
-        self.assertEqual(len(self._meter.observers), 4)
+        self.assertEqual(len(self._meter.observers), 8)

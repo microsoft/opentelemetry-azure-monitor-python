@@ -575,7 +575,7 @@ class LiveMetricDocumentProperty(BaseObject):
 class LiveMetricDocument(BaseObject):
 
     __slots__ = (
-        "__type",
+        "quickpulse_type",
         "document_type",
         "version",
         "operation_id",
@@ -584,13 +584,13 @@ class LiveMetricDocument(BaseObject):
 
     def __init__(
         self,
-        __type: str = "",
+        quickpulse_type: str = "",
         document_type: str = "",
         version: str = "",
         operation_id: str = "",
         properties: typing.List[LiveMetricDocumentProperty] = None,
     ) -> None:
-        self.__type = __type
+        self.quickpulse_type = quickpulse_type
         self.document_type = document_type
         self.version = version
         self.operation_id = operation_id
@@ -598,7 +598,7 @@ class LiveMetricDocument(BaseObject):
 
     def to_dict(self):
         return {
-            "__type": self.__type,
+            "__type": self.quickpulse_type,
             "DocumentType": self.document_type,
             "Version": self.version,
             "OperationId": self.operation_id,

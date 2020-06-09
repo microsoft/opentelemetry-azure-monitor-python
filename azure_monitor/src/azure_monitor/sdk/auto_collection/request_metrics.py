@@ -9,7 +9,6 @@ from opentelemetry.metrics import Meter, Observer
 from azure_monitor.sdk.auto_collection.metrics_span_processor import (
     AzureMetricsSpanProcessor,
 )
-from azure_monitor.sdk.auto_collection.utils import AutoCollectionType
 
 logger = logging.getLogger(__name__)
 requests_map = dict()
@@ -32,7 +31,6 @@ class RequestMetrics:
         meter: Meter,
         labels: Dict[str, str],
         span_processor: AzureMetricsSpanProcessor,
-        collection_type: AutoCollectionType,
     ):
         self._meter = meter
         self._labels = labels
@@ -43,23 +41,22 @@ class RequestMetrics:
             name="\\ApplicationInsights\\Requests Failed/Sec",
             description="Incoming Requests Failed Rate",
             unit="rps",
+            value_type=float,
+        )
+        meter.register_observer(
+            callback=self._track_request_duration,
+            name="\\ASP.NET Applications(??APP_W3SVC_PROC??)\\Request Execution Time",
+            description="Incoming Requests Average Execution Time",
+            unit="milliseconds",
             value_type=int,
         )
-        if collection_type == AutoCollectionType.STANDARD_METRICS:
-            meter.register_observer(
-                callback=self._track_request_duration,
-                name="\\ASP.NET Applications(??APP_W3SVC_PROC??)\\Request Execution Time",
-                description="Incoming Requests Average Execution Time",
-                unit="milliseconds",
-                value_type=int,
-            )
-            meter.register_observer(
-                callback=self._track_request_rate,
-                name="\\ASP.NET Applications(??APP_W3SVC_PROC??)\\Requests/Sec",
-                description="Incoming Requests Rate",
-                unit="rps",
-                value_type=int,
-            )
+        meter.register_observer(
+            callback=self._track_request_rate,
+            name="\\ASP.NET Applications(??APP_W3SVC_PROC??)\\Requests/Sec",
+            description="Incoming Requests Rate",
+            unit="rps",
+            value_type=float,
+        )
 
     def _track_request_duration(self, observer: Observer) -> None:
         """ Track Request execution time
@@ -82,12 +79,11 @@ class RequestMetrics:
             requests_map[
                 "last_duration"
             ] = self._span_processor.request_duration
-            # Convert to milliseconds
-            observer.observe(int(result * 1000.0), self._labels)
+            observer.observe(int(result), self._labels)
         except ZeroDivisionError:
             # If interval_count is 0, exporter call made too close to previous
             # Return the previous result if this is the case
-            observer.observe(int(last_average_duration * 1000.0), self._labels)
+            observer.observe(int(last_average_duration), self._labels)
 
     def _track_request_rate(self, observer: Observer) -> None:
         """ Track Request execution rate
@@ -110,15 +106,15 @@ class RequestMetrics:
                 )
                 result = interval_count / interval_time
             else:
-                result = 0
+                result = 0.0
             requests_map["last_time"] = current_time
             requests_map["last_count"] = self._span_processor.request_count
             requests_map["last_rate"] = result
-            observer.observe(int(result), self._labels)
+            observer.observe(result, self._labels)
         except ZeroDivisionError:
             # If elapsed_seconds is 0, exporter call made too close to previous
             # Return the previous result if this is the case
-            observer.observe(int(last_rate), self._labels)
+            observer.observe(last_rate, self._labels)
 
     def _track_request_failed_rate(self, observer: Observer) -> None:
         """ Track Request failed execution rate
@@ -141,14 +137,14 @@ class RequestMetrics:
                 )
                 result = interval_count / interval_time
             else:
-                result = 0
+                result = 0.0
             requests_map["last_time"] = current_time
             requests_map[
                 "last_failed_count"
             ] = self._span_processor.failed_request_count
             requests_map["last_rate"] = result
-            observer.observe(int(result), self._labels)
+            observer.observe(result, self._labels)
         except ZeroDivisionError:
             # If elapsed_seconds is 0, exporter call made too close to previous
             # Return the previous result if this is the case
-            observer.observe(int(last_rate), self._labels)
+            observer.observe(last_rate, self._labels)

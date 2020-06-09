@@ -17,8 +17,8 @@ class AzureMetricsSpanProcessor(SpanProcessor):
     and failed dependencies/requests.
     """
 
-    def __init__(self, collect_documents: bool = False):
-        self._collect_documents = collect_documents
+    def __init__(self):
+        self.is_collecting_documents = False
         self.documents = collections.deque()
         self.request_count = 0
         self.dependency_count = 0
@@ -34,24 +34,26 @@ class AzureMetricsSpanProcessor(SpanProcessor):
         try:
             if span.kind == SpanKind.SERVER:
                 self.request_count = self.request_count + 1
-                self.request_duration = self.request_duration + (
+                duration = (
                     span.end_time - span.start_time
-                )
+                ) / 1000000  # Convert to milliseconds
+                self.request_duration = self.request_duration + duration
                 if not span.status.is_ok:
                     self.failed_request_count = self.failed_request_count + 1
-                    if self._collect_documents:
+                    if self.is_collecting_documents:
                         self.documents.append(convert_span_to_envelope(span))
 
             elif span.kind == SpanKind.CLIENT:
                 self.dependency_count = self.dependency_count + 1
-                self.dependency_duration = self.dependency_duration + (
+                duration = (
                     span.end_time - span.start_time
-                )
+                ) / 1000000  # Convert to milliseconds
+                self.dependency_duration = self.dependency_duration + duration
                 if not span.status.is_ok:
                     self.failed_dependency_count = (
                         self.failed_dependency_count + 1
                     )
-                    if self._collect_documents:
+                    if self.is_collecting_documents:
                         self.documents.append(convert_span_to_envelope(span))
 
         # pylint: disable=broad-except

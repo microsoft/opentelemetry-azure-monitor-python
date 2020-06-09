@@ -8,7 +8,6 @@ from opentelemetry.metrics import Meter, Observer
 from azure_monitor.sdk.auto_collection.metrics_span_processor import (
     AzureMetricsSpanProcessor,
 )
-from azure_monitor.sdk.auto_collection.utils import AutoCollectionType
 
 dependency_map = dict()
 
@@ -29,7 +28,6 @@ class DependencyMetrics:
         meter: Meter,
         labels: Dict[str, str],
         span_processor: AzureMetricsSpanProcessor,
-        collection_type: AutoCollectionType,
     ):
         self._meter = meter
         self._labels = labels
@@ -40,23 +38,22 @@ class DependencyMetrics:
             name="\\ApplicationInsights\\Dependency Call Duration",
             description="Average Outgoing Requests duration",
             unit="milliseconds",
-            value_type=float,
+            value_type=int,
         )
         meter.register_observer(
             callback=self._track_failure_rate,
             name="\\ApplicationInsights\\Dependency Calls Failed/Sec",
             description="Failed Outgoing Requests per second",
             unit="rps",
-            value_type=int,
+            value_type=float,
         )
-        if collection_type == AutoCollectionType.STANDARD_METRICS:
-            meter.register_observer(
-                callback=self._track_dependency_rate,
-                name="\\ApplicationInsights\\Dependency Calls/Sec",
-                description="Outgoing Requests per second",
-                unit="rps",
-                value_type=int,
-            )
+        meter.register_observer(
+            callback=self._track_dependency_rate,
+            name="\\ApplicationInsights\\Dependency Calls/Sec",
+            description="Outgoing Requests per second",
+            unit="rps",
+            value_type=float,
+        )
 
     def _track_dependency_rate(self, observer: Observer) -> None:
         """ Track Dependency rate
@@ -78,15 +75,15 @@ class DependencyMetrics:
                 interval_count = current_count - last_count
                 result = interval_count / elapsed_seconds
             else:
-                result = 0
+                result = 0.0
             dependency_map["last_time"] = current_time
             dependency_map["last_count"] = current_count
             dependency_map["last_result"] = result
-            observer.observe(int(result), self._labels)
+            observer.observe(result, self._labels)
         except ZeroDivisionError:
             # If elapsed_seconds is 0, exporter call made too close to previous
             # Return the previous result if this is the case
-            observer.observe(int(last_result), self._labels)
+            observer.observe(last_result, self._labels)
 
     def _track_dependency_duration(self, observer: Observer) -> None:
         """ Track Dependency average duration
@@ -112,12 +109,11 @@ class DependencyMetrics:
             dependency_map[
                 "last_duration"
             ] = self._span_processor.dependency_duration
-            # Convert to milliseconds
-            observer.observe(int(result * 1000.0), self._labels)
+            observer.observe(int(result), self._labels)
         except ZeroDivisionError:
             # If interval_count is 0, exporter call made too close to previous
             # Return the previous result if this is the case
-            observer.observe(int(last_average_duration * 1000.0), self._labels)
+            observer.observe(int(last_average_duration), self._labels)
 
     def _track_failure_rate(self, observer: Observer) -> None:
         """ Track Failed Dependency rate
@@ -141,12 +137,12 @@ class DependencyMetrics:
                 )
                 result = interval_failed_count / elapsed_seconds
             else:
-                result = 0
+                result = 0.0
             dependency_map["last_time"] = current_time
             dependency_map["last_failed_count"] = current_failed_count
             dependency_map["last_result"] = result
-            observer.observe(int(result), self._labels)
+            observer.observe(result, self._labels)
         except ZeroDivisionError:
             # If elapsed_seconds is 0, exporter call made too close to previous
             # Return the previous result if this is the case
-            observer.observe(int(last_result), self._labels)
+            observer.observe(last_result, self._labels)

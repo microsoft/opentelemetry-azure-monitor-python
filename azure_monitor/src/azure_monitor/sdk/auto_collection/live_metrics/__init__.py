@@ -9,9 +9,6 @@ from azure_monitor.sdk.auto_collection import AutoCollectionType
 from azure_monitor.sdk.auto_collection.dependency_metrics import (
     DependencyMetrics,
 )
-from azure_monitor.sdk.auto_collection.live_metrics.exporter import (
-    LiveMetricsExporter,
-)
 from azure_monitor.sdk.auto_collection.live_metrics.manager import (
     LiveMetricsManager,
 )
@@ -45,11 +42,9 @@ class LiveMetricsAutoCollection:
         col_type = AutoCollectionType.LIVE_METRICS
         self._performance_metrics = PerformanceMetrics(meter, labels, col_type)
         self._dependency_metrics = DependencyMetrics(
-            meter, labels, span_processor, col_type
+            meter, labels, span_processor
         )
-        self._request_metrics = RequestMetrics(
-            meter, labels, span_processor, col_type
-        )
+        self._request_metrics = RequestMetrics(meter, labels, span_processor)
         self._manager = LiveMetricsManager(
             meter, instrumentation_key, span_processor
         )

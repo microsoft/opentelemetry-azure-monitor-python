@@ -13,7 +13,12 @@ from opentelemetry.sdk.metrics.export.aggregate import (
     ObserverAggregator,
 )
 
-from azure_monitor.protocol import LiveMetricEnvelope
+from azure_monitor.protocol import (
+    Data,
+    Envelope,
+    LiveMetricEnvelope,
+    RemoteDependency,
+)
 from azure_monitor.sdk.auto_collection.live_metrics.exporter import (
     LiveMetricsExporter,
 )
@@ -149,3 +154,71 @@ class TestLiveMetricsExporter(unittest.TestCase):
         self.assertEqual(envelope.metrics[0].name, "testname")
         self.assertEqual(envelope.metrics[0].value, 123)
         self.assertEqual(envelope.metrics[0].weight, 1)
+
+    def test_live_metric_envelope_documents(self):
+        aggregator = CounterAggregator()
+        aggregator.update(123)
+        aggregator.take_checkpoint()
+        record = MetricRecord(aggregator, self._test_labels, self._test_metric)
+        exporter = LiveMetricsExporter(
+            instrumentation_key=self._instrumentation_key,
+            span_processor=self._span_processor,
+        )
+        request_data = RemoteDependency(
+            name="testName",
+            id="",
+            result_code="testResultCode",
+            duration="testDuration",
+            success=True,
+            properties={},
+            measurements={},
+        )
+        request_data.properties["test_property1"] = "test_property1Value"
+        request_data.properties["test_property2"] = "test_property2Value"
+        request_data.measurements[
+            "test_measurement1"
+        ] = "test_measurement1Value"
+        request_data.measurements[
+            "test_measurement2"
+        ] = "test_measurement2Value"
+        test_envelope = Envelope(
+            data=Data(base_type="RemoteDependencyData", base_data=request_data)
+        )
+        self._span_processor.documents.append(test_envelope)
+        envelope = exporter._metric_to_live_metrics_envelope([record])
+        self.assertIsInstance(envelope, LiveMetricEnvelope)
+        self.assertEqual(len(envelope.documents), 1)
+        self.assertEqual(
+            envelope.documents[0].quickpulse_type,
+            "DependencyTelemetryDocument",
+        )
+        self.assertEqual(
+            envelope.documents[0].document_type, "RemoteDependency"
+        )
+        self.assertEqual(envelope.documents[0].version, "1.0")
+        self.assertEqual(envelope.documents[0].operation_id, "")
+        self.assertEqual(len(envelope.documents[0].properties), 4)
+        self.assertEqual(
+            envelope.documents[0].properties[0].key, "test_measurement1"
+        )
+        self.assertEqual(
+            envelope.documents[0].properties[1].key, "test_measurement2"
+        )
+        self.assertEqual(
+            envelope.documents[0].properties[2].key, "test_property1"
+        )
+        self.assertEqual(
+            envelope.documents[0].properties[3].key, "test_property2"
+        )
+        self.assertEqual(
+            envelope.documents[0].properties[0].value, "test_measurement1Value"
+        )
+        self.assertEqual(
+            envelope.documents[0].properties[1].value, "test_measurement2Value"
+        )
+        self.assertEqual(
+            envelope.documents[0].properties[2].value, "test_property1Value"
+        )
+        self.assertEqual(
+            envelope.documents[0].properties[3].value, "test_property2Value"
+        )

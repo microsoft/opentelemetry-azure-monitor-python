@@ -36,8 +36,8 @@ class TestAutoCollection(unittest.TestCase):
                 is_remote=False,
             ),
         )
-        test_span._start_time = 5
-        test_span._end_time = 15
+        test_span._start_time = 5000000
+        test_span._end_time = 15000000
         span_processor.on_end(test_span)
         self.assertEqual(span_processor.request_count, 0)
         self.assertEqual(span_processor.request_duration, 0)
@@ -59,8 +59,8 @@ class TestAutoCollection(unittest.TestCase):
             ),
         )
         test_span.set_status(Status(StatusCanonicalCode.INTERNAL, "test"))
-        test_span._start_time = 5
-        test_span._end_time = 15
+        test_span._start_time = 5000000
+        test_span._end_time = 15000000
         span_processor.on_end(test_span)
         self.assertEqual(span_processor.request_count, 0)
         self.assertEqual(span_processor.request_duration, 0)
@@ -81,8 +81,8 @@ class TestAutoCollection(unittest.TestCase):
                 is_remote=False,
             ),
         )
-        test_span._start_time = 5
-        test_span._end_time = 15
+        test_span._start_time = 5000000
+        test_span._end_time = 15000000
         span_processor.on_end(test_span)
         self.assertEqual(span_processor.dependency_count, 0)
         self.assertEqual(span_processor.dependency_duration, 0)
@@ -104,8 +104,8 @@ class TestAutoCollection(unittest.TestCase):
             ),
         )
         test_span.set_status(Status(StatusCanonicalCode.INTERNAL, "test"))
-        test_span._start_time = 5
-        test_span._end_time = 15
+        test_span._start_time = 5000000
+        test_span._end_time = 15000000
         span_processor.on_end(test_span)
         self.assertEqual(span_processor.dependency_count, 0)
         self.assertEqual(span_processor.dependency_duration, 0)
@@ -113,3 +113,26 @@ class TestAutoCollection(unittest.TestCase):
         self.assertEqual(span_processor.request_count, 1)
         self.assertEqual(span_processor.request_duration, 10)
         self.assertEqual(span_processor.failed_request_count, 1)
+
+    def test_document_collection(self):
+        """Test the document collection."""
+        span_processor = AzureMetricsSpanProcessor()
+        span_processor.is_collecting_documents = True
+        test_span = Span(
+            name="test",
+            kind=SpanKind.SERVER,
+            context=SpanContext(
+                trace_id=36873507687745823477771305566750195431,
+                span_id=12030755672171557338,
+                is_remote=False,
+            ),
+        )
+        test_span.set_status(Status(StatusCanonicalCode.INTERNAL, "test"))
+        test_span._start_time = 5000000
+        test_span._end_time = 15000000
+        span_processor.on_end(test_span)
+        document = span_processor.documents.pop()
+        self.assertIsNotNone(document)
+        self.assertEqual(
+            document.name, "Microsoft.ApplicationInsights.Request"
+        )

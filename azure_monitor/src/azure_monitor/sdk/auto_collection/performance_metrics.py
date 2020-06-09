@@ -33,14 +33,15 @@ class PerformanceMetrics:
         self._meter = meter
         self._labels = labels
 
+        self._meter.register_observer(
+            callback=self._track_cpu,
+            name="\\Processor(_Total)\\% Processor Time",
+            description="Processor time as a percentage",
+            unit="percentage",
+            value_type=float,
+        )
+
         if collection_type == AutoCollectionType.STANDARD_METRICS:
-            self._meter.register_observer(
-                callback=self._track_cpu,
-                name="\\Processor(_Total)\\% Processor Time",
-                description="Processor time as a percentage",
-                unit="percentage",
-                value_type=float,
-            )
             self._meter.register_observer(
                 callback=self._track_memory,
                 name="\\Memory\\Available Bytes",

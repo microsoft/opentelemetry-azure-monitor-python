@@ -84,10 +84,16 @@ class TestLiveMetricsManager(unittest.TestCase):
             self._manager.check_if_user_is_subscribed()
             self.assertIsNone(self._manager._ping)
             self.assertIsNotNone(self._manager._post)
+            self.assertEqual(
+                self._manager._span_processor.is_collecting_documents, True
+            )
             self._manager._post.is_user_subscribed = False
             self._manager.check_if_user_is_subscribed()
             self.assertIsNone(self._manager._post)
             self.assertIsNotNone(self._manager._ping)
+            self.assertEqual(
+                self._manager._span_processor.is_collecting_documents, False
+            )
 
     def test_ping_ok(self):
         """Test ping send requests to Live Metrics service."""

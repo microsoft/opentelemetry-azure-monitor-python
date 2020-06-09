@@ -69,12 +69,14 @@ class LiveMetricsManager(threading.Thread):
                 # Switch to Post
                 self._ping.shutdown()
                 self._ping = None
+                self._span_processor.is_collecting_documents = True
                 self._post = LiveMetricsPost(
                     self._meter, self._exporter, self._instrumentation_key
                 )
         if self._post:
             if not self._post.is_user_subscribed:
                 # Switch to Ping
+                self._span_processor.is_collecting_documents = False
                 self._post.shutdown()
                 self._post = None
                 self._ping = LiveMetricsPing(self._instrumentation_key)
