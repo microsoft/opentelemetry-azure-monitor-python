@@ -563,15 +563,6 @@ class Request(BaseObject):
         }
 
 
-class LiveMetricDocumentProperty(BaseObject):
-
-    __slots__ = ("key", "value")
-
-    def __init__(self, key: str, value: str) -> None:
-        self.key = key
-        self.value = value
-
-
 class LiveMetricDocument(BaseObject):
 
     __slots__ = (
@@ -588,7 +579,7 @@ class LiveMetricDocument(BaseObject):
         document_type: str = "",
         version: str = "",
         operation_id: str = "",
-        properties: typing.List[LiveMetricDocumentProperty] = None,
+        properties: typing.Dict[str, any] = None,
     ) -> None:
         self.quickpulse_type = quickpulse_type
         self.document_type = document_type
@@ -602,9 +593,7 @@ class LiveMetricDocument(BaseObject):
             "DocumentType": self.document_type,
             "Version": self.version,
             "OperationId": self.operation_id,
-            "Properties": self.properties.to_dict()
-            if self.properties
-            else None,
+            "Properties": self.properties,
         }
 
 
@@ -675,7 +664,9 @@ class LiveMetricEnvelope(BaseObject):
 
     def to_dict(self):
         return {
-            "Documents": self.documents.to_dict() if self.documents else None,
+            "Documents": list(map(lambda x: x.to_dict(), self.documents))
+            if self.documents
+            else None,
             "Instance": self.instance,
             "InstrumentationKey": self.instrumentation_key,
             "InvariantVersion": self.invariant_version,

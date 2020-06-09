@@ -199,26 +199,18 @@ class TestLiveMetricsExporter(unittest.TestCase):
         self.assertEqual(envelope.documents[0].operation_id, "")
         self.assertEqual(len(envelope.documents[0].properties), 4)
         self.assertEqual(
-            envelope.documents[0].properties[0].key, "test_measurement1"
+            envelope.documents[0].properties["test_measurement1"],
+            "test_measurement1Value",
         )
         self.assertEqual(
-            envelope.documents[0].properties[1].key, "test_measurement2"
+            envelope.documents[0].properties["test_measurement2"],
+            "test_measurement2Value",
         )
         self.assertEqual(
-            envelope.documents[0].properties[2].key, "test_property1"
+            envelope.documents[0].properties["test_property1"],
+            "test_property1Value",
         )
         self.assertEqual(
-            envelope.documents[0].properties[3].key, "test_property2"
-        )
-        self.assertEqual(
-            envelope.documents[0].properties[0].value, "test_measurement1Value"
-        )
-        self.assertEqual(
-            envelope.documents[0].properties[1].value, "test_measurement2Value"
-        )
-        self.assertEqual(
-            envelope.documents[0].properties[2].value, "test_property1Value"
-        )
-        self.assertEqual(
-            envelope.documents[0].properties[3].value, "test_property2Value"
+            envelope.documents[0].properties["test_property2"],
+            "test_property2Value",
         )

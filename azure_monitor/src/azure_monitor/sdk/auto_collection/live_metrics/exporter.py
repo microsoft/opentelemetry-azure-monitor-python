@@ -15,7 +15,6 @@ from azure_monitor.protocol import (
     Envelope,
     LiveMetric,
     LiveMetricDocument,
-    LiveMetricDocumentProperty,
     LiveMetricEnvelope,
 )
 from azure_monitor.sdk.auto_collection.live_metrics import utils
@@ -148,25 +147,20 @@ class LiveMetricsExporter(MetricsExporter):
             return "Availability"
         return ""
 
-    def _get_aggregated_properties(
-        self, envelope: Envelope
-    ) -> typing.List[LiveMetricDocumentProperty]:
-
-        aggregated_properties = []
+    def _get_aggregated_properties(self, envelope: Envelope) -> typing.Dict:
+        aggregated_properties = {}
         measurements = (
             envelope.data.base_data.measurements
             if envelope.data.base_data and envelope.data.base_data.measurements
             else []
         )
         for key in measurements:
-            prop = LiveMetricDocumentProperty(key=key, value=measurements[key])
-            aggregated_properties.append(prop)
+            aggregated_properties[key] = measurements[key]
         properties = (
             envelope.data.base_data.properties
             if envelope.data.base_data and envelope.data.base_data.properties
             else []
         )
         for key in properties:
-            prop = LiveMetricDocumentProperty(key=key, value=properties[key])
-            aggregated_properties.append(prop)
+            aggregated_properties[key] = properties[key]
         return aggregated_properties
