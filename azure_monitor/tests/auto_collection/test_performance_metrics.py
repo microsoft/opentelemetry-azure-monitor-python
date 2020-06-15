@@ -9,6 +9,7 @@ from opentelemetry import metrics
 from opentelemetry.sdk.metrics import MeterProvider, Observer
 
 from azure_monitor.sdk.auto_collection import PerformanceMetrics
+from azure_monitor.sdk.auto_collection.utils import AutoCollectionType
 
 
 def throw(exc_type, *args, **kwargs):
@@ -30,10 +31,12 @@ class TestPerformanceMetrics(unittest.TestCase):
     def tearDownClass(cls):
         metrics._METER_PROVIDER = None
 
-    def test_constructor(self):
+    def test_constructor_standard_metrics(self):
         mock_meter = mock.Mock()
         performance_metrics_collector = PerformanceMetrics(
-            meter=mock_meter, labels=self._test_labels
+            meter=mock_meter,
+            labels=self._test_labels,
+            collection_type=AutoCollectionType.STANDARD_METRICS,
         )
         self.assertEqual(performance_metrics_collector._meter, mock_meter)
         self.assertEqual(
@@ -70,9 +73,39 @@ class TestPerformanceMetrics(unittest.TestCase):
             value_type=int,
         )
 
+    def test_constructor_live_metrics(self):
+        mock_meter = mock.Mock()
+        performance_metrics_collector = PerformanceMetrics(
+            meter=mock_meter,
+            labels=self._test_labels,
+            collection_type=AutoCollectionType.LIVE_METRICS,
+        )
+        self.assertEqual(performance_metrics_collector._meter, mock_meter)
+        self.assertEqual(
+            performance_metrics_collector._labels, self._test_labels
+        )
+        self.assertEqual(mock_meter.register_observer.call_count, 2)
+        reg_obs_calls = mock_meter.register_observer.call_args_list
+        reg_obs_calls[0].assert_called_with(
+            callback=performance_metrics_collector._track_cpu,
+            name="\\Processor(_Total)\\% Processor Time",
+            description="Processor time as a percentage",
+            unit="percentage",
+            value_type=float,
+        )
+        reg_obs_calls[1].assert_called_with(
+            callback=performance_metrics_collector._track_commited_memory,
+            name="\\Memory\\Committed Bytes",
+            description="Amount of commited memory in bytes",
+            unit="byte",
+            value_type=int,
+        )
+
     def test_track_cpu(self):
         performance_metrics_collector = PerformanceMetrics(
-            meter=self._meter, labels=self._test_labels
+            meter=self._meter,
+            labels=self._test_labels,
+            collection_type=AutoCollectionType.STANDARD_METRICS,
         )
         with mock.patch("psutil.cpu_times_percent") as processor_mock:
             cpu = collections.namedtuple("cpu", "idle")
@@ -94,7 +127,9 @@ class TestPerformanceMetrics(unittest.TestCase):
     @mock.patch("psutil.virtual_memory")
     def test_track_memory(self, psutil_mock):
         performance_metrics_collector = PerformanceMetrics(
-            meter=self._meter, labels=self._test_labels
+            meter=self._meter,
+            labels=self._test_labels,
+            collection_type=AutoCollectionType.STANDARD_METRICS,
         )
         memory = collections.namedtuple("memory", "available")
         vmem = memory(available=100)
@@ -112,13 +147,38 @@ class TestPerformanceMetrics(unittest.TestCase):
             obs.aggregators[tuple(self._test_labels.items())].current, 100
         )
 
+    @mock.patch("psutil.virtual_memory")
+    def test_track_commited_memory(self, psutil_mock):
+        performance_metrics_collector = PerformanceMetrics(
+            meter=self._meter,
+            labels=self._test_labels,
+            collection_type=AutoCollectionType.LIVE_METRICS,
+        )
+        memory = collections.namedtuple("memory", ["available", "total"])
+        vmem = memory(available=100, total=150)
+        psutil_mock.return_value = vmem
+        obs = Observer(
+            callback=performance_metrics_collector._track_commited_memory,
+            name="\\Memory\\Available Bytes",
+            description="Amount of available memory in bytes",
+            unit="byte",
+            value_type=int,
+            meter=self._meter,
+        )
+        performance_metrics_collector._track_commited_memory(obs)
+        self.assertEqual(
+            obs.aggregators[tuple(self._test_labels.items())].current, 50
+        )
+
     @mock.patch("azure_monitor.sdk.auto_collection.performance_metrics.psutil")
     def test_track_process_cpu(self, psutil_mock):
         with mock.patch(
             "azure_monitor.sdk.auto_collection.performance_metrics.PROCESS"
         ) as process_mock:
             performance_metrics_collector = PerformanceMetrics(
-                meter=self._meter, labels=self._test_labels
+                meter=self._meter,
+                labels=self._test_labels,
+                collection_type=AutoCollectionType.STANDARD_METRICS,
             )
             process_mock.cpu_percent.return_value = 44.4
             psutil_mock.cpu_count.return_value = 2
@@ -141,7 +201,9 @@ class TestPerformanceMetrics(unittest.TestCase):
             "azure_monitor.sdk.auto_collection.performance_metrics.psutil"
         ) as psutil_mock:
             performance_metrics_collector = PerformanceMetrics(
-                meter=self._meter, labels=self._test_labels
+                meter=self._meter,
+                labels=self._test_labels,
+                collection_type=AutoCollectionType.STANDARD_METRICS,
             )
             psutil_mock.cpu_count.return_value = None
             obs = Observer(
@@ -160,7 +222,9 @@ class TestPerformanceMetrics(unittest.TestCase):
             "azure_monitor.sdk.auto_collection.performance_metrics.PROCESS"
         ) as process_mock:
             performance_metrics_collector = PerformanceMetrics(
-                meter=self._meter, labels=self._test_labels
+                meter=self._meter,
+                labels=self._test_labels,
+                collection_type=AutoCollectionType.STANDARD_METRICS,
             )
             memory = collections.namedtuple("memory", "rss")
             pmem = memory(rss=100)
@@ -185,7 +249,9 @@ class TestPerformanceMetrics(unittest.TestCase):
             throw(Exception),
         ):
             performance_metrics_collector = PerformanceMetrics(
-                meter=self._meter, labels=self._test_labels
+                meter=self._meter,
+                labels=self._test_labels,
+                collection_type=AutoCollectionType.STANDARD_METRICS,
             )
             obs = Observer(
                 callback=performance_metrics_collector._track_process_memory,

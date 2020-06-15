@@ -16,6 +16,9 @@ from azure_monitor.sdk.auto_collection.live_metrics.manager import (
     LiveMetricsPing,
     LiveMetricsPost,
 )
+from azure_monitor.sdk.auto_collection.metrics_span_processor import (
+    AzureMetricsSpanProcessor,
+)
 
 
 # pylint: disable=protected-access
@@ -33,6 +36,7 @@ class TestLiveMetricsManager(unittest.TestCase):
         cls._manager = None
         cls._ping = None
         cls._post = None
+        cls._span_processor = AzureMetricsSpanProcessor()
 
     @classmethod
     def tearDownClass(cls):
@@ -55,6 +59,7 @@ class TestLiveMetricsManager(unittest.TestCase):
             self._manager = LiveMetricsManager(
                 meter=self._meter,
                 instrumentation_key=self._instrumentation_key,
+                span_processor=self._span_processor,
             )
             self.assertFalse(self._manager._is_user_subscribed)
             self.assertEqual(
@@ -72,16 +77,23 @@ class TestLiveMetricsManager(unittest.TestCase):
             self._manager = LiveMetricsManager(
                 meter=self._meter,
                 instrumentation_key=self._instrumentation_key,
+                span_processor=self._span_processor,
             )
             self._manager.interval = 60
             time.sleep(1)
             self._manager.check_if_user_is_subscribed()
             self.assertIsNone(self._manager._ping)
             self.assertIsNotNone(self._manager._post)
+            self.assertEqual(
+                self._manager._span_processor.is_collecting_documents, True
+            )
             self._manager._post.is_user_subscribed = False
             self._manager.check_if_user_is_subscribed()
             self.assertIsNone(self._manager._post)
             self.assertIsNotNone(self._manager._ping)
+            self.assertEqual(
+                self._manager._span_processor.is_collecting_documents, False
+            )
 
     def test_ping_ok(self):
         """Test ping send requests to Live Metrics service."""
@@ -115,7 +127,7 @@ class TestLiveMetricsManager(unittest.TestCase):
             self._ping = LiveMetricsPing(
                 instrumentation_key=self._instrumentation_key
             )
-            self._ping.last_request_success_time = time.time() - 21
+            self._ping.last_request_success_time = time.time() - 60
             self._ping.ping()
             self.assertFalse(self._ping.last_send_succeeded)
             self.assertEqual(self._ping.interval, 60)
@@ -127,7 +139,10 @@ class TestLiveMetricsManager(unittest.TestCase):
                 200, None, {"x-ms-qps-subscribed": "false"}
             )
             self._post = LiveMetricsPost(
-                exporter=LiveMetricsExporter(self._instrumentation_key),
+                exporter=LiveMetricsExporter(
+                    self._instrumentation_key,
+                    span_processor=self._span_processor,
+                ),
                 meter=self._meter,
                 instrumentation_key=self._instrumentation_key,
             )
@@ -144,7 +159,10 @@ class TestLiveMetricsManager(unittest.TestCase):
                 200, None, {"x-ms-qps-subscribed": "true"}
             )
             self._post = LiveMetricsPost(
-                exporter=LiveMetricsExporter(self._instrumentation_key),
+                exporter=LiveMetricsExporter(
+                    self._instrumentation_key,
+                    span_processor=self._span_processor,
+                ),
                 meter=self._meter,
                 instrumentation_key=self._instrumentation_key,
             )
@@ -156,7 +174,10 @@ class TestLiveMetricsManager(unittest.TestCase):
         with mock.patch("requests.post") as request:
             request.return_value = MockResponse(400, None, {})
             self._post = LiveMetricsPost(
-                exporter=LiveMetricsExporter(self._instrumentation_key),
+                exporter=LiveMetricsExporter(
+                    self._instrumentation_key,
+                    span_processor=self._span_processor,
+                ),
                 meter=self._meter,
                 instrumentation_key=self._instrumentation_key,
             )
