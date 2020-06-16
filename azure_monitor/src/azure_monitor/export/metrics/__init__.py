@@ -5,7 +5,14 @@ import logging
 from typing import Sequence
 from urllib.parse import urlparse
 
-from opentelemetry.sdk.metrics import Counter, Metric, Observer
+from opentelemetry.sdk.metrics import (
+    Counter,
+    SumObserver,
+    UpDownCounter,
+    UpDownSumObserver,
+    ValueRecorder,
+    ValueObserver
+)
 from opentelemetry.sdk.metrics.export import (
     MetricRecord,
     MetricsExporter,
@@ -66,20 +73,22 @@ class AzureMonitorMetricsExporter(BaseExporter, MetricsExporter):
         )
         envelope.name = "Microsoft.ApplicationInsights.Metric"
         value = 0
-        metric = metric_record.metric
-        if isinstance(metric, Counter):
-            value = metric_record.aggregator.checkpoint
-        elif isinstance(metric, Observer):
+        metric = metric_record.instrument
+        if isinstance(metric, ValueObserver):
+            # mmscl
             value = metric_record.aggregator.checkpoint.last
-            if not value:
-                value = 0
+        elif isinstance(metric, ValueRecorder):
+            # mmsc
+            value = metric_record.aggregator.checkpoint.count
         else:
-            # TODO: What do measure aggregations look like in AI?
-            logger.warning("Measure metric recorded.")
-
+            # sum or lv
+            value = metric_record.aggregator.checkpoint
+        if not value:
+            logger.warning("Value is none. Default to 0.")
+            value = 0
         data_point = protocol.DataPoint(
-            ns=metric_record.metric.description,
-            name=metric_record.metric.name,
+            ns=metric.description,
+            name=metric.name,
             value=value,
             kind=protocol.DataPointType.MEASUREMENT.value,
         )

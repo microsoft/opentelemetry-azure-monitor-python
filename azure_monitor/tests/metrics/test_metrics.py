@@ -6,12 +6,17 @@ import unittest
 from unittest import mock
 
 from opentelemetry import metrics
-from opentelemetry.sdk.metrics import Counter, Measure, MeterProvider
+from opentelemetry.sdk.metrics import (
+    Counter,
+    ValueRecorder,
+    MeterProvider,
+    ValueObserver
+)
 from opentelemetry.sdk.metrics.export import MetricRecord, MetricsExportResult
 from opentelemetry.sdk.metrics.export.aggregate import (
     CounterAggregator,
     MinMaxSumCountAggregator,
-    ObserverAggregator,
+    ValueObserverAggregator,
 )
 from opentelemetry.sdk.util import ns_to_iso_str
 
@@ -55,8 +60,8 @@ class TestAzureMetricsExporter(unittest.TestCase):
         cls._test_metric = cls._meter.create_metric(
             "testname", "testdesc", "unit", int, Counter, ["environment"]
         )
-        cls._test_measure = cls._meter.create_metric(
-            "testname", "testdesc", "unit", int, Measure, ["environment"]
+        cls._test_value_recorder = cls._meter.create_metric(
+            "testname", "testdesc", "unit", int, ValueRecorder, ["environment"]
         )
         cls._test_obs = cls._meter.register_observer(
             lambda x: x,
@@ -64,7 +69,7 @@ class TestAzureMetricsExporter(unittest.TestCase):
             "testdesc",
             "unit",
             int,
-            Counter,
+            ValueObserver,
             ["environment"],
         )
         cls._test_labels = tuple({"environment": "staging"}.items())
@@ -157,7 +162,7 @@ class TestAzureMetricsExporter(unittest.TestCase):
         aggregator = CounterAggregator()
         aggregator.update(123)
         aggregator.take_checkpoint()
-        record = MetricRecord(aggregator, self._test_labels, self._test_metric)
+        record = MetricRecord(self._test_metric, self._test_labels, aggregator)
         exporter = self._exporter
         envelope = exporter._metric_to_envelope(record)
         self.assertIsInstance(envelope, Envelope)
@@ -191,10 +196,10 @@ class TestAzureMetricsExporter(unittest.TestCase):
         self.assertIsNotNone(envelope.tags["ai.internal.sdkVersion"])
 
     def test_observer_to_envelope(self):
-        aggregator = ObserverAggregator()
+        aggregator = ValueObserverAggregator()
         aggregator.update(123)
         aggregator.take_checkpoint()
-        record = MetricRecord(aggregator, self._test_labels, self._test_obs)
+        record = MetricRecord(self._test_obs, self._test_labels, aggregator)
         print(record.labels)
         exporter = self._exporter
         envelope = exporter._metric_to_envelope(record)
@@ -229,10 +234,10 @@ class TestAzureMetricsExporter(unittest.TestCase):
         self.assertIsNotNone(envelope.tags["ai.internal.sdkVersion"])
 
     def test_observer_to_envelope_value_none(self):
-        aggregator = ObserverAggregator()
+        aggregator = ValueObserverAggregator()
         aggregator.update(None)
         aggregator.take_checkpoint()
-        record = MetricRecord(aggregator, self._test_labels, self._test_obs)
+        record = MetricRecord(self._test_obs, self._test_labels, aggregator)
         exporter = self._exporter
         envelope = exporter._metric_to_envelope(record)
         self.assertIsInstance(envelope, Envelope)
@@ -266,13 +271,12 @@ class TestAzureMetricsExporter(unittest.TestCase):
         self.assertIsNotNone(envelope.tags["ai.device.type"])
         self.assertIsNotNone(envelope.tags["ai.internal.sdkVersion"])
 
-    @mock.patch("azure_monitor.export.metrics.logger")
-    def test_measure_to_envelope(self, logger_mock):
+    def test_value_recorder_to_envelope(self):
         aggregator = MinMaxSumCountAggregator()
         aggregator.update(123)
         aggregator.take_checkpoint()
         record = MetricRecord(
-            aggregator, self._test_labels, self._test_measure
+            self._test_value_recorder, self._test_labels, aggregator
         )
         exporter = self._exporter
         envelope = exporter._metric_to_envelope(record)
@@ -294,7 +298,7 @@ class TestAzureMetricsExporter(unittest.TestCase):
         self.assertIsInstance(envelope.data.base_data.metrics[0], DataPoint)
         self.assertEqual(envelope.data.base_data.metrics[0].ns, "testdesc")
         self.assertEqual(envelope.data.base_data.metrics[0].name, "testname")
-        self.assertEqual(envelope.data.base_data.metrics[0].value, 0)
+        self.assertEqual(envelope.data.base_data.metrics[0].value, 1)
         self.assertEqual(
             envelope.data.base_data.properties["environment"], "staging"
         )
@@ -305,4 +309,3 @@ class TestAzureMetricsExporter(unittest.TestCase):
         self.assertIsNotNone(envelope.tags["ai.device.osVersion"])
         self.assertIsNotNone(envelope.tags["ai.device.type"])
         self.assertIsNotNone(envelope.tags["ai.internal.sdkVersion"])
-        self.assertEqual(logger_mock.warning.called, True)

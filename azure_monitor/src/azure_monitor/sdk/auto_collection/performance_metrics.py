@@ -5,6 +5,7 @@ from typing import Dict
 
 import psutil
 from opentelemetry.metrics import Meter, Observer
+from opentelemetry.sdk.metrics import UpDownSumObserver
 
 from azure_monitor.sdk.auto_collection.utils import AutoCollectionType
 
@@ -39,6 +40,7 @@ class PerformanceMetrics:
             description="Processor time as a percentage",
             unit="percentage",
             value_type=float,
+            observer_type=UpDownSumObserver,
         )
 
         if collection_type == AutoCollectionType.STANDARD_METRICS:
@@ -48,6 +50,7 @@ class PerformanceMetrics:
                 description="Amount of available memory in bytes",
                 unit="byte",
                 value_type=int,
+                observer_type=UpDownSumObserver,
             )
             self._meter.register_observer(
                 callback=self._track_process_cpu,
@@ -55,6 +58,7 @@ class PerformanceMetrics:
                 description="Process CPU usage as a percentage",
                 unit="percentage",
                 value_type=float,
+                observer_type=UpDownSumObserver,
             )
             self._meter.register_observer(
                 callback=self._track_process_memory,
@@ -62,14 +66,16 @@ class PerformanceMetrics:
                 description="Amount of memory process has used in bytes",
                 unit="byte",
                 value_type=int,
+                observer_type=UpDownSumObserver,
             )
         if collection_type == AutoCollectionType.LIVE_METRICS:
             self._meter.register_observer(
                 callback=self._track_commited_memory,
                 name="\\Memory\\Committed Bytes",
-                description="Amount of commited memory in bytes",
+                description="Amount of committed memory in bytes",
                 unit="byte",
                 value_type=int,
+                observer_type=UpDownSumObserver,
             )
 
     def _track_cpu(self, observer: Observer) -> None:
