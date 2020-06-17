@@ -10,7 +10,7 @@ from opentelemetry.sdk.metrics import (
     Counter,
     ValueRecorder,
     MeterProvider,
-    ValueObserver
+    ValueObserver,
 )
 from opentelemetry.sdk.metrics.export import MetricRecord, MetricsExportResult
 from opentelemetry.sdk.metrics.export.aggregate import (

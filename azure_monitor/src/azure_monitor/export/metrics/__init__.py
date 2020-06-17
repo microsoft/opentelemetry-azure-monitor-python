@@ -11,7 +11,7 @@ from opentelemetry.sdk.metrics import (
     UpDownCounter,
     UpDownSumObserver,
     ValueRecorder,
-    ValueObserver
+    ValueObserver,
 )
 from opentelemetry.sdk.metrics.export import (
     MetricRecord,

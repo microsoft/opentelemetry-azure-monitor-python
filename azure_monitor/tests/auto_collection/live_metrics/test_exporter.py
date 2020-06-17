@@ -10,7 +10,7 @@ from opentelemetry.sdk.metrics import (
     Counter,
     MeterProvider,
     ValueObserver,
-    ValueRecorder
+    ValueRecorder,
 )
 from opentelemetry.sdk.metrics.export import MetricRecord, MetricsExportResult
 from opentelemetry.sdk.metrics.export.aggregate import (
@@ -168,7 +168,9 @@ class TestLiveMetricsExporter(unittest.TestCase):
         aggregator = MinMaxSumCountAggregator()
         aggregator.update(123)
         aggregator.take_checkpoint()
-        record = MetricRecord(self._test_metric2, self._test_labels, aggregator)
+        record = MetricRecord(
+            self._test_metric2, self._test_labels, aggregator
+        )
         exporter = LiveMetricsExporter(
             instrumentation_key=self._instrumentation_key,
             span_processor=self._span_processor,
