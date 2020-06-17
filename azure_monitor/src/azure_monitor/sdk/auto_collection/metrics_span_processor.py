@@ -6,7 +6,7 @@ import logging
 from opentelemetry.sdk.trace import Span, SpanProcessor
 from opentelemetry.trace import SpanKind
 
-from azure_monitor.export import convert_span_to_envelope
+from azure_monitor.export.trace import convert_span_to_envelope
 
 logger = logging.getLogger(__name__)
 

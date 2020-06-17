@@ -4,6 +4,7 @@ import time
 from typing import Dict
 
 from opentelemetry.metrics import Meter, Observer
+from opentelemetry.sdk.metrics import UpDownSumObserver
 
 from azure_monitor.sdk.auto_collection.metrics_span_processor import (
     AzureMetricsSpanProcessor,
@@ -39,6 +40,7 @@ class DependencyMetrics:
             description="Average Outgoing Requests duration",
             unit="milliseconds",
             value_type=int,
+            observer_type=UpDownSumObserver,
         )
         meter.register_observer(
             callback=self._track_failure_rate,
@@ -46,6 +48,7 @@ class DependencyMetrics:
             description="Failed Outgoing Requests per second",
             unit="rps",
             value_type=float,
+            observer_type=UpDownSumObserver,
         )
         meter.register_observer(
             callback=self._track_dependency_rate,
@@ -53,6 +56,7 @@ class DependencyMetrics:
             description="Outgoing Requests per second",
             unit="rps",
             value_type=float,
+            observer_type=UpDownSumObserver,
         )
 
     def _track_dependency_rate(self, observer: Observer) -> None:
