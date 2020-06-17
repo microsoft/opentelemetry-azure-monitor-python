@@ -10,8 +10,8 @@ from opentelemetry.sdk.metrics import (
     SumObserver,
     UpDownCounter,
     UpDownSumObserver,
-    ValueRecorder,
     ValueObserver,
+    ValueRecorder,
 )
 from opentelemetry.sdk.metrics.export import (
     MetricRecord,

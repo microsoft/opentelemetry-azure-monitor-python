@@ -8,9 +8,9 @@ from unittest import mock
 from opentelemetry import metrics
 from opentelemetry.sdk.metrics import (
     Counter,
-    ValueRecorder,
     MeterProvider,
     ValueObserver,
+    ValueRecorder,
 )
 from opentelemetry.sdk.metrics.export import MetricRecord, MetricsExportResult
 from opentelemetry.sdk.metrics.export.aggregate import (

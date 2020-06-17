@@ -15,8 +15,8 @@ from opentelemetry.sdk.metrics import (
 from opentelemetry.sdk.metrics.export import MetricRecord, MetricsExportResult
 from opentelemetry.sdk.metrics.export.aggregate import (
     CounterAggregator,
-    ValueObserverAggregator,
     MinMaxSumCountAggregator,
+    ValueObserverAggregator,
 )
 
 from azure_monitor.protocol import (
