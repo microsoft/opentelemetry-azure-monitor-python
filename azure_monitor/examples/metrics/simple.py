@@ -2,7 +2,6 @@
 # Licensed under the MIT License.
 from opentelemetry import metrics
 from opentelemetry.sdk.metrics import Counter, MeterProvider
-from opentelemetry.sdk.metrics.export.controller import PushController
 
 from azure_monitor import AzureMonitorMetricsExporter
 
@@ -11,7 +10,7 @@ meter = metrics.get_meter(__name__)
 exporter = AzureMonitorMetricsExporter(
     connection_string="InstrumentationKey=<INSTRUMENTATION KEY HERE>"
 )
-controller = PushController(meter, exporter, 5)
+metrics.get_meter_provider().start_pipeline(meter, exporter, 5)
 
 requests_counter = meter.create_metric(
     name="requests",

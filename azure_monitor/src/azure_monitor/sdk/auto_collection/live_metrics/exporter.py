@@ -86,7 +86,7 @@ class LiveMetricsExporter(MetricsExporter):
             else:
                 # sum or lv
                 value = metric_record.aggregator.checkpoint
-            if not value:
+            if value is None:
                 logger.warning("Value is none. Default to 0.")
                 value = 0
             envelope.metrics.append(
