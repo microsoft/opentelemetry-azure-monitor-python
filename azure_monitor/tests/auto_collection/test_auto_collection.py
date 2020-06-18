@@ -32,9 +32,7 @@ class TestAutoCollection(unittest.TestCase):
     @mock.patch(
         "azure_monitor.sdk.auto_collection.RequestMetrics", autospec=True
     )
-    def test_constructor(
-        self, mock_requests, mock_performance
-    ):
+    def test_constructor(self, mock_requests, mock_performance):
         """Test the constructor."""
 
         AutoCollection(
