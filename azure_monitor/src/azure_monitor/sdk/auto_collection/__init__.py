@@ -44,7 +44,4 @@ class AutoCollection:
     ):
         col_type = AutoCollectionType.STANDARD_METRICS
         self._performance_metrics = PerformanceMetrics(meter, labels, col_type)
-        self._dependency_metrics = DependencyMetrics(
-            meter, labels, span_processor
-        )
         self._request_metrics = RequestMetrics(meter, labels, span_processor)

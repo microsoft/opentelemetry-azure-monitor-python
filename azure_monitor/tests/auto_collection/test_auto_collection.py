@@ -30,9 +30,6 @@ class TestAutoCollection(unittest.TestCase):
         "azure_monitor.sdk.auto_collection.PerformanceMetrics", autospec=True
     )
     @mock.patch(
-        "azure_monitor.sdk.auto_collection.DependencyMetrics", autospec=True
-    )
-    @mock.patch(
         "azure_monitor.sdk.auto_collection.RequestMetrics", autospec=True
     )
     def test_constructor(
@@ -46,11 +43,8 @@ class TestAutoCollection(unittest.TestCase):
             span_processor=self._span_processor,
         )
         self.assertEqual(mock_performance.called, True)
-        self.assertEqual(mock_dependencies.called, True)
         self.assertEqual(mock_requests.called, True)
         self.assertEqual(mock_performance.call_args[0][0], self._meter)
         self.assertEqual(mock_performance.call_args[0][1], self._test_labels)
-        self.assertEqual(mock_dependencies.call_args[0][0], self._meter)
-        self.assertEqual(mock_dependencies.call_args[0][1], self._test_labels)
         self.assertEqual(mock_requests.call_args[0][0], self._meter)
         self.assertEqual(mock_requests.call_args[0][1], self._test_labels)
