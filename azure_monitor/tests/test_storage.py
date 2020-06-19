@@ -32,6 +32,7 @@ def throw(exc_type, *args, **kwargs):
 
     return func
 
+
 # pylint: disable=no-self-use
 class TestLocalFileBlob(unittest.TestCase):
     def test_delete(self):

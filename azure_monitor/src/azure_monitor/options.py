@@ -102,7 +102,7 @@ class ExporterOptions(BaseObject):
         if self.storage_path is None:
             temp_suffix = self.instrumentation_key or ""
             self.storage_path = os.path.join(
-                tempfile.gettempdir(), temp_suffix + TEMPDIR_SUFFIX
+                tempfile.gettempdir(), TEMPDIR_PREFIX + temp_suffix
             )
 
     def _validate_instrumentation_key(self) -> None:
