@@ -3,6 +3,7 @@
 import os
 import re
 import sys
+import tempfile
 import typing
 
 from azure_monitor.protocol import BaseObject
@@ -102,10 +103,8 @@ class ExporterOptions(BaseObject):
         if self.storage_path is None:
             TEMPDIR_SUFFIX = self.instrumentation_key or ""
             self.storage_path = os.path.join(
-                    tempfile.gettempdir(),
-                    TEMPDIR_PREFIX + TEMPDIR_SUFFIX
-                )
-
+                tempfile.gettempdir(), TEMPDIR_PREFIX + TEMPDIR_SUFFIX
+            )
 
     def _validate_instrumentation_key(self) -> None:
         """Validates the instrumentation key used for Azure Monitor.

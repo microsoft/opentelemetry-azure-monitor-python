@@ -124,11 +124,13 @@ class BaseExporter:
                 )
             except requests.Timeout:
                 logger.warning(
-                    'Request time out. Ingestion may be backed up. Retrying.')
+                    "Request time out. Ingestion may be backed up. Retrying."
+                )
                 return ExportResult.FAILED_RETRYABLE
             except Exception as ex:
                 logger.warning(
-                    'Retrying due to transient client side error %s.', ex)
+                    "Retrying due to transient client side error %s.", ex
+                )
                 # client side error (retryable)
                 return ExportResult.FAILED_RETRYABLE
 
