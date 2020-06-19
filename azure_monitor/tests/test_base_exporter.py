@@ -3,11 +3,11 @@
 
 import json
 import os
-import requests
 import shutil
 import unittest
 from unittest import mock
 
+import requests
 from opentelemetry.sdk.metrics.export import MetricsExportResult
 from opentelemetry.sdk.trace.export import SpanExportResult
 
