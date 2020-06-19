@@ -104,6 +104,7 @@ class BaseExporter:
 
     # pylint: disable=too-many-branches
     # pylint: disable=too-many-nested-blocks
+    # pylint: disable=too-many-return-statements
     def _transmit(self, envelopes: typing.List[Envelope]) -> ExportResult:
         """
         Transmit the data envelopes to the ingestion service.

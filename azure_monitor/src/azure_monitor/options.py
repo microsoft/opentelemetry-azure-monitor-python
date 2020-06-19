@@ -2,7 +2,6 @@
 # Licensed under the MIT License.
 import os
 import re
-import sys
 import tempfile
 import typing
 
@@ -101,9 +100,9 @@ class ExporterOptions(BaseObject):
 
         # storage path
         if self.storage_path is None:
-            TEMPDIR_SUFFIX = self.instrumentation_key or ""
+            temp_suffix = self.instrumentation_key or ""
             self.storage_path = os.path.join(
-                tempfile.gettempdir(), TEMPDIR_PREFIX + TEMPDIR_SUFFIX
+                tempfile.gettempdir(), temp_suffix + TEMPDIR_SUFFIX
             )
 
     def _validate_instrumentation_key(self) -> None:
