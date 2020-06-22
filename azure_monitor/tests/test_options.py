@@ -245,7 +245,7 @@ class TestOptions(unittest.TestCase):
         options = ExporterOptions(
             connection_string=None,
             instrumentation_key=self._valid_instrumentation_key,
-            proxies='{}'
+            proxies="{}",
         )
         self.assertEqual(options.proxies, "{}")
 
@@ -253,7 +253,7 @@ class TestOptions(unittest.TestCase):
         options = ExporterOptions(
             connection_string=None,
             instrumentation_key=self._valid_instrumentation_key,
-            proxies='{"https": "https://test-proxy.com"}'
+            proxies='{"https": "https://test-proxy.com"}',
         )
         self.assertEqual(
             options.proxies, '{"https": "https://test-proxy.com"}'
