@@ -242,18 +242,19 @@ class TestOptions(unittest.TestCase):
         )
 
     def test_process_options_proxies_default(self):
-        options = ExporterOptions()
-        options.proxies = "{}"
-        common.process_options(options)
-
+        options = ExporterOptions(
+            connection_string=None,
+            instrumentation_key=self._valid_instrumentation_key,
+            proxies='{}'
+        )
         self.assertEqual(options.proxies, "{}")
 
     def test_process_options_proxies_set_proxies(self):
-        options = ExporterOptions()
-        options.connection_string = None
-        options.proxies = '{"https": "https://test-proxy.com"}'
-        common.process_options(options)
-
+        options = ExporterOptions(
+            connection_string=None,
+            instrumentation_key=self._valid_instrumentation_key,
+            proxies='{"https": "https://test-proxy.com"}'
+        )
         self.assertEqual(
             options.proxies, '{"https": "https://test-proxy.com"}'
         )
