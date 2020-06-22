@@ -37,6 +37,7 @@ class ExporterOptions(BaseObject):
 
     __slots__ = (
         "connection_string",
+        "endpoint",
         "instrumentation_key",
         "proxies",
         "storage_maintenance_period",
@@ -109,8 +110,7 @@ class ExporterOptions(BaseObject):
 
         # proxies
         if self.proxies is None:
-            self.proxies = '{}'
-
+            self.proxies = "{}"
 
     def _validate_instrumentation_key(self) -> None:
         """Validates the instrumentation key used for Azure Monitor.

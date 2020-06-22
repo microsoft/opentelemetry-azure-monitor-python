@@ -255,8 +255,7 @@ class TestOptions(unittest.TestCase):
         common.process_options(options)
 
         self.assertEqual(
-            options.proxies,
-            '{"https": "https://test-proxy.com"}'
+            options.proxies, '{"https": "https://test-proxy.com"}'
         )
 
     def test_parse_connection_string_invalid(self):

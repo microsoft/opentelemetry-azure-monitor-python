@@ -3,7 +3,7 @@
 ## Unreleased
 
 - Implement proxies in exporter configuration
-- ([#92](https://github.com/microsoft/opentelemetry-azure-monitor-python/pull/92))
+- ([#101](https://github.com/microsoft/opentelemetry-azure-monitor-python/pull/101))
 - Remove dependency metrics from auto-collection
 - ([#92](https://github.com/microsoft/opentelemetry-azure-monitor-python/pull/92))
 
