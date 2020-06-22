@@ -121,6 +121,7 @@ class BaseExporter:
                         "Content-Type": "application/json; charset=utf-8",
                     },
                     timeout=self.options.timeout,
+                    proxies=json.loads(self.options.proxies),
                 )
             except Exception as ex:
                 logger.warning("Transient client side error: %s.", ex)
