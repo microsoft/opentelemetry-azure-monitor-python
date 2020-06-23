@@ -10,7 +10,6 @@ from opentelemetry.sdk.metrics import UpDownSumObserver
 from azure_monitor.sdk.auto_collection.metrics_span_processor import (
     AzureMetricsSpanProcessor,
 )
-
 from azure_monitor.sdk.auto_collection.utils import AutoCollectionType
 
 logger = logging.getLogger(__name__)

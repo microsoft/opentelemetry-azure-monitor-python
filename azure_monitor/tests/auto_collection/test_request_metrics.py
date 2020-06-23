@@ -40,9 +40,9 @@ class TestRequestMetrics(unittest.TestCase):
         )
         self.assertEqual(request_metrics_collector._meter, mock_meter)
         self.assertEqual(request_metrics_collector._labels, self._test_labels)
-        self.assertEqual(mock_meter.register_observer.call_count, 3)
+        self.assertEqual(mock_meter.register_observer.call_count, 2)
         create_metric_calls = mock_meter.register_observer.call_args_list
-        create_metric_calls[1].assert_called_with(
+        create_metric_calls[0].assert_called_with(
             callback=request_metrics_collector._track_request_duration,
             name="\\ASP.NET Applications(??APP_W3SVC_PROC??)\\Request Execution Time",
             description="Incoming Requests Average Execution Time",
@@ -50,7 +50,7 @@ class TestRequestMetrics(unittest.TestCase):
             value_type=int,
         )
 
-        create_metric_calls[2].assert_called_with(
+        create_metric_calls[1].assert_called_with(
             callback=request_metrics_collector._track_request_rate,
             name="\\ASP.NET Applications(??APP_W3SVC_PROC??)\\Requests/Sec",
             description="Incoming Requests Rate",
@@ -135,6 +135,7 @@ class TestRequestMetrics(unittest.TestCase):
             meter=self._meter,
             labels=self._test_labels,
             span_processor=self._span_processor,
+            collection_type=AutoCollectionType.STANDARD_METRICS,
         )
         request_metrics.requests_map["last_time"] = None
         obs = Observer(
@@ -156,6 +157,7 @@ class TestRequestMetrics(unittest.TestCase):
             meter=self._meter,
             labels=self._test_labels,
             span_processor=self._span_processor,
+            collection_type=AutoCollectionType.STANDARD_METRICS,
         )
         time_mock.time.return_value = 100
         request_metrics.requests_map["last_rate"] = 5.0
