@@ -245,18 +245,18 @@ class TestOptions(unittest.TestCase):
         options = ExporterOptions(
             connection_string=None,
             instrumentation_key=self._valid_instrumentation_key,
-            proxies="{}",
+            proxies={},
         )
-        self.assertEqual(options.proxies, "{}")
+        self.assertEqual(options.proxies, {})
 
     def test_process_options_proxies_set_proxies(self):
         options = ExporterOptions(
             connection_string=None,
             instrumentation_key=self._valid_instrumentation_key,
-            proxies='{"https": "https://test-proxy.com"}',
+            proxies={"https": "https://test-proxy.com"},
         )
         self.assertEqual(
-            options.proxies, '{"https": "https://test-proxy.com"}'
+            options.proxies, {"https": "https://test-proxy.com"}
         )
 
     def test_parse_connection_string_invalid(self):

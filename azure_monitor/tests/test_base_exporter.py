@@ -67,7 +67,7 @@ class TestBaseExporter(unittest.TestCase):
         """Test the constructor."""
         base = BaseExporter(
             instrumentation_key="4321abcd-5678-4efa-8abc-1234567890ab",
-            proxies='{"https":"https://test-proxy.com"}',
+            proxies={"https":"https://test-proxy.com"},
             storage_maintenance_period=2,
             storage_max_size=3,
             storage_path=os.path.join(TEST_FOLDER, self.id()),
@@ -80,7 +80,7 @@ class TestBaseExporter(unittest.TestCase):
             "4321abcd-5678-4efa-8abc-1234567890ab",
         )
         self.assertEqual(
-            base.options.proxies, '{"https":"https://test-proxy.com"}',
+            base.options.proxies, {"https":"https://test-proxy.com"},
         )
         self.assertEqual(base.options.storage_maintenance_period, 2)
         self.assertEqual(base.options.storage_max_size, 3)
