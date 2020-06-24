@@ -95,15 +95,16 @@ class BaseExporter:
             # give a few more seconds for blob lease operation
             # to reduce the chance of race (for perf consideration)
             if blob.lease(self.options.timeout + 5):
-                envelopes = blob.get()  # TODO: handle error
+                envelopes = blob.get()
                 result = self._transmit(envelopes)
                 if result == ExportResult.FAILED_RETRYABLE:
                     blob.lease(1)
                 else:
-                    blob.delete(silent=True)
+                    blob.delete()
 
     # pylint: disable=too-many-branches
     # pylint: disable=too-many-nested-blocks
+    # pylint: disable=too-many-return-statements
     def _transmit(self, envelopes: typing.List[Envelope]) -> ExportResult:
         """
         Transmit the data envelopes to the ingestion service.
@@ -122,8 +123,16 @@ class BaseExporter:
                     },
                     timeout=self.options.timeout,
                 )
+            except requests.Timeout:
+                logger.warning(
+                    "Request time out. Ingestion may be backed up. Retrying."
+                )
+                return ExportResult.FAILED_RETRYABLE
             except Exception as ex:
-                logger.warning("Transient client side error: %s.", ex)
+                logger.warning(
+                    "Retrying due to transient client side error %s.", ex
+                )
+                # client side error (retryable)
                 return ExportResult.FAILED_RETRYABLE
 
             text = "N/A"
