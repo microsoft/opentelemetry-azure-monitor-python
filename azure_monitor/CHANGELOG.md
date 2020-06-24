@@ -5,7 +5,11 @@
 - Implement proxies in exporter configuration
 - ([#101](https://github.com/microsoft/opentelemetry-azure-monitor-python/pull/101))
 - Remove dependency metrics from auto-collection
-- ([#92](https://github.com/microsoft/opentelemetry-azure-monitor-python/pull/92))
+  ([#92](https://github.com/microsoft/opentelemetry-azure-monitor-python/pull/92))
+- Change default local storage directory
+  ([#100](https://github.com/microsoft/opentelemetry-azure-monitor-python/pull/100))
+- Remove request failed per second metrics from auto-collection
+  ([#102](https://github.com/microsoft/opentelemetry-azure-monitor-python/pull/102))
 
 ## 0.3b.1
 Released 2020-05-21

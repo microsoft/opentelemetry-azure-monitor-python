@@ -2,13 +2,14 @@
 # Licensed under the MIT License.
 import os
 import re
-import sys
+import tempfile
 import typing
 
 from azure_monitor.protocol import BaseObject
 
 INGESTION_ENDPOINT = "ingestionendpoint"
 INSTRUMENTATION_KEY = "instrumentationkey"
+TEMPDIR_PREFIX = "opentelemetry-python-"
 
 # Validate UUID format
 # Specs taken from https://tools.ietf.org/html/rfc4122
@@ -58,13 +59,6 @@ class ExporterOptions(BaseObject):
         storage_retention_period: int = 7 * 24 * 60 * 60,
         timeout: int = 10.0,  # networking timeout in seconds
     ) -> None:
-        if storage_path is None:
-            storage_path = os.path.join(
-                os.path.expanduser("~"),
-                ".opentelemetry",
-                ".azure",
-                os.path.basename(sys.argv[0]) or ".console",
-            )
         self.connection_string = connection_string
         self.instrumentation_key = instrumentation_key
         self.proxies = proxies
@@ -110,7 +104,14 @@ class ExporterOptions(BaseObject):
 
         # proxies
         if self.proxies is None:
-            self.proxies = "{}"
+            self.proxies = {}
+
+        # storage path
+        if self.storage_path is None:
+            temp_suffix = self.instrumentation_key or ""
+            self.storage_path = os.path.join(
+                tempfile.gettempdir(), TEMPDIR_PREFIX + temp_suffix
+            )
 
     def _validate_instrumentation_key(self) -> None:
         """Validates the instrumentation key used for Azure Monitor.
