@@ -122,6 +122,7 @@ class BaseExporter:
                         "Content-Type": "application/json; charset=utf-8",
                     },
                     timeout=self.options.timeout,
+                    proxies=self.options.proxies,
                 )
             except requests.Timeout:
                 logger.warning(

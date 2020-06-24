@@ -28,6 +28,7 @@ class ExporterOptions(BaseObject):
     Args:
         connection_string: Azure Connection String.
         instrumentation_key: Azure Instrumentation Key.
+        proxies: Proxies to pass Azure Monitor request through.
         storage_maintenance_period: Local storage maintenance interval in seconds.
         storage_max_size: Local storage maximum size in bytes.
         storage_path: Local storage file path.
@@ -39,6 +40,7 @@ class ExporterOptions(BaseObject):
         "connection_string",
         "endpoint",
         "instrumentation_key",
+        "proxies",
         "storage_maintenance_period",
         "storage_max_size",
         "storage_path",
@@ -50,6 +52,7 @@ class ExporterOptions(BaseObject):
         self,
         connection_string: str = None,
         instrumentation_key: str = None,
+        proxies: typing.Dict[str, str] = None,
         storage_maintenance_period: int = 60,
         storage_max_size: int = 50 * 1024 * 1024,
         storage_path: str = None,
@@ -58,6 +61,7 @@ class ExporterOptions(BaseObject):
     ) -> None:
         self.connection_string = connection_string
         self.instrumentation_key = instrumentation_key
+        self.proxies = proxies
         self.storage_maintenance_period = storage_maintenance_period
         self.storage_max_size = storage_max_size
         self.storage_path = storage_path
@@ -68,7 +72,7 @@ class ExporterOptions(BaseObject):
         self._validate_instrumentation_key()
 
     def _initialize(self) -> None:
-        # cs and ikey
+        # connection string and ikey
         code_cs = parse_connection_string(self.connection_string)
         code_ikey = self.instrumentation_key
         env_cs = parse_connection_string(
@@ -97,6 +101,10 @@ class ExporterOptions(BaseObject):
             or "https://dc.services.visualstudio.com"
         )
         self.endpoint = endpoint + "/v2/track"
+
+        # proxies
+        if self.proxies is None:
+            self.proxies = {}
 
         # storage path
         if self.storage_path is None:

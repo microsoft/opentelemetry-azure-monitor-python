@@ -241,6 +241,22 @@ class TestOptions(unittest.TestCase):
             options.endpoint, "https://dc.services.visualstudio.com/v2/track"
         )
 
+    def test_process_options_proxies_default(self):
+        options = ExporterOptions(
+            connection_string=None,
+            instrumentation_key=self._valid_instrumentation_key,
+            proxies={},
+        )
+        self.assertEqual(options.proxies, {})
+
+    def test_process_options_proxies_set_proxies(self):
+        options = ExporterOptions(
+            connection_string=None,
+            instrumentation_key=self._valid_instrumentation_key,
+            proxies={"https": "https://test-proxy.com"},
+        )
+        self.assertEqual(options.proxies, {"https": "https://test-proxy.com"})
+
     def test_parse_connection_string_invalid(self):
         self.assertRaises(
             ValueError, lambda: ExporterOptions(connection_string="asd")
