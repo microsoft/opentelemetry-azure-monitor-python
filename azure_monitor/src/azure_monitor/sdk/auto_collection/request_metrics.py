@@ -10,6 +10,7 @@ from opentelemetry.sdk.metrics import UpDownSumObserver
 from azure_monitor.sdk.auto_collection.metrics_span_processor import (
     AzureMetricsSpanProcessor,
 )
+from azure_monitor.sdk.auto_collection.utils import AutoCollectionType
 
 logger = logging.getLogger(__name__)
 requests_map = dict()
@@ -32,19 +33,21 @@ class RequestMetrics:
         meter: Meter,
         labels: Dict[str, str],
         span_processor: AzureMetricsSpanProcessor,
+        collection_type: AutoCollectionType,
     ):
         self._meter = meter
         self._labels = labels
         self._span_processor = span_processor
 
-        meter.register_observer(
-            callback=self._track_request_failed_rate,
-            name="\\ApplicationInsights\\Requests Failed/Sec",
-            description="Incoming Requests Failed Rate",
-            unit="rps",
-            value_type=float,
-            observer_type=UpDownSumObserver,
-        )
+        if collection_type == AutoCollectionType.LIVE_METRICS:
+            meter.register_observer(
+                callback=self._track_request_failed_rate,
+                name="\\ApplicationInsights\\Requests Failed/Sec",
+                description="Incoming Requests Failed Rate",
+                unit="rps",
+                value_type=float,
+                observer_type=UpDownSumObserver,
+            )
         meter.register_observer(
             callback=self._track_request_duration,
             name="\\ASP.NET Applications(??APP_W3SVC_PROC??)\\Request Execution Time",
