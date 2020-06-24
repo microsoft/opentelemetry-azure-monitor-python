@@ -14,8 +14,8 @@ from opentelemetry.sdk.metrics import (
 )
 from opentelemetry.sdk.metrics.export import MetricRecord, MetricsExportResult
 from opentelemetry.sdk.metrics.export.aggregate import (
-    SumAggregator,
     MinMaxSumCountAggregator,
+    SumAggregator,
     ValueObserverAggregator,
 )
 from opentelemetry.sdk.util import ns_to_iso_str
