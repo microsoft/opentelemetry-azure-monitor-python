@@ -255,9 +255,7 @@ class TestOptions(unittest.TestCase):
             instrumentation_key=self._valid_instrumentation_key,
             proxies={"https": "https://test-proxy.com"},
         )
-        self.assertEqual(
-            options.proxies, {"https": "https://test-proxy.com"}
-        )
+        self.assertEqual(options.proxies, {"https": "https://test-proxy.com"})
 
     def test_parse_connection_string_invalid(self):
         self.assertRaises(

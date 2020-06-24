@@ -14,7 +14,7 @@ from opentelemetry.sdk.metrics import (
 )
 from opentelemetry.sdk.metrics.export import MetricRecord, MetricsExportResult
 from opentelemetry.sdk.metrics.export.aggregate import (
-    CounterAggregator,
+    SumAggregator,
     MinMaxSumCountAggregator,
     ValueObserverAggregator,
 )
@@ -79,7 +79,7 @@ class TestLiveMetricsExporter(unittest.TestCase):
     def test_export(self):
         """Test export."""
         record = MetricRecord(
-            self._test_metric, self._test_labels, CounterAggregator()
+            self._test_metric, self._test_labels, SumAggregator()
         )
         exporter = LiveMetricsExporter(
             instrumentation_key=self._instrumentation_key,
@@ -96,7 +96,7 @@ class TestLiveMetricsExporter(unittest.TestCase):
 
     def test_export_failed(self):
         record = MetricRecord(
-            self._test_metric, self._test_labels, CounterAggregator()
+            self._test_metric, self._test_labels, SumAggregator()
         )
         exporter = LiveMetricsExporter(
             instrumentation_key=self._instrumentation_key,
@@ -113,7 +113,7 @@ class TestLiveMetricsExporter(unittest.TestCase):
 
     def test_export_exception(self):
         record = MetricRecord(
-            self._test_metric, self._test_labels, CounterAggregator()
+            self._test_metric, self._test_labels, SumAggregator()
         )
         exporter = LiveMetricsExporter(
             instrumentation_key=self._instrumentation_key,
@@ -148,7 +148,7 @@ class TestLiveMetricsExporter(unittest.TestCase):
         self.assertEqual(envelope.metrics[0].weight, 1)
 
     def test_live_metric_envelope_counter(self):
-        aggregator = CounterAggregator()
+        aggregator = SumAggregator()
         aggregator.update(123)
         aggregator.take_checkpoint()
         record = MetricRecord(self._test_metric, self._test_labels, aggregator)
@@ -184,7 +184,7 @@ class TestLiveMetricsExporter(unittest.TestCase):
         self.assertEqual(envelope.metrics[0].weight, 1)
 
     def test_live_metric_envelope_documents(self):
-        aggregator = CounterAggregator()
+        aggregator = SumAggregator()
         aggregator.update(123)
         aggregator.take_checkpoint()
         record = MetricRecord(self._test_metric, self._test_labels, aggregator)

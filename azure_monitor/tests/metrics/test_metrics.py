@@ -14,7 +14,7 @@ from opentelemetry.sdk.metrics import (
 )
 from opentelemetry.sdk.metrics.export import MetricRecord, MetricsExportResult
 from opentelemetry.sdk.metrics.export.aggregate import (
-    CounterAggregator,
+    SumAggregator,
     MinMaxSumCountAggregator,
     ValueObserverAggregator,
 )
@@ -109,7 +109,7 @@ class TestAzureMetricsExporter(unittest.TestCase):
     )
     def test_export(self, mte, transmit):
         record = MetricRecord(
-            CounterAggregator(), self._test_labels, self._test_metric
+            SumAggregator(), self._test_labels, self._test_metric
         )
         exporter = self._exporter
         mte.return_value = Envelope()
@@ -125,7 +125,7 @@ class TestAzureMetricsExporter(unittest.TestCase):
     )
     def test_export_failed_retryable(self, mte, transmit):
         record = MetricRecord(
-            CounterAggregator(), self._test_labels, self._test_metric
+            SumAggregator(), self._test_labels, self._test_metric
         )
         exporter = self._exporter
         transmit.return_value = ExportResult.FAILED_RETRYABLE
@@ -145,7 +145,7 @@ class TestAzureMetricsExporter(unittest.TestCase):
     )
     def test_export_exception(self, mte, transmit, logger_mock):
         record = MetricRecord(
-            CounterAggregator(), self._test_labels, self._test_metric
+            SumAggregator(), self._test_labels, self._test_metric
         )
         exporter = self._exporter
         mte.return_value = Envelope()
@@ -159,7 +159,7 @@ class TestAzureMetricsExporter(unittest.TestCase):
         self.assertIsNone(exporter._metric_to_envelope(None))
 
     def test_metric_to_envelope(self):
-        aggregator = CounterAggregator()
+        aggregator = SumAggregator()
         aggregator.update(123)
         aggregator.take_checkpoint()
         record = MetricRecord(self._test_metric, self._test_labels, aggregator)
