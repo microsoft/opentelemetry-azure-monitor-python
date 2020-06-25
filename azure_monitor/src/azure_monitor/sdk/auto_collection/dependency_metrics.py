@@ -21,7 +21,7 @@ def dependency_patch(*args, **kwargs) -> None:
 
     try:
         result = ORIGINAL_REQUEST(*args, **kwargs)
-    except Exception as exc:
+    except Exception as exc: # pylint: disable=broad-except
         exception = exc
         result = getattr(exc, "response", None)
     end_time = time.time()
