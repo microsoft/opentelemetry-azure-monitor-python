@@ -14,7 +14,6 @@ from azure_monitor.sdk.auto_collection.metrics_span_processor import (
 
 # pylint: disable=protected-access
 class TestMetricsSpanProcessor(unittest.TestCase):
-
     def test_document_collection(self):
         """Test the document collection."""
         span_processor = AzureMetricsSpanProcessor()

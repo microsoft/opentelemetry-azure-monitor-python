@@ -10,7 +10,6 @@ from opentelemetry import context
 from opentelemetry.metrics import Meter, Observer
 from opentelemetry.sdk.metrics import UpDownSumObserver
 
-
 _dependency_lock = threading.Lock()
 logger = logging.getLogger(__name__)
 dependency_map = dict()
@@ -46,7 +45,7 @@ def dependency_patch(*args, **kwargs) -> None:
                 ) or exception is not None:
                     failed_count = dependency_map.get("failed_count", 0)
                     dependency_map["failed_count"] = failed_count + 1
-            except Exception as exc:
+            except Exception:
                 logger.warning("Error handling failed request metrics.")
     return result
 

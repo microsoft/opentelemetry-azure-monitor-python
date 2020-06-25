@@ -13,6 +13,7 @@ from azure_monitor.sdk.auto_collection.utils import AutoCollectionType
 
 ORIGINAL_CONS = HTTPServer.__init__
 
+
 # pylint: disable=protected-access
 class TestRequestMetrics(unittest.TestCase):
     @classmethod

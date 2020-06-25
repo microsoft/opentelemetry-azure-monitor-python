@@ -14,6 +14,7 @@ from azure_monitor.sdk.auto_collection import dependency_metrics
 ORIGINAL_FUNCTION = requests.Session.request
 ORIGINAL_CONS = HTTPServer.__init__
 
+
 # pylint: disable=protected-access
 class TestDependencyMetrics(unittest.TestCase):
     @classmethod
@@ -152,8 +153,7 @@ class TestDependencyMetrics(unittest.TestCase):
     def test_track_failed_dependency_rate_time_none(self, time_mock):
         time_mock.time.return_value = 100
         metrics_collector = dependency_metrics.DependencyMetrics(
-            meter=self._meter,
-            labels=self._test_labels,
+            meter=self._meter, labels=self._test_labels
         )
         dependency_metrics.dependency_map["last_time"] = None
         obs = Observer(
@@ -173,8 +173,7 @@ class TestDependencyMetrics(unittest.TestCase):
     def test_track_failed_dependency_rate_error(self, time_mock):
         time_mock.time.return_value = 100
         metrics_collector = dependency_metrics.DependencyMetrics(
-            meter=self._meter,
-            labels=self._test_labels,
+            meter=self._meter, labels=self._test_labels
         )
         dependency_metrics.dependency_map["last_time"] = 100
         dependency_metrics.dependency_map["last_result"] = 5.0
@@ -193,8 +192,7 @@ class TestDependencyMetrics(unittest.TestCase):
 
     def test_track_dependency_duration(self):
         metrics_collector = dependency_metrics.DependencyMetrics(
-            meter=self._meter,
-            labels=self._test_labels,
+            meter=self._meter, labels=self._test_labels
         )
         dependency_metrics.dependency_map["duration"] = 100
         dependency_metrics.dependency_map["count"] = 10
@@ -214,8 +212,7 @@ class TestDependencyMetrics(unittest.TestCase):
 
     def test_track_dependency_duration_error(self):
         metrics_collector = dependency_metrics.DependencyMetrics(
-            meter=self._meter,
-            labels=self._test_labels,
+            meter=self._meter, labels=self._test_labels
         )
         dependency_metrics.dependency_map["duration"] = 100
         dependency_metrics.dependency_map["count"] = 10

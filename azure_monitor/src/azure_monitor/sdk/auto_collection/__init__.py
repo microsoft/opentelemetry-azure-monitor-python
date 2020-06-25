@@ -36,13 +36,7 @@ class AutoCollection:
         labels: Dictionary of labels
     """
 
-    def __init__(
-        self,
-        meter: Meter,
-        labels: Dict[str, str],
-    ):
+    def __init__(self, meter: Meter, labels: Dict[str, str]):
         col_type = AutoCollectionType.STANDARD_METRICS
         self._performance_metrics = PerformanceMetrics(meter, labels, col_type)
-        self._request_metrics = RequestMetrics(
-            meter, labels, col_type
-        )
+        self._request_metrics = RequestMetrics(meter, labels, col_type)
