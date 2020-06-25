@@ -2,16 +2,17 @@
 # Licensed under the MIT License.
 
 import unittest
+from http.server import HTTPServer
 from unittest import mock
 
+import requests
 from opentelemetry import metrics
 from opentelemetry.sdk.metrics import MeterProvider, Observer
 
 from azure_monitor.sdk.auto_collection import dependency_metrics
-from azure_monitor.sdk.auto_collection.metrics_span_processor import (
-    AzureMetricsSpanProcessor,
-)
 
+ORIGINAL_FUNCTION = requests.Session.request
+ORIGINAL_CONS = HTTPServer.__init__
 
 # pylint: disable=protected-access
 class TestDependencyMetrics(unittest.TestCase):
@@ -20,21 +21,22 @@ class TestDependencyMetrics(unittest.TestCase):
         metrics.set_meter_provider(MeterProvider())
         cls._meter = metrics.get_meter(__name__)
         cls._test_labels = {"environment": "staging"}
-        cls._span_processor = AzureMetricsSpanProcessor()
 
     @classmethod
     def tearDown(cls):
+        requests.Session.request = ORIGINAL_FUNCTION
+        dependency_metrics.ORIGINAL_CONSTRUCTOR = ORIGINAL_CONS
         metrics._METER_PROVIDER = None
 
     def setUp(self):
         dependency_metrics.dependency_map.clear()
+        requests.Session.request = ORIGINAL_FUNCTION
+        dependency_metrics.ORIGINAL_CONSTRUCTOR = ORIGINAL_CONS
 
     def test_constructor(self):
         mock_meter = mock.Mock()
         metrics_collector = dependency_metrics.DependencyMetrics(
-            meter=mock_meter,
-            labels=self._test_labels,
-            span_processor=self._span_processor,
+            meter=mock_meter, labels=self._test_labels
         )
         self.assertEqual(metrics_collector._meter, mock_meter)
         self.assertEqual(metrics_collector._labels, self._test_labels)
@@ -67,9 +69,7 @@ class TestDependencyMetrics(unittest.TestCase):
     def test_track_dependency_rate(self, time_mock):
         time_mock.time.return_value = 100
         metrics_collector = dependency_metrics.DependencyMetrics(
-            meter=self._meter,
-            labels=self._test_labels,
-            span_processor=self._span_processor,
+            meter=self._meter, labels=self._test_labels
         )
         obs = Observer(
             callback=metrics_collector._track_dependency_rate,
@@ -80,7 +80,7 @@ class TestDependencyMetrics(unittest.TestCase):
             meter=self._meter,
         )
         dependency_metrics.dependency_map["last_time"] = 98.0
-        self._span_processor.dependency_count = 4
+        dependency_metrics.dependency_map["count"] = 4
         metrics_collector._track_dependency_rate(obs)
         self.assertEqual(
             obs.aggregators[tuple(self._test_labels.items())].current, 2
@@ -90,9 +90,7 @@ class TestDependencyMetrics(unittest.TestCase):
     def test_track_dependency_rate_time_none(self, time_mock):
         time_mock.time.return_value = 100
         metrics_collector = dependency_metrics.DependencyMetrics(
-            meter=self._meter,
-            labels=self._test_labels,
-            span_processor=self._span_processor,
+            meter=self._meter, labels=self._test_labels
         )
         dependency_metrics.dependency_map["last_time"] = None
         obs = Observer(
@@ -112,9 +110,7 @@ class TestDependencyMetrics(unittest.TestCase):
     def test_track_dependency_rate_error(self, time_mock):
         time_mock.time.return_value = 100
         metrics_collector = dependency_metrics.DependencyMetrics(
-            meter=self._meter,
-            labels=self._test_labels,
-            span_processor=self._span_processor,
+            meter=self._meter, labels=self._test_labels
         )
         dependency_metrics.dependency_map["last_time"] = 100
         dependency_metrics.dependency_map["last_result"] = 5.0
@@ -135,9 +131,7 @@ class TestDependencyMetrics(unittest.TestCase):
     def test_track_failed_dependency_rate(self, time_mock):
         time_mock.time.return_value = 100
         metrics_collector = dependency_metrics.DependencyMetrics(
-            meter=self._meter,
-            labels=self._test_labels,
-            span_processor=self._span_processor,
+            meter=self._meter, labels=self._test_labels
         )
         obs = Observer(
             callback=metrics_collector._track_failure_rate,
@@ -148,7 +142,7 @@ class TestDependencyMetrics(unittest.TestCase):
             meter=self._meter,
         )
         dependency_metrics.dependency_map["last_time"] = 98
-        self._span_processor.failed_dependency_count = 4
+        dependency_metrics.dependency_map["failed_count"] = 4
         metrics_collector._track_failure_rate(obs)
         self.assertEqual(
             obs.aggregators[tuple(self._test_labels.items())].current, 2.0
@@ -160,7 +154,6 @@ class TestDependencyMetrics(unittest.TestCase):
         metrics_collector = dependency_metrics.DependencyMetrics(
             meter=self._meter,
             labels=self._test_labels,
-            span_processor=self._span_processor,
         )
         dependency_metrics.dependency_map["last_time"] = None
         obs = Observer(
@@ -182,7 +175,6 @@ class TestDependencyMetrics(unittest.TestCase):
         metrics_collector = dependency_metrics.DependencyMetrics(
             meter=self._meter,
             labels=self._test_labels,
-            span_processor=self._span_processor,
         )
         dependency_metrics.dependency_map["last_time"] = 100
         dependency_metrics.dependency_map["last_result"] = 5.0
@@ -203,10 +195,9 @@ class TestDependencyMetrics(unittest.TestCase):
         metrics_collector = dependency_metrics.DependencyMetrics(
             meter=self._meter,
             labels=self._test_labels,
-            span_processor=self._span_processor,
         )
-        self._span_processor.dependency_duration = 100
-        self._span_processor.dependency_count = 10
+        dependency_metrics.dependency_map["duration"] = 100
+        dependency_metrics.dependency_map["count"] = 10
         dependency_metrics.dependency_map["last_count"] = 5
         obs = Observer(
             callback=metrics_collector._track_dependency_duration,
@@ -225,10 +216,9 @@ class TestDependencyMetrics(unittest.TestCase):
         metrics_collector = dependency_metrics.DependencyMetrics(
             meter=self._meter,
             labels=self._test_labels,
-            span_processor=self._span_processor,
         )
-        self._span_processor.dependency_duration = 100
-        self._span_processor.dependency_count = 10
+        dependency_metrics.dependency_map["duration"] = 100
+        dependency_metrics.dependency_map["count"] = 10
         dependency_metrics.dependency_map["last_count"] = 10
         obs = Observer(
             callback=metrics_collector._track_dependency_duration,
@@ -242,3 +232,23 @@ class TestDependencyMetrics(unittest.TestCase):
         self.assertEqual(
             obs.aggregators[tuple(self._test_labels.items())].current, 0
         )
+
+    @mock.patch(
+        "azure_monitor.sdk.auto_collection.dependency_metrics.ORIGINAL_REQUEST"
+    )
+    def test_dependency_patch(self, request_mock):
+        session = requests.Session()
+        dependency_metrics.dependency_patch(session)
+        self.assertEqual(dependency_metrics.dependency_map["count"], 1)
+        request_mock.assert_called_with(session)
+
+    @mock.patch(
+        "azure_monitor.sdk.auto_collection.dependency_metrics.ORIGINAL_REQUEST"
+    )
+    @mock.patch("azure_monitor.sdk.auto_collection.dependency_metrics.context")
+    def test_dependency_patch_suppress(self, context_mock, request_mock):
+        context_mock.get_value.return_value = {}
+        session = requests.Session()
+        dependency_metrics.dependency_patch(session)
+        self.assertEqual(dependency_metrics.dependency_map.get("count"), None)
+        request_mock.assert_called_with(session)

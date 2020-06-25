@@ -40,10 +40,9 @@ class AutoCollection:
         self,
         meter: Meter,
         labels: Dict[str, str],
-        span_processor: AzureMetricsSpanProcessor,
     ):
         col_type = AutoCollectionType.STANDARD_METRICS
         self._performance_metrics = PerformanceMetrics(meter, labels, col_type)
         self._request_metrics = RequestMetrics(
-            meter, labels, span_processor, col_type
+            meter, labels, col_type
         )
