@@ -37,7 +37,7 @@ def request_patch(func):
 def send_response_patch(func):
     def wrapper(self, code, message=None):
         func(self, code, message)
-        if code >= 200 and code < 300:
+        if code >= 200 < 300:
             with _requests_lock:
                 # Update Count
                 failed_count = requests_map.get("failed_count", 0)

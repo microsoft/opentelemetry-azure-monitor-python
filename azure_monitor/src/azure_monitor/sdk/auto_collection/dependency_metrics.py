@@ -45,7 +45,7 @@ def dependency_patch(*args, **kwargs) -> None:
                 ) or exception is not None:
                     failed_count = dependency_map.get("failed_count", 0)
                     dependency_map["failed_count"] = failed_count + 1
-            except Exception:
+            except Exception:  # pylint: disable=broad-except
                 logger.warning("Error handling failed request metrics.")
     return result
 
