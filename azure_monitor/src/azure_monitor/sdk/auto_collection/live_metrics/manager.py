@@ -5,6 +5,7 @@ import threading
 import time
 
 from opentelemetry.context import attach, detach, set_value
+from opentelemetry.sdk.metrics import Meter
 from opentelemetry.sdk.metrics.export import MetricsExportResult
 
 from azure_monitor.sdk.auto_collection.live_metrics import utils
@@ -13,6 +14,9 @@ from azure_monitor.sdk.auto_collection.live_metrics.exporter import (
 )
 from azure_monitor.sdk.auto_collection.live_metrics.sender import (
     LiveMetricsSender,
+)
+from azure_monitor.sdk.auto_collection.metrics_span_processor import (
+    AzureMetricsSpanProcessor,
 )
 
 # Interval for failures threshold reached in seconds
@@ -34,14 +38,22 @@ class LiveMetricsManager(threading.Thread):
 
     daemon = True
 
-    def __init__(self, meter, instrumentation_key):
+    def __init__(
+        self,
+        meter: Meter,
+        instrumentation_key: str,
+        span_processor: AzureMetricsSpanProcessor,
+    ):
         super().__init__()
         self.thread_event = threading.Event()
         self.interval = MAIN_INTERVAL
         self._instrumentation_key = instrumentation_key
         self._is_user_subscribed = False
         self._meter = meter
-        self._exporter = LiveMetricsExporter(self._instrumentation_key)
+        self._span_processor = span_processor
+        self._exporter = LiveMetricsExporter(
+            self._instrumentation_key, self._span_processor
+        )
         self._post = None
         self._ping = LiveMetricsPing(self._instrumentation_key)
         self.start()
@@ -57,12 +69,14 @@ class LiveMetricsManager(threading.Thread):
                 # Switch to Post
                 self._ping.shutdown()
                 self._ping = None
+                self._span_processor.is_collecting_documents = True
                 self._post = LiveMetricsPost(
                     self._meter, self._exporter, self._instrumentation_key
                 )
         if self._post:
             if not self._post.is_user_subscribed:
                 # Switch to Ping
+                self._span_processor.is_collecting_documents = False
                 self._post.shutdown()
                 self._post = None
                 self._ping = LiveMetricsPing(self._instrumentation_key)

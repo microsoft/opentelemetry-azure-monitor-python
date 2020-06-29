@@ -33,42 +33,41 @@ def throw(exc_type, *args, **kwargs):
     return func
 
 
+# pylint: disable=no-self-use
 class TestLocalFileBlob(unittest.TestCase):
     def test_delete(self):
         blob = LocalFileBlob(os.path.join(TEST_FOLDER, "foobar"))
-        blob.delete(silent=True)
-        self.assertRaises(Exception, blob.delete)
-        self.assertRaises(Exception, lambda: blob.delete(silent=False))
+        blob.delete()
+        blob.delete()
 
     def test_get(self):
         blob = LocalFileBlob(os.path.join(TEST_FOLDER, "foobar"))
-        self.assertIsNone(blob.get(silent=True))
-        self.assertRaises(Exception, blob.get)
-        self.assertRaises(Exception, lambda: blob.get(silent=False))
+        self.assertIsNone(blob.get())
+        blob.get()
 
     def test_put_error(self):
         blob = LocalFileBlob(os.path.join(TEST_FOLDER, "foobar"))
         with mock.patch("os.rename", side_effect=throw(Exception)):
-            self.assertRaises(Exception, lambda: blob.put([1, 2, 3]))
+            blob.put([1, 2, 3])
 
     def test_put_without_lease(self):
         blob = LocalFileBlob(os.path.join(TEST_FOLDER, "foobar.blob"))
         test_input = (1, 2, 3)
-        blob.delete(silent=True)
+        blob.delete()
         blob.put(test_input)
         self.assertEqual(blob.get(), test_input)
 
     def test_put_with_lease(self):
         blob = LocalFileBlob(os.path.join(TEST_FOLDER, "foobar.blob"))
         test_input = (1, 2, 3)
-        blob.delete(silent=True)
+        blob.delete()
         blob.put(test_input, lease_period=0.01)
         blob.lease(0.01)
         self.assertEqual(blob.get(), test_input)
 
     def test_lease_error(self):
         blob = LocalFileBlob(os.path.join(TEST_FOLDER, "foobar.blob"))
-        blob.delete(silent=True)
+        blob.delete()
         self.assertEqual(blob.lease(0.01), None)
 
 
@@ -105,8 +104,7 @@ class TestLocalFileStorage(unittest.TestCase):
         with LocalFileStorage(os.path.join(TEST_FOLDER, "bar")) as stor:
             self.assertEqual(stor.get().get(), test_input)
             with mock.patch("os.rename", side_effect=throw(Exception)):
-                self.assertIsNone(stor.put(test_input, silent=True))
-                self.assertRaises(Exception, lambda: stor.put(test_input))
+                self.assertIsNone(stor.put(test_input))
 
     def test_put_max_size(self):
         test_input = (1, 2, 3)
@@ -152,25 +150,16 @@ class TestLocalFileStorage(unittest.TestCase):
 
     def test_maintanence_routine(self):
         with mock.patch("os.makedirs") as m:
-            m.return_value = None
-            self.assertRaises(
-                Exception,
-                lambda: LocalFileStorage(os.path.join(TEST_FOLDER, "baz")),
-            )
+            with LocalFileStorage(os.path.join(TEST_FOLDER, "baz")) as stor:
+                m.return_value = None
         with mock.patch("os.makedirs", side_effect=throw(Exception)):
-            self.assertRaises(
-                Exception,
-                lambda: LocalFileStorage(os.path.join(TEST_FOLDER, "baz")),
-            )
+            stor = LocalFileStorage(os.path.join(TEST_FOLDER, "baz"))
+            stor.close()
         with mock.patch("os.listdir", side_effect=throw(Exception)):
-            self.assertRaises(
-                Exception,
-                lambda: LocalFileStorage(os.path.join(TEST_FOLDER, "baz")),
-            )
+            stor = LocalFileStorage(os.path.join(TEST_FOLDER, "baz"))
+            stor.close()
         with LocalFileStorage(os.path.join(TEST_FOLDER, "baz")) as stor:
             with mock.patch("os.listdir", side_effect=throw(Exception)):
-                stor._maintenance_routine(silent=True)
-                self.assertRaises(Exception, stor._maintenance_routine)
+                stor._maintenance_routine()
             with mock.patch("os.path.isdir", side_effect=throw(Exception)):
-                stor._maintenance_routine(silent=True)
-                self.assertRaises(Exception, stor._maintenance_routine)
+                stor._maintenance_routine()

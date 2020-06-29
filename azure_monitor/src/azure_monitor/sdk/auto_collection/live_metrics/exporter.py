@@ -1,11 +1,10 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 #
-import collections
 import logging
 import typing
 
-from opentelemetry.sdk.metrics import Counter, Observer
+from opentelemetry.sdk.metrics import ValueObserver, ValueRecorder
 from opentelemetry.sdk.metrics.export import (
     MetricRecord,
     MetricsExporter,
@@ -16,12 +15,14 @@ from azure_monitor.protocol import (
     Envelope,
     LiveMetric,
     LiveMetricDocument,
-    LiveMetricDocumentProperty,
     LiveMetricEnvelope,
 )
 from azure_monitor.sdk.auto_collection.live_metrics import utils
 from azure_monitor.sdk.auto_collection.live_metrics.sender import (
     LiveMetricsSender,
+)
+from azure_monitor.sdk.auto_collection.metrics_span_processor import (
+    AzureMetricsSpanProcessor,
 )
 
 logger = logging.getLogger(__name__)
@@ -36,14 +37,15 @@ class LiveMetricsExporter(MetricsExporter):
     Export data to Azure Live Metrics service and determine if user is subscribed.
     """
 
-    def __init__(self, instrumentation_key):
+    def __init__(
+        self,
+        instrumentation_key: str,
+        span_processor: AzureMetricsSpanProcessor,
+    ):
         self._instrumentation_key = instrumentation_key
+        self._span_processor = span_processor
         self._sender = LiveMetricsSender(self._instrumentation_key)
         self.subscribed = True
-        self._document_envelopes = collections.deque()
-
-    def add_document(self, envelope: Envelope):
-        self._document_envelopes.append(envelope)
 
     def export(
         self, metric_records: typing.Sequence[MetricRecord]
@@ -74,13 +76,19 @@ class LiveMetricsExporter(MetricsExporter):
         # Add metrics
         for metric_record in metric_records:
             value = 0
-            metric = metric_record.metric
-            if isinstance(metric, Counter):
-                value = metric_record.aggregator.checkpoint
-            elif isinstance(metric, Observer):
+            metric = metric_record.instrument
+            if isinstance(metric, ValueObserver):
+                # mmscl
                 value = metric_record.aggregator.checkpoint.last
-                if not value:
-                    value = 0
+            elif isinstance(metric, ValueRecorder):
+                # mmsc
+                value = metric_record.aggregator.checkpoint.count
+            else:
+                # sum or lv
+                value = metric_record.aggregator.checkpoint
+            if value is None:
+                logger.warning("Value is none. Default to 0.")
+                value = 0
             envelope.metrics.append(
                 LiveMetric(name=metric.name, value=value, weight=1)
             )
@@ -91,23 +99,23 @@ class LiveMetricsExporter(MetricsExporter):
         self,
     ) -> typing.Sequence[LiveMetricDocument]:
         live_metric_documents = []
-        while self._document_envelopes:
-            for envelope in self._document_envelopes.popleft():
-                base_type = envelope.data.baseType
-                if base_type:
-                    document = LiveMetricDocument(
-                        __type=self._get_live_metric_type(base_type),
-                        document_type=self._get_live_metric_document_type(
-                            base_type
-                        ),
-                        properties=self._get_aggregated_properties(envelope),
-                        version="1.0",
-                    )
-                    live_metric_documents.append(document)
-                else:
-                    logger.warning(
-                        "Document type invalid; not sending live metric document"
-                    )
+        while self._span_processor.documents:
+            envelope = self._span_processor.documents.popleft()
+            base_type = envelope.data.base_type
+            if base_type:
+                document = LiveMetricDocument(
+                    quickpulse_type=self._get_live_metric_type(base_type),
+                    document_type=self._get_live_metric_document_type(
+                        base_type
+                    ),
+                    properties=self._get_aggregated_properties(envelope),
+                    version="1.0",
+                )
+                live_metric_documents.append(document)
+            else:
+                logger.warning(
+                    "Document type invalid; not sending live metric document"
+                )
 
         return live_metric_documents
 
@@ -145,25 +153,20 @@ class LiveMetricsExporter(MetricsExporter):
             return "Availability"
         return ""
 
-    def _get_aggregated_properties(
-        self, envelope: Envelope
-    ) -> typing.List[LiveMetricDocumentProperty]:
-
-        aggregated_properties = []
+    def _get_aggregated_properties(self, envelope: Envelope) -> typing.Dict:
+        aggregated_properties = {}
         measurements = (
             envelope.data.base_data.measurements
-            if envelope.data.base_data.measurements
+            if envelope.data.base_data and envelope.data.base_data.measurements
             else []
         )
         for key in measurements:
-            prop = LiveMetricDocumentProperty(key=key, value=measurements[key])
-            aggregated_properties.append(prop)
+            aggregated_properties[key] = measurements[key]
         properties = (
             envelope.data.base_data.properties
-            if envelope.data.base_data.properties
+            if envelope.data.base_data and envelope.data.base_data.properties
             else []
         )
         for key in properties:
-            prop = LiveMetricDocumentProperty(key=key, value=properties[key])
-            aggregated_properties.append(prop)
+            aggregated_properties[key] = properties[key]
         return aggregated_properties
