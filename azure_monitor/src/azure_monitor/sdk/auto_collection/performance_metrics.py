@@ -4,7 +4,10 @@ import logging
 from typing import Dict
 
 import psutil
-from opentelemetry.metrics import Meter
+from opentelemetry.metrics import Meter, Observer
+from opentelemetry.sdk.metrics import UpDownSumObserver
+
+from azure_monitor.sdk.auto_collection.utils import AutoCollectionType
 
 logger = logging.getLogger(__name__)
 PROCESS = psutil.Process()
@@ -19,42 +22,63 @@ class PerformanceMetrics:
     Args:
         meter: OpenTelemetry Meter
         labels: Dictionary of labels
+        collection_type: Standard or Live Metrics
     """
 
-    def __init__(self, meter: Meter, labels: Dict[str, str]):
+    def __init__(
+        self,
+        meter: Meter,
+        labels: Dict[str, str],
+        collection_type: AutoCollectionType,
+    ):
         self._meter = meter
         self._labels = labels
-        # Create performance metrics
-        meter.register_observer(
+
+        self._meter.register_observer(
             callback=self._track_cpu,
             name="\\Processor(_Total)\\% Processor Time",
             description="Processor time as a percentage",
             unit="percentage",
             value_type=float,
-        )
-        meter.register_observer(
-            callback=self._track_memory,
-            name="\\Memory\\Available Bytes",
-            description="Amount of available memory in bytes",
-            unit="byte",
-            value_type=int,
-        )
-        meter.register_observer(
-            callback=self._track_process_cpu,
-            name="\\Process(??APP_WIN32_PROC??)\\% Processor Time",
-            description="Process CPU usage as a percentage",
-            unit="percentage",
-            value_type=float,
-        )
-        meter.register_observer(
-            callback=self._track_process_memory,
-            name="\\Process(??APP_WIN32_PROC??)\\Private Bytes",
-            description="Amount of memory process has used in bytes",
-            unit="byte",
-            value_type=int,
+            observer_type=UpDownSumObserver,
         )
 
-    def _track_cpu(self, observer) -> None:
+        if collection_type == AutoCollectionType.STANDARD_METRICS:
+            self._meter.register_observer(
+                callback=self._track_memory,
+                name="\\Memory\\Available Bytes",
+                description="Amount of available memory in bytes",
+                unit="byte",
+                value_type=int,
+                observer_type=UpDownSumObserver,
+            )
+            self._meter.register_observer(
+                callback=self._track_process_cpu,
+                name="\\Process(??APP_WIN32_PROC??)\\% Processor Time",
+                description="Process CPU usage as a percentage",
+                unit="percentage",
+                value_type=float,
+                observer_type=UpDownSumObserver,
+            )
+            self._meter.register_observer(
+                callback=self._track_process_memory,
+                name="\\Process(??APP_WIN32_PROC??)\\Private Bytes",
+                description="Amount of memory process has used in bytes",
+                unit="byte",
+                value_type=int,
+                observer_type=UpDownSumObserver,
+            )
+        if collection_type == AutoCollectionType.LIVE_METRICS:
+            self._meter.register_observer(
+                callback=self._track_commited_memory,
+                name="\\Memory\\Committed Bytes",
+                description="Amount of committed memory in bytes",
+                unit="byte",
+                value_type=int,
+                observer_type=UpDownSumObserver,
+            )
+
+    def _track_cpu(self, observer: Observer) -> None:
         """ Track CPU time
 
         Processor time is defined as a float representing the current system
@@ -65,7 +89,7 @@ class PerformanceMetrics:
         cpu_times_percent = psutil.cpu_times_percent()
         observer.observe(100.0 - cpu_times_percent.idle, self._labels)
 
-    def _track_memory(self, observer) -> None:
+    def _track_memory(self, observer: Observer) -> None:
         """ Track Memory
 
         Available memory is defined as memory that can be given instantly to
@@ -73,7 +97,7 @@ class PerformanceMetrics:
         """
         observer.observe(psutil.virtual_memory().available, self._labels)
 
-    def _track_process_cpu(self, observer) -> None:
+    def _track_process_cpu(self, observer: Observer) -> None:
         """ Track Process CPU time
 
         Returns a derived gauge for the CPU usage for the current process.
@@ -88,7 +112,7 @@ class PerformanceMetrics:
         except Exception:  # pylint: disable=broad-except
             logger.exception("Error handling get process cpu usage.")
 
-    def _track_process_memory(self, observer) -> None:
+    def _track_process_memory(self, observer: Observer) -> None:
         """ Track Memory
 
          Available memory is defined as memory that can be given instantly to
@@ -98,3 +122,13 @@ class PerformanceMetrics:
             observer.observe(PROCESS.memory_info().rss, self._labels)
         except Exception:  # pylint: disable=broad-except
             logger.exception("Error handling get process private bytes.")
+
+    def _track_commited_memory(self, observer: Observer) -> None:
+        """ Track Commited Memory
+
+        Available commited memory is defined as total memory minus available memory.
+        """
+        observer.observe(
+            psutil.virtual_memory().total - psutil.virtual_memory().available,
+            self._labels,
+        )

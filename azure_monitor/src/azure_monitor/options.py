@@ -2,13 +2,14 @@
 # Licensed under the MIT License.
 import os
 import re
-import sys
+import tempfile
 import typing
 
 from azure_monitor.protocol import BaseObject
 
 INGESTION_ENDPOINT = "ingestionendpoint"
 INSTRUMENTATION_KEY = "instrumentationkey"
+TEMPDIR_PREFIX = "opentelemetry-python-"
 
 # Validate UUID format
 # Specs taken from https://tools.ietf.org/html/rfc4122
@@ -27,6 +28,7 @@ class ExporterOptions(BaseObject):
     Args:
         connection_string: Azure Connection String.
         instrumentation_key: Azure Instrumentation Key.
+        proxies: Proxies to pass Azure Monitor request through.
         storage_maintenance_period: Local storage maintenance interval in seconds.
         storage_max_size: Local storage maximum size in bytes.
         storage_path: Local storage file path.
@@ -38,6 +40,7 @@ class ExporterOptions(BaseObject):
         "connection_string",
         "endpoint",
         "instrumentation_key",
+        "proxies",
         "storage_maintenance_period",
         "storage_max_size",
         "storage_path",
@@ -49,21 +52,16 @@ class ExporterOptions(BaseObject):
         self,
         connection_string: str = None,
         instrumentation_key: str = None,
+        proxies: typing.Dict[str, str] = None,
         storage_maintenance_period: int = 60,
         storage_max_size: int = 50 * 1024 * 1024,
         storage_path: str = None,
         storage_retention_period: int = 7 * 24 * 60 * 60,
         timeout: int = 10.0,  # networking timeout in seconds
     ) -> None:
-        if storage_path is None:
-            storage_path = os.path.join(
-                os.path.expanduser("~"),
-                ".opentelemetry",
-                ".azure",
-                os.path.basename(sys.argv[0]) or ".console",
-            )
         self.connection_string = connection_string
         self.instrumentation_key = instrumentation_key
+        self.proxies = proxies
         self.storage_maintenance_period = storage_maintenance_period
         self.storage_max_size = storage_max_size
         self.storage_path = storage_path
@@ -74,6 +72,7 @@ class ExporterOptions(BaseObject):
         self._validate_instrumentation_key()
 
     def _initialize(self) -> None:
+        # connection string and ikey
         code_cs = parse_connection_string(self.connection_string)
         code_ikey = self.instrumentation_key
         env_cs = parse_connection_string(
@@ -102,6 +101,17 @@ class ExporterOptions(BaseObject):
             or "https://dc.services.visualstudio.com"
         )
         self.endpoint = endpoint + "/v2/track"
+
+        # proxies
+        if self.proxies is None:
+            self.proxies = {}
+
+        # storage path
+        if self.storage_path is None:
+            temp_suffix = self.instrumentation_key or ""
+            self.storage_path = os.path.join(
+                tempfile.gettempdir(), TEMPDIR_PREFIX + temp_suffix
+            )
 
     def _validate_instrumentation_key(self) -> None:
         """Validates the instrumentation key used for Azure Monitor.

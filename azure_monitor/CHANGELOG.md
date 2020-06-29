@@ -2,6 +2,20 @@
 
 ## Unreleased
 
+## 0.4b.0
+Released 2020-06-29
+
+- Added live metrics
+  ([#96](https://github.com/microsoft/opentelemetry-azure-monitor-python/pull/96))
+- Remove dependency metrics from auto-collection
+  ([#99](https://github.com/microsoft/opentelemetry-azure-monitor-python/pull/99))
+- Change default local storage directory
+  ([#100](https://github.com/microsoft/opentelemetry-azure-monitor-python/pull/100))
+- Implement proxies in exporter configuration
+  ([#101](https://github.com/microsoft/opentelemetry-azure-monitor-python/pull/101))
+- Remove request failed per second metrics from auto-collection
+  ([#102](https://github.com/microsoft/opentelemetry-azure-monitor-python/pull/102))
+
 ## 0.3b.1
 Released 2020-05-21
 

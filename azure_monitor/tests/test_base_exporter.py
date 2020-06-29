@@ -7,6 +7,7 @@ import shutil
 import unittest
 from unittest import mock
 
+import requests
 from opentelemetry.sdk.metrics.export import MetricsExportResult
 from opentelemetry.sdk.trace.export import SpanExportResult
 
@@ -66,6 +67,7 @@ class TestBaseExporter(unittest.TestCase):
         """Test the constructor."""
         base = BaseExporter(
             instrumentation_key="4321abcd-5678-4efa-8abc-1234567890ab",
+            proxies={"https": "https://test-proxy.com"},
             storage_maintenance_period=2,
             storage_max_size=3,
             storage_path=os.path.join(TEST_FOLDER, self.id()),
@@ -76,6 +78,9 @@ class TestBaseExporter(unittest.TestCase):
         self.assertEqual(
             base.options.instrumentation_key,
             "4321abcd-5678-4efa-8abc-1234567890ab",
+        )
+        self.assertEqual(
+            base.options.proxies, {"https": "https://test-proxy.com"},
         )
         self.assertEqual(base.options.storage_maintenance_period, 2)
         self.assertEqual(base.options.storage_max_size, 3)
@@ -164,6 +169,17 @@ class TestBaseExporter(unittest.TestCase):
         with mock.patch("requests.post") as post:
             post.return_value = None
             exporter._transmit_from_storage()
+
+    def test_transmit_request_timeout(self):
+        exporter = BaseExporter(
+            storage_path=os.path.join(TEST_FOLDER, self.id())
+        )
+        envelopes_to_export = map(lambda x: x.to_dict(), tuple([Envelope()]))
+        exporter.storage.put(envelopes_to_export)
+        with mock.patch("requests.post", throw(requests.Timeout)):
+            exporter._transmit_from_storage()
+        self.assertIsNone(exporter.storage.get())
+        self.assertEqual(len(os.listdir(exporter.storage.path)), 1)
 
     def test_transmit_request_exception(self):
         exporter = BaseExporter(

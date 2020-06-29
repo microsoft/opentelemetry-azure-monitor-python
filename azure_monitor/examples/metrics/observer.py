@@ -2,8 +2,7 @@
 # Licensed under the MIT License.
 import psutil
 from opentelemetry import metrics
-from opentelemetry.sdk.metrics import MeterProvider
-from opentelemetry.sdk.metrics.export.controller import PushController
+from opentelemetry.sdk.metrics import MeterProvider, UpDownSumObserver
 
 from azure_monitor import AzureMonitorMetricsExporter
 
@@ -12,7 +11,7 @@ meter = metrics.get_meter(__name__)
 exporter = AzureMonitorMetricsExporter(
     connection_string="InstrumentationKey=<INSTRUMENTATION KEY HERE>"
 )
-controller = PushController(meter=meter, exporter=exporter, interval=2)
+metrics.get_meter_provider().start_pipeline(meter, exporter, 2)
 
 
 # Callback to gather cpu usage
@@ -28,6 +27,7 @@ meter.register_observer(
     description="per-cpu usage",
     unit="1",
     value_type=float,
+    observer_type=UpDownSumObserver,
     label_keys=("cpu_number",),
 )
 
@@ -44,6 +44,7 @@ meter.register_observer(
     description="RAM memory usage",
     unit="1",
     value_type=float,
+    observer_type=UpDownSumObserver,
     label_keys=(),
 )
 

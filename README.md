@@ -18,7 +18,7 @@ The online documentation is available at https://opentelemetry-azure-monitor-pyt
 
 ### Trace
 
-The **Azure Monitor Trace Exporter** allows you to export [OpenTelemetry](https://opentelemetry.io/) traces to [Azure Monitor](https://docs.microsoft.com/azure/azure-monitor/).
+The **Azure Monitor Span Exporter** allows you to export [OpenTelemetry](https://opentelemetry.io/) traces to [Azure Monitor](https://docs.microsoft.com/azure/azure-monitor/).
 
 This example shows how to send a span "hello" to Azure Monitor.
 
@@ -33,17 +33,13 @@ from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import BatchExportSpanProcessor
 
 trace.set_tracer_provider(TracerProvider())
-
-# We tell OpenTelemetry who it is that is creating spans. In this case, we have
-# no real name (no setup.py), so we make one up. If we had a version, we would
-# also specify it here.
 tracer = trace.get_tracer(__name__)
 
+# SpanExporter receives the spans and send them to the target location
 exporter = AzureMonitorSpanExporter(
     connection_string='InstrumentationKey=<your-ikey-here>',
 )
 
-# SpanExporter receives the spans and send them to the target location.
 span_processor = BatchExportSpanProcessor(exporter)
 trace.get_tracer_provider().add_span_processor(span_processor)
 
@@ -75,12 +71,14 @@ trace.set_tracer_provider(TracerProvider())
 tracer_provider = trace.get_tracer_provider()
 
 exporter = AzureMonitorSpanExporter(
-        connection_string='InstrumentationKey=<your-ikey-here>',
-    )
+    connection_string='InstrumentationKey=<your-ikey-here>',
+)
 span_processor = BatchExportSpanProcessor(exporter)
 tracer_provider.add_span_processor(span_processor)
 
 RequestsInstrumentor().instrument()
+
+# This request will be traced
 response = requests.get(url="https://azure.microsoft.com/")
 ```
 
@@ -106,6 +104,7 @@ def callback_function(envelope):
 exporter = AzureMonitorSpanExporter(
     connection_string='InstrumentationKey=<your-ikey-here>'
 )
+# This line will modify telemetry
 exporter.add_telemetry_processor(callback_function)
 
 trace.set_tracer_provider(TracerProvider())
