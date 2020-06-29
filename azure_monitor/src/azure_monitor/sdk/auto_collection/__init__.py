@@ -5,9 +5,6 @@ from typing import Dict
 
 from opentelemetry.metrics import Meter
 
-from azure_monitor.sdk.auto_collection.dependency_metrics import (
-    DependencyMetrics,
-)
 from azure_monitor.sdk.auto_collection.metrics_span_processor import (
     AzureMetricsSpanProcessor,
 )
@@ -21,7 +18,6 @@ __all__ = [
     "AutoCollection",
     "AutoCollectionType",
     "AzureMetricsSpanProcessor",
-    "DependencyMetrics",
     "RequestMetrics",
     "PerformanceMetrics",
 ]
@@ -37,6 +33,6 @@ class AutoCollection:
     """
 
     def __init__(self, meter: Meter, labels: Dict[str, str]):
-        col_type = AutoCollectionType.STANDARD_METRICS
+        col_type = AutoCollectionType.PERF_COUNTER
         self._performance_metrics = PerformanceMetrics(meter, labels, col_type)
         self._request_metrics = RequestMetrics(meter, labels, col_type)

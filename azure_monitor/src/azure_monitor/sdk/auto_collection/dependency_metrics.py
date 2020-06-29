@@ -40,13 +40,13 @@ def dependency_patch(*args, **kwargs) -> None:
                 # Update failed count
                 if (
                     result is not None
-                    and result.status_code >= 200
-                    and result.status_code < 300
+                    and result.status_code < 200
+                    and result.status_code >= 300
                 ) or exception is not None:
                     failed_count = dependency_map.get("failed_count", 0)
                     dependency_map["failed_count"] = failed_count + 1
             except Exception:  # pylint: disable=broad-except
-                logger.warning("Error handling failed request metrics.")
+                logger.warning("Error handling failed dependency metrics.")
     return result
 
 
@@ -57,7 +57,6 @@ class DependencyMetrics:
     Args:
         meter: OpenTelemetry Meter
         labels: Dictionary of labels
-        collection_type: Standard or Live Metrics
     """
 
     def __init__(self, meter: Meter, labels: Dict[str, str]):

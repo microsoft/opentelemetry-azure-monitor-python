@@ -35,7 +35,7 @@ class TestRequestMetrics(unittest.TestCase):
         request_metrics_collector = request_metrics.RequestMetrics(
             meter=mock_meter,
             labels=self._test_labels,
-            collection_type=AutoCollectionType.STANDARD_METRICS,
+            collection_type=AutoCollectionType.PERF_COUNTER,
         )
         self.assertEqual(request_metrics_collector._meter, mock_meter)
         self.assertEqual(request_metrics_collector._labels, self._test_labels)
@@ -61,7 +61,7 @@ class TestRequestMetrics(unittest.TestCase):
         request_metrics_collector = request_metrics.RequestMetrics(
             meter=self._meter,
             labels=self._test_labels,
-            collection_type=AutoCollectionType.STANDARD_METRICS,
+            collection_type=AutoCollectionType.PERF_COUNTER,
         )
         request_metrics.requests_map["duration"] = 100
         request_metrics.requests_map["count"] = 10
@@ -83,7 +83,7 @@ class TestRequestMetrics(unittest.TestCase):
         request_metrics_collector = request_metrics.RequestMetrics(
             meter=self._meter,
             labels=self._test_labels,
-            collection_type=AutoCollectionType.STANDARD_METRICS,
+            collection_type=AutoCollectionType.PERF_COUNTER,
         )
         request_metrics.requests_map["duration"] = 100
         request_metrics.requests_map["count"] = 10
@@ -106,7 +106,7 @@ class TestRequestMetrics(unittest.TestCase):
         request_metrics_collector = request_metrics.RequestMetrics(
             meter=self._meter,
             labels=self._test_labels,
-            collection_type=AutoCollectionType.STANDARD_METRICS,
+            collection_type=AutoCollectionType.PERF_COUNTER,
         )
         time_mock.time.return_value = 100
         request_metrics.requests_map["last_time"] = 98
@@ -130,7 +130,7 @@ class TestRequestMetrics(unittest.TestCase):
         request_metrics_collector = request_metrics.RequestMetrics(
             meter=self._meter,
             labels=self._test_labels,
-            collection_type=AutoCollectionType.STANDARD_METRICS,
+            collection_type=AutoCollectionType.PERF_COUNTER,
         )
         request_metrics.requests_map["last_time"] = None
         obs = Observer(
@@ -151,7 +151,7 @@ class TestRequestMetrics(unittest.TestCase):
         request_metrics_collector = request_metrics.RequestMetrics(
             meter=self._meter,
             labels=self._test_labels,
-            collection_type=AutoCollectionType.STANDARD_METRICS,
+            collection_type=AutoCollectionType.PERF_COUNTER,
         )
         time_mock.time.return_value = 100
         request_metrics.requests_map["last_rate"] = 5.0

@@ -43,7 +43,7 @@ class PerformanceMetrics:
             observer_type=UpDownSumObserver,
         )
 
-        if collection_type == AutoCollectionType.STANDARD_METRICS:
+        if collection_type == AutoCollectionType.PERF_COUNTER:
             self._meter.register_observer(
                 callback=self._track_memory,
                 name="\\Memory\\Available Bytes",
