@@ -31,7 +31,7 @@ class TestPerformanceMetrics(unittest.TestCase):
     def tearDownClass(cls):
         metrics._METER_PROVIDER = None
 
-    def test_constructor_PERF_COUNTER(self):
+    def test_constructor_perf_counters(self):
         mock_meter = mock.Mock()
         performance_metrics_collector = PerformanceMetrics(
             meter=mock_meter,
