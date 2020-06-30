@@ -70,7 +70,7 @@ class DependencyMetrics:
             name="\\ApplicationInsights\\Dependency Call Duration",
             description="Average Outgoing Requests duration",
             unit="milliseconds",
-            value_type=int,
+            value_type=float,
             observer_type=UpDownSumObserver,
         )
         meter.register_observer(
@@ -101,7 +101,7 @@ class DependencyMetrics:
         current_time = time.time()
         last_count = dependency_map.get("last_count", 0)
         last_time = dependency_map.get("last_time")
-        last_result = dependency_map.get("last_result", 0)
+        last_result = dependency_map.get("last_result", 0.0)
 
         try:
             # last_time is None the very first time this function is called
@@ -126,10 +126,10 @@ class DependencyMetrics:
         Calculated by getting the time it takes to make an outgoing request
         and dividing over the amount of outgoing requests over an elapsed time.
         """
-        last_average_duration = dependency_map.get("last_average_duration", 0)
+        last_average_duration = dependency_map.get("last_average_duration", 0.0)
         interval_duration = dependency_map.get(
-            "duration", 0
-        ) - dependency_map.get("last_duration", 0)
+            "duration", 0.0
+        ) - dependency_map.get("last_duration", 0.0)
         interval_count = dependency_map.get("count", 0) - dependency_map.get(
             "last_count", 0
         )
@@ -137,12 +137,12 @@ class DependencyMetrics:
             result = interval_duration / interval_count
             dependency_map["last_count"] = dependency_map.get("count", 0)
             dependency_map["last_average_duration"] = result
-            dependency_map["last_duration"] = dependency_map.get("duration", 0)
-            observer.observe(int(result), self._labels)
+            dependency_map["last_duration"] = dependency_map.get("duration", 0.0)
+            observer.observe(result, self._labels)
         except ZeroDivisionError:
             # If interval_count is 0, exporter call made too close to previous
             # Return the previous result if this is the case
-            observer.observe(int(last_average_duration), self._labels)
+            observer.observe(last_average_duration, self._labels)
 
     def _track_failure_rate(self, observer: Observer) -> None:
         """ Track Failed Dependency rate
@@ -155,7 +155,7 @@ class DependencyMetrics:
         current_time = time.time()
         last_failed_count = dependency_map.get("last_failed_count", 0)
         last_time = dependency_map.get("last_time")
-        last_result = dependency_map.get("last_result", 0)
+        last_result = dependency_map.get("last_result", 0.0)
 
         try:
             # last_time is None the very first time this function is called

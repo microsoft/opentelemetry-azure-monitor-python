@@ -104,15 +104,15 @@ class RequestMetrics:
             )
         meter.register_observer(
             callback=self._track_request_duration,
-            name="\\ASP.NET Applications(??APP_W3SVC_PROC??)\\Request Execution Time",
+            name="\\ApplicationInsights\\Request Duration",
             description="Incoming Requests Average Execution Time",
             unit="milliseconds",
-            value_type=int,
+            value_type=float,
             observer_type=UpDownSumObserver,
         )
         meter.register_observer(
             callback=self._track_request_rate,
-            name="\\ASP.NET Applications(??APP_W3SVC_PROC??)\\Requests/Sec",
+            name="\\ApplicationInsights\\Requests/Sec",
             description="Incoming Requests Rate",
             unit="rps",
             value_type=float,
@@ -125,9 +125,9 @@ class RequestMetrics:
         Calculated by getting the time it takes to make an incoming request
         and dividing over the amount of incoming requests over an elapsed time.
         """
-        last_average_duration = requests_map.get("last_average_duration", 0)
-        interval_duration = requests_map.get("duration", 0) - requests_map.get(
-            "last_duration", 0
+        last_average_duration = requests_map.get("last_average_duration", 0.0)
+        interval_duration = requests_map.get("duration", 0.0) - requests_map.get(
+            "last_duration", 0.0
         )
         interval_count = requests_map.get("count", 0) - requests_map.get(
             "last_count", 0
@@ -136,12 +136,12 @@ class RequestMetrics:
             result = interval_duration / interval_count
             requests_map["last_count"] = requests_map.get("count", 0)
             requests_map["last_average_duration"] = result
-            requests_map["last_duration"] = requests_map.get("duration", 0)
-            observer.observe(int(result), self._labels)
+            requests_map["last_duration"] = requests_map.get("duration", 0.0)
+            observer.observe(result, self._labels)
         except ZeroDivisionError:
             # If interval_count is 0, exporter call made too close to previous
             # Return the previous result if this is the case
-            observer.observe(int(last_average_duration), self._labels)
+            observer.observe(last_average_duration, self._labels)
 
     def _track_request_rate(self, observer: Observer) -> None:
         """ Track Request execution rate
@@ -151,7 +151,7 @@ class RequestMetrics:
         over the elapsed time.
         """
         current_time = time.time()
-        last_rate = requests_map.get("last_rate", 0)
+        last_rate = requests_map.get("last_rate", 0.0)
         last_time = requests_map.get("last_time")
 
         try:
@@ -181,7 +181,7 @@ class RequestMetrics:
         over the elapsed time.
         """
         current_time = time.time()
-        last_rate = requests_map.get("last_rate", 0)
+        last_rate = requests_map.get("last_rate", 0.0)
         last_time = requests_map.get("last_time")
 
         try:
