@@ -126,7 +126,9 @@ class DependencyMetrics:
         Calculated by getting the time it takes to make an outgoing request
         and dividing over the amount of outgoing requests over an elapsed time.
         """
-        last_average_duration = dependency_map.get("last_average_duration", 0.0)
+        last_average_duration = dependency_map.get(
+            "last_average_duration", 0.0
+        )
         interval_duration = dependency_map.get(
             "duration", 0.0
         ) - dependency_map.get("last_duration", 0.0)
@@ -137,7 +139,9 @@ class DependencyMetrics:
             result = interval_duration / interval_count
             dependency_map["last_count"] = dependency_map.get("count", 0)
             dependency_map["last_average_duration"] = result
-            dependency_map["last_duration"] = dependency_map.get("duration", 0.0)
+            dependency_map["last_duration"] = dependency_map.get(
+                "duration", 0.0
+            )
             observer.observe(result, self._labels)
         except ZeroDivisionError:
             # If interval_count is 0, exporter call made too close to previous

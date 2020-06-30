@@ -126,9 +126,9 @@ class RequestMetrics:
         and dividing over the amount of incoming requests over an elapsed time.
         """
         last_average_duration = requests_map.get("last_average_duration", 0.0)
-        interval_duration = requests_map.get("duration", 0.0) - requests_map.get(
-            "last_duration", 0.0
-        )
+        interval_duration = requests_map.get(
+            "duration", 0.0
+        ) - requests_map.get("last_duration", 0.0)
         interval_count = requests_map.get("count", 0) - requests_map.get(
             "last_count", 0
         )
