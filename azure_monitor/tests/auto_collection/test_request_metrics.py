@@ -43,15 +43,15 @@ class TestRequestMetrics(unittest.TestCase):
         create_metric_calls = mock_meter.register_observer.call_args_list
         create_metric_calls[0].assert_called_with(
             callback=request_metrics_collector._track_request_duration,
-            name="\\ASP.NET Applications(??APP_W3SVC_PROC??)\\Request Execution Time",
+            name="\\ApplicationInsights\\Request Duration",
             description="Incoming Requests Average Execution Time",
             unit="milliseconds",
-            value_type=int,
+            value_type=float,
         )
 
         create_metric_calls[1].assert_called_with(
             callback=request_metrics_collector._track_request_rate,
-            name="\\ASP.NET Applications(??APP_W3SVC_PROC??)\\Requests/Sec",
+            name="\\ApplicationInsights\\Requests/Sec",
             description="Incoming Requests Rate",
             unit="rps",
             value_type=float,
@@ -71,7 +71,7 @@ class TestRequestMetrics(unittest.TestCase):
             name="\\ASP.NET Applications(??APP_W3SVC_PROC??)\\Request Execution Time",
             description="Incoming Requests Average Execution Time",
             unit="milliseconds",
-            value_type=int,
+            value_type=float,
             meter=self._meter,
         )
         request_metrics_collector._track_request_duration(obs)
@@ -93,7 +93,7 @@ class TestRequestMetrics(unittest.TestCase):
             name="\\ASP.NET Applications(??APP_W3SVC_PROC??)\\Request Execution Time",
             description="Incoming Requests Average Execution Time",
             unit="milliseconds",
-            value_type=int,
+            value_type=float,
             meter=self._meter,
         )
         request_metrics_collector._track_request_duration(obs)

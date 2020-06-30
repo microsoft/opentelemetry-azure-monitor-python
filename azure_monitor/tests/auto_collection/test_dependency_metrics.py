@@ -49,7 +49,7 @@ class TestDependencyMetrics(unittest.TestCase):
             name="\\ApplicationInsights\\Dependency Call Duration",
             description="Average Outgoing Requests duration",
             unit="milliseconds",
-            value_type=int,
+            value_type=float,
         )
         create_metric_calls[1].assert_called_with(
             callback=metrics_collector._track_failure_rate,
@@ -202,7 +202,7 @@ class TestDependencyMetrics(unittest.TestCase):
             name="test",
             description="test",
             unit="test",
-            value_type=int,
+            value_type=float,
             meter=self._meter,
         )
         metrics_collector._track_dependency_duration(obs)
@@ -222,7 +222,7 @@ class TestDependencyMetrics(unittest.TestCase):
             name="test",
             description="test",
             unit="test",
-            value_type=int,
+            value_type=float,
             meter=self._meter,
         )
         metrics_collector._track_dependency_duration(obs)
