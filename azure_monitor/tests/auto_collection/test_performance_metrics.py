@@ -215,7 +215,7 @@ class TestPerformanceMetrics(unittest.TestCase):
                 meter=self._meter,
             )
             performance_metrics_collector._track_process_cpu(obs)
-            self.assertEqual(logger_mock.exception.called, True)
+            self.assertEqual(logger_mock.warning.called, True)
 
     def test_track_process_memory(self):
         with mock.patch(
@@ -262,4 +262,4 @@ class TestPerformanceMetrics(unittest.TestCase):
                 meter=self._meter,
             )
             performance_metrics_collector._track_process_memory(obs)
-            self.assertEqual(logger_mock.exception.called, True)
+            self.assertEqual(logger_mock.warning.called, True)
