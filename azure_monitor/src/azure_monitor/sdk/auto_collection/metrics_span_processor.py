@@ -29,7 +29,7 @@ class AzureMetricsSpanProcessor(SpanProcessor):
                     self.documents.append(convert_span_to_envelope(span))
         # pylint: disable=broad-except
         except Exception:
-            logger.exception("Exception while processing Span.")
+            logger.warning("Exception while processing Span.")
 
     def shutdown(self) -> None:
         pass

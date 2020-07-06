@@ -110,7 +110,7 @@ class PerformanceMetrics:
             cpu_count = psutil.cpu_count(logical=True)
             observer.observe(PROCESS.cpu_percent() / cpu_count, self._labels)
         except Exception:  # pylint: disable=broad-except
-            logger.exception("Error handling get process cpu usage.")
+            logger.warning("Error handling get process cpu usage.")
 
     def _track_process_memory(self, observer: Observer) -> None:
         """ Track Memory
@@ -121,7 +121,7 @@ class PerformanceMetrics:
         try:
             observer.observe(PROCESS.memory_info().rss, self._labels)
         except Exception:  # pylint: disable=broad-except
-            logger.exception("Error handling get process private bytes.")
+            logger.warning("Error handling get process private bytes.")
 
     def _track_commited_memory(self, observer: Observer) -> None:
         """ Track Commited Memory

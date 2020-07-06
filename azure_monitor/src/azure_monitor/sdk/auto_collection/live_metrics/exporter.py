@@ -61,7 +61,7 @@ class LiveMetricsExporter(MetricsExporter):
                 return MetricsExportResult.SUCCESS
 
         except Exception:  # pylint: disable=broad-except
-            logger.exception("Exception occurred while exporting the data.")
+            logger.warning("Exception occurred while exporting the data.")
 
         return MetricsExportResult.FAILURE
 
