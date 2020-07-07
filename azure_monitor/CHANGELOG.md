@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+## 0.4b.0
+Released 2020-06-29
+
+- Added live metrics
+  ([#96](https://github.com/microsoft/opentelemetry-azure-monitor-python/pull/96))
 - Remove dependency metrics from auto-collection
   ([#92](https://github.com/microsoft/opentelemetry-azure-monitor-python/pull/92))
 - Change default local storage directory
