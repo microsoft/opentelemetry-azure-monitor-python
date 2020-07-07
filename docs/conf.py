@@ -28,7 +28,7 @@ copyright = "2020, Microsoft"
 author = "Microsoft"
 
 # The full version, including alpha/beta/rc tags
-release = "0.2b.0"
+release = "0.4b.0"
 
 
 # -- General configuration ---------------------------------------------------
