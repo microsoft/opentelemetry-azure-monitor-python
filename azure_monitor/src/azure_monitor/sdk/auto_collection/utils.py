@@ -7,5 +7,5 @@ class AutoCollectionType(Enum):
     """Automatic collection of metrics type
     """
 
-    STANDARD_METRICS = 0
+    PERF_COUNTER = 0
     LIVE_METRICS = 1

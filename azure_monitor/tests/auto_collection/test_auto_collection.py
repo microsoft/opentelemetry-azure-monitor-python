@@ -7,10 +7,7 @@ from unittest import mock
 from opentelemetry import metrics
 from opentelemetry.sdk.metrics import MeterProvider
 
-from azure_monitor.sdk.auto_collection import (
-    AutoCollection,
-    AzureMetricsSpanProcessor,
-)
+from azure_monitor.sdk.auto_collection import AutoCollection
 
 
 # pylint: disable=protected-access
@@ -20,7 +17,6 @@ class TestAutoCollection(unittest.TestCase):
         metrics.set_meter_provider(MeterProvider())
         cls._meter = metrics.get_meter(__name__)
         cls._test_labels = tuple({"environment": "staging"}.items())
-        cls._span_processor = AzureMetricsSpanProcessor()
 
     @classmethod
     def tearDownClass(cls):
@@ -35,11 +31,7 @@ class TestAutoCollection(unittest.TestCase):
     def test_constructor(self, mock_requests, mock_performance):
         """Test the constructor."""
 
-        AutoCollection(
-            meter=self._meter,
-            labels=self._test_labels,
-            span_processor=self._span_processor,
-        )
+        AutoCollection(meter=self._meter, labels=self._test_labels)
         self.assertEqual(mock_performance.called, True)
         self.assertEqual(mock_requests.called, True)
         self.assertEqual(mock_performance.call_args[0][0], self._meter)
