@@ -202,8 +202,9 @@ class LocalFileStorage:
                             "Persistent storage max capacity has been "
                             "reached. Currently at {}KB. Telemetry will be "
                             "lost. Please consider increasing the value of "
-                            "'storage_max_size' in exporter config."
-                            .format(size/1024)
+                            "'storage_max_size' in exporter config.".format(
+                                size / 1024
+                            )
                         )
                         return False
         return True
