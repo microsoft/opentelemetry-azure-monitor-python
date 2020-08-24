@@ -31,8 +31,8 @@ def create_metric_envelope(instrumentation_key: str):
 def get_time_since_epoch():
     now = datetime.datetime.now()
     # epoch is defined as 12:00:00 midnight on January 1, 0001 for Microsoft
-    epoch = datetime.datetime(1,1,1)
+    epoch = datetime.datetime(1, 1, 1)
     delta = (now - epoch).total_seconds()
-    # return the number of 100-nanosecond intervals 
+    # return the number of 100-nanosecond intervals
     delta = round(delta * 10000000)
     return delta
