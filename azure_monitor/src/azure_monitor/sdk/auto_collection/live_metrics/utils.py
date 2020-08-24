@@ -1,7 +1,7 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 #
-import time
+import datetime
 import uuid
 
 from azure_monitor.protocol import LiveMetricEnvelope
@@ -22,7 +22,17 @@ def create_metric_envelope(instrumentation_key: str):
         machine_name=azure_monitor_context.get("ai.device.id"),
         metrics=None,
         stream_id=STREAM_ID,
-        timestamp="/Date({0})/".format(str(int(time.time()) * 1000)),
+        timestamp="/Date({0})/".format(str(get_time_since_epoch())),
         version=azure_monitor_context.get("ai.internal.sdkVersion"),
     )
     return envelope
+
+
+def get_time_since_epoch():
+    now = datetime.datetime.now()
+    # epoch is defined as 12:00:00 midnight on January 1, 0001 for Microsoft
+    epoch = datetime.datetime(1,1,1)
+    delta = (now - epoch).total_seconds()
+    # return the number of 100-nanosecond intervals 
+    delta = round(delta * 10000000)
+    return delta
