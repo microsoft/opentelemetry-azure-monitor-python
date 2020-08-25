@@ -2,6 +2,7 @@
 # Licensed under the MIT License.
 #
 import datetime
+import time
 import uuid
 
 from azure_monitor.protocol import LiveMetricEnvelope
@@ -22,7 +23,7 @@ def create_metric_envelope(instrumentation_key: str):
         machine_name=azure_monitor_context.get("ai.device.id"),
         metrics=None,
         stream_id=STREAM_ID,
-        timestamp="/Date({0})/".format(str(get_time_since_epoch())),
+        timestamp="/Date({0})/".format(str(int(time.time()) * 1000)),
         version=azure_monitor_context.get("ai.internal.sdkVersion"),
     )
     return envelope
