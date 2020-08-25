@@ -48,4 +48,4 @@ meter.register_observer(
     label_keys=(),
 )
 
-input("Metrics will be printed soon. Press a key to finish...\n")
+input("Press any key to exit...")
