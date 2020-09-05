@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Change epoch for live metrics
+  ([#115](https://github.com/microsoft/opentelemetry-azure-monitor-python/pull/115))
+
 ## 0.4b.0
 Released 2020-06-29
 

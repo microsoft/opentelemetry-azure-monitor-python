@@ -1,6 +1,8 @@
-# OpenTelemetry Azure Monitor SDKs and Exporters
+# OpenTelemetry Azure Monitor SDKs and Exporters (Private preview)
 
 [![PyPI version](https://badge.fury.io/py/opentelemetry-azure-monitor.svg)](https://badge.fury.io/py/opentelemetry-azure-monitor)
+
+The OpenTelemetry Azure Monitor SDK and exporter are in private preview. They are not recommended for a production environment.
 
 ## Installation
 
