@@ -14,7 +14,7 @@ from azure_monitor.sdk.auto_collection.live_metrics.sender import (
 class TestLiveMetricsSender(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls._instrumentation_key = "99c42f65-1656-4c41-afde-bd86b709a4a7"
+        cls._instrumentation_key = "12345678-1234-5678-abcd-12345678abcd"
 
     def test_constructor(self):
         """Test the constructor."""
