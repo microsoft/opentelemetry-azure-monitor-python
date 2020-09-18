@@ -117,7 +117,6 @@ class TestPerformanceMetrics(unittest.TestCase):
                 description="Processor time as a percentage",
                 unit="percentage",
                 value_type=float,
-                meter=self._meter,
             )
             performance_metrics_collector._track_cpu(obs)
             self.assertEqual(
@@ -140,7 +139,6 @@ class TestPerformanceMetrics(unittest.TestCase):
             description="Amount of available memory in bytes",
             unit="byte",
             value_type=int,
-            meter=self._meter,
         )
         performance_metrics_collector._track_memory(obs)
         self.assertEqual(
@@ -163,7 +161,6 @@ class TestPerformanceMetrics(unittest.TestCase):
             description="Amount of available memory in bytes",
             unit="byte",
             value_type=int,
-            meter=self._meter,
         )
         performance_metrics_collector._track_commited_memory(obs)
         self.assertEqual(
@@ -188,7 +185,6 @@ class TestPerformanceMetrics(unittest.TestCase):
                 description="Process CPU usage as a percentage",
                 unit="percentage",
                 value_type=float,
-                meter=self._meter,
             )
             performance_metrics_collector._track_process_cpu(obs)
             self.assertEqual(
@@ -212,7 +208,6 @@ class TestPerformanceMetrics(unittest.TestCase):
                 description="Process CPU usage as a percentage",
                 unit="percentage",
                 value_type=float,
-                meter=self._meter,
             )
             performance_metrics_collector._track_process_cpu(obs)
             self.assertEqual(logger_mock.warning.called, True)
@@ -235,7 +230,6 @@ class TestPerformanceMetrics(unittest.TestCase):
                 description="Amount of memory process has used in bytes",
                 unit="byte",
                 value_type=int,
-                meter=self._meter,
             )
             performance_metrics_collector._track_process_memory(obs)
             self.assertEqual(
@@ -259,7 +253,6 @@ class TestPerformanceMetrics(unittest.TestCase):
                 description="Amount of memory process has used in bytes",
                 unit="byte",
                 value_type=int,
-                meter=self._meter,
             )
             performance_metrics_collector._track_process_memory(obs)
             self.assertEqual(logger_mock.warning.called, True)
