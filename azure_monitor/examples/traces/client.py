@@ -5,7 +5,7 @@
 # pylint: disable=no-name-in-module
 import requests
 from opentelemetry import trace
-from opentelemetry.ext.requests import RequestsInstrumentor
+from opentelemetry.instrumentation.requests import RequestsInstrumentor
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import BatchExportSpanProcessor
 
@@ -21,6 +21,6 @@ span_processor = BatchExportSpanProcessor(
 )
 trace.get_tracer_provider().add_span_processor(span_processor)
 
-response = requests.get(url="http://127.0.0.1:8080/")
+response = requests.get(url="http://example.com/")
 
 input("Press any key to exit...")
