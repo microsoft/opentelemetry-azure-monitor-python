@@ -78,7 +78,6 @@ class TestDependencyMetrics(unittest.TestCase):
             description="Outgoing Requests per second",
             unit="rps",
             value_type=float,
-            meter=self._meter,
         )
         dependency_metrics.dependency_map["last_time"] = 98.0
         dependency_metrics.dependency_map["count"] = 4
@@ -100,7 +99,6 @@ class TestDependencyMetrics(unittest.TestCase):
             description="Outgoing Requests per second",
             unit="rps",
             value_type=float,
-            meter=self._meter,
         )
         metrics_collector._track_dependency_rate(obs)
         self.assertEqual(
@@ -121,7 +119,6 @@ class TestDependencyMetrics(unittest.TestCase):
             description="Outgoing Requests per second",
             unit="rps",
             value_type=float,
-            meter=self._meter,
         )
         metrics_collector._track_dependency_rate(obs)
         self.assertEqual(
@@ -140,7 +137,6 @@ class TestDependencyMetrics(unittest.TestCase):
             description="test",
             unit="test",
             value_type=float,
-            meter=self._meter,
         )
         dependency_metrics.dependency_map["last_time"] = 98
         dependency_metrics.dependency_map["failed_count"] = 4
@@ -162,7 +158,6 @@ class TestDependencyMetrics(unittest.TestCase):
             description="test",
             unit="test",
             value_type=float,
-            meter=self._meter,
         )
         metrics_collector._track_failure_rate(obs)
         self.assertEqual(
@@ -183,7 +178,6 @@ class TestDependencyMetrics(unittest.TestCase):
             description="test",
             unit="test",
             value_type=float,
-            meter=self._meter,
         )
         metrics_collector._track_failure_rate(obs)
         self.assertEqual(
@@ -203,7 +197,6 @@ class TestDependencyMetrics(unittest.TestCase):
             description="test",
             unit="test",
             value_type=float,
-            meter=self._meter,
         )
         metrics_collector._track_dependency_duration(obs)
         self.assertEqual(
@@ -223,7 +216,6 @@ class TestDependencyMetrics(unittest.TestCase):
             description="test",
             unit="test",
             value_type=float,
-            meter=self._meter,
         )
         metrics_collector._track_dependency_duration(obs)
         self.assertEqual(

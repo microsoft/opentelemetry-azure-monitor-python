@@ -72,7 +72,6 @@ class TestRequestMetrics(unittest.TestCase):
             description="Incoming Requests Average Execution Time",
             unit="milliseconds",
             value_type=float,
-            meter=self._meter,
         )
         request_metrics_collector._track_request_duration(obs)
         self.assertEqual(
@@ -94,7 +93,6 @@ class TestRequestMetrics(unittest.TestCase):
             description="Incoming Requests Average Execution Time",
             unit="milliseconds",
             value_type=float,
-            meter=self._meter,
         )
         request_metrics_collector._track_request_duration(obs)
         self.assertEqual(
@@ -117,7 +115,6 @@ class TestRequestMetrics(unittest.TestCase):
             description="Incoming Requests Average Execution Rate",
             unit="rps",
             value_type=float,
-            meter=self._meter,
         )
         request_metrics_collector._track_request_rate(obs)
         self.assertEqual(
@@ -139,7 +136,6 @@ class TestRequestMetrics(unittest.TestCase):
             description="Incoming Requests Average Execution Rate",
             unit="rps",
             value_type=float,
-            meter=self._meter,
         )
         request_metrics_collector._track_request_rate(obs)
         self.assertEqual(
@@ -162,7 +158,6 @@ class TestRequestMetrics(unittest.TestCase):
             description="Incoming Requests Average Execution Rate",
             unit="rps",
             value_type=float,
-            meter=self._meter,
         )
         request_metrics_collector._track_request_rate(obs)
         self.assertEqual(
