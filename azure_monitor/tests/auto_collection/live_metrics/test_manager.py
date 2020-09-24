@@ -32,7 +32,7 @@ class TestLiveMetricsManager(unittest.TestCase):
         )
         testing_labels = {"environment": "testing"}
         cls._test_metric.add(5, testing_labels)
-        cls._instrumentation_key = "99c42f65-1656-4c41-afde-bd86b709a4a7"
+        cls._instrumentation_key = "12345678-1234-5678-abcd-12345678abcd"
         cls._manager = None
         cls._ping = None
         cls._post = None
