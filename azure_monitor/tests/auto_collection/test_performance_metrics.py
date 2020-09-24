@@ -31,12 +31,12 @@ class TestPerformanceMetrics(unittest.TestCase):
     def tearDownClass(cls):
         metrics._METER_PROVIDER = None
 
-    def test_constructor_standard_metrics(self):
+    def test_constructor_perf_counters(self):
         mock_meter = mock.Mock()
         performance_metrics_collector = PerformanceMetrics(
             meter=mock_meter,
             labels=self._test_labels,
-            collection_type=AutoCollectionType.STANDARD_METRICS,
+            collection_type=AutoCollectionType.PERF_COUNTER,
         )
         self.assertEqual(performance_metrics_collector._meter, mock_meter)
         self.assertEqual(
@@ -105,7 +105,7 @@ class TestPerformanceMetrics(unittest.TestCase):
         performance_metrics_collector = PerformanceMetrics(
             meter=self._meter,
             labels=self._test_labels,
-            collection_type=AutoCollectionType.STANDARD_METRICS,
+            collection_type=AutoCollectionType.PERF_COUNTER,
         )
         with mock.patch("psutil.cpu_times_percent") as processor_mock:
             cpu = collections.namedtuple("cpu", "idle")
@@ -117,7 +117,6 @@ class TestPerformanceMetrics(unittest.TestCase):
                 description="Processor time as a percentage",
                 unit="percentage",
                 value_type=float,
-                meter=self._meter,
             )
             performance_metrics_collector._track_cpu(obs)
             self.assertEqual(
@@ -129,7 +128,7 @@ class TestPerformanceMetrics(unittest.TestCase):
         performance_metrics_collector = PerformanceMetrics(
             meter=self._meter,
             labels=self._test_labels,
-            collection_type=AutoCollectionType.STANDARD_METRICS,
+            collection_type=AutoCollectionType.PERF_COUNTER,
         )
         memory = collections.namedtuple("memory", "available")
         vmem = memory(available=100)
@@ -140,7 +139,6 @@ class TestPerformanceMetrics(unittest.TestCase):
             description="Amount of available memory in bytes",
             unit="byte",
             value_type=int,
-            meter=self._meter,
         )
         performance_metrics_collector._track_memory(obs)
         self.assertEqual(
@@ -163,7 +161,6 @@ class TestPerformanceMetrics(unittest.TestCase):
             description="Amount of available memory in bytes",
             unit="byte",
             value_type=int,
-            meter=self._meter,
         )
         performance_metrics_collector._track_commited_memory(obs)
         self.assertEqual(
@@ -178,7 +175,7 @@ class TestPerformanceMetrics(unittest.TestCase):
             performance_metrics_collector = PerformanceMetrics(
                 meter=self._meter,
                 labels=self._test_labels,
-                collection_type=AutoCollectionType.STANDARD_METRICS,
+                collection_type=AutoCollectionType.PERF_COUNTER,
             )
             process_mock.cpu_percent.return_value = 44.4
             psutil_mock.cpu_count.return_value = 2
@@ -188,7 +185,6 @@ class TestPerformanceMetrics(unittest.TestCase):
                 description="Process CPU usage as a percentage",
                 unit="percentage",
                 value_type=float,
-                meter=self._meter,
             )
             performance_metrics_collector._track_process_cpu(obs)
             self.assertEqual(
@@ -203,7 +199,7 @@ class TestPerformanceMetrics(unittest.TestCase):
             performance_metrics_collector = PerformanceMetrics(
                 meter=self._meter,
                 labels=self._test_labels,
-                collection_type=AutoCollectionType.STANDARD_METRICS,
+                collection_type=AutoCollectionType.PERF_COUNTER,
             )
             psutil_mock.cpu_count.return_value = None
             obs = Observer(
@@ -212,10 +208,9 @@ class TestPerformanceMetrics(unittest.TestCase):
                 description="Process CPU usage as a percentage",
                 unit="percentage",
                 value_type=float,
-                meter=self._meter,
             )
             performance_metrics_collector._track_process_cpu(obs)
-            self.assertEqual(logger_mock.exception.called, True)
+            self.assertEqual(logger_mock.warning.called, True)
 
     def test_track_process_memory(self):
         with mock.patch(
@@ -224,7 +219,7 @@ class TestPerformanceMetrics(unittest.TestCase):
             performance_metrics_collector = PerformanceMetrics(
                 meter=self._meter,
                 labels=self._test_labels,
-                collection_type=AutoCollectionType.STANDARD_METRICS,
+                collection_type=AutoCollectionType.PERF_COUNTER,
             )
             memory = collections.namedtuple("memory", "rss")
             pmem = memory(rss=100)
@@ -235,7 +230,6 @@ class TestPerformanceMetrics(unittest.TestCase):
                 description="Amount of memory process has used in bytes",
                 unit="byte",
                 value_type=int,
-                meter=self._meter,
             )
             performance_metrics_collector._track_process_memory(obs)
             self.assertEqual(
@@ -251,7 +245,7 @@ class TestPerformanceMetrics(unittest.TestCase):
             performance_metrics_collector = PerformanceMetrics(
                 meter=self._meter,
                 labels=self._test_labels,
-                collection_type=AutoCollectionType.STANDARD_METRICS,
+                collection_type=AutoCollectionType.PERF_COUNTER,
             )
             obs = Observer(
                 callback=performance_metrics_collector._track_process_memory,
@@ -259,7 +253,6 @@ class TestPerformanceMetrics(unittest.TestCase):
                 description="Amount of memory process has used in bytes",
                 unit="byte",
                 value_type=int,
-                meter=self._meter,
             )
             performance_metrics_collector._track_process_memory(obs)
-            self.assertEqual(logger_mock.exception.called, True)
+            self.assertEqual(logger_mock.warning.called, True)

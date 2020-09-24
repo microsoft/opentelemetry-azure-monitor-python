@@ -18,7 +18,6 @@ requests_counter = meter.create_metric(
     unit="1",
     value_type=int,
     metric_type=Counter,
-    label_keys=("environment",),
 )
 
 testing_labels = {"environment": "testing"}

@@ -3,7 +3,6 @@
 #
 import json
 import logging
-import time
 
 import requests
 
@@ -42,7 +41,7 @@ class LiveMetricsSender:
                     "Expect": "100-continue",
                     "Content-Type": "application/json; charset=utf-8",
                     utils.LIVE_METRICS_TRANSMISSION_TIME_HEADER: str(
-                        round(time.time()) * 1000
+                        utils.get_time_since_epoch()
                     ),
                 },
             )

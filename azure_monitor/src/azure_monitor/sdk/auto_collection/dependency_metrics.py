@@ -1,16 +1,53 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
+import logging
+import threading
 import time
 from typing import Dict
 
+import requests
+from opentelemetry import context
 from opentelemetry.metrics import Meter, Observer
 from opentelemetry.sdk.metrics import UpDownSumObserver
 
-from azure_monitor.sdk.auto_collection.metrics_span_processor import (
-    AzureMetricsSpanProcessor,
-)
-
+_dependency_lock = threading.Lock()
+logger = logging.getLogger(__name__)
 dependency_map = dict()
+ORIGINAL_REQUEST = requests.Session.request
+
+
+def dependency_patch(*args, **kwargs) -> None:
+    start_time = time.time()
+
+    try:
+        result = ORIGINAL_REQUEST(*args, **kwargs)
+    except Exception as exc:  # pylint: disable=broad-except
+        exception = exc
+        result = getattr(exc, "response", None)
+    end_time = time.time()
+
+    # Only collect request metric if sent from non-exporter thread
+    if context.get_value("suppress_instrumentation") is None:
+        # We don't want multiple threads updating this at once
+        with _dependency_lock:
+            try:
+                # Update duration
+                duration = dependency_map.get("duration", 0)
+                dependency_map["duration"] = duration + (end_time - start_time)
+                # Update count
+                count = dependency_map.get("count", 0)
+                dependency_map["count"] = count + 1
+                # Update failed count
+                if (
+                    result is not None
+                    and result.status_code < 200
+                    and result.status_code >= 300
+                ) or exception is not None:
+                    failed_count = dependency_map.get("failed_count", 0)
+                    dependency_map["failed_count"] = failed_count + 1
+            except Exception:  # pylint: disable=broad-except
+                logger.warning("Error handling failed dependency metrics.")
+    return result
 
 
 class DependencyMetrics:
@@ -20,26 +57,20 @@ class DependencyMetrics:
     Args:
         meter: OpenTelemetry Meter
         labels: Dictionary of labels
-        span_processor: Azure Metrics Span Processor
-        collection_type: Standard or Live Metrics
     """
 
-    def __init__(
-        self,
-        meter: Meter,
-        labels: Dict[str, str],
-        span_processor: AzureMetricsSpanProcessor,
-    ):
+    def __init__(self, meter: Meter, labels: Dict[str, str]):
         self._meter = meter
         self._labels = labels
-        self._span_processor = span_processor
+        # Patch requests
+        requests.Session.request = dependency_patch
 
         meter.register_observer(
             callback=self._track_dependency_duration,
             name="\\ApplicationInsights\\Dependency Call Duration",
             description="Average Outgoing Requests duration",
             unit="milliseconds",
-            value_type=int,
+            value_type=float,
             observer_type=UpDownSumObserver,
         )
         meter.register_observer(
@@ -66,11 +97,11 @@ class DependencyMetrics:
         using the requests library within an elapsed time and dividing
         that value over the elapsed time.
         """
-        current_count = self._span_processor.dependency_count
+        current_count = dependency_map.get("count", 0)
         current_time = time.time()
         last_count = dependency_map.get("last_count", 0)
         last_time = dependency_map.get("last_time")
-        last_result = dependency_map.get("last_result", 0)
+        last_result = dependency_map.get("last_result", 0.0)
 
         try:
             # last_time is None the very first time this function is called
@@ -95,29 +126,27 @@ class DependencyMetrics:
         Calculated by getting the time it takes to make an outgoing request
         and dividing over the amount of outgoing requests over an elapsed time.
         """
-        last_average_duration = dependency_map.get("last_average_duration", 0)
-        interval_duration = (
-            self._span_processor.dependency_duration
-            - dependency_map.get("last_duration", 0)
+        last_average_duration = dependency_map.get(
+            "last_average_duration", 0.0
         )
-        interval_count = (
-            self._span_processor.dependency_count
-            - dependency_map.get("last_count", 0)
+        interval_duration = dependency_map.get(
+            "duration", 0.0
+        ) - dependency_map.get("last_duration", 0.0)
+        interval_count = dependency_map.get("count", 0) - dependency_map.get(
+            "last_count", 0
         )
         try:
             result = interval_duration / interval_count
-            dependency_map[
-                "last_count"
-            ] = self._span_processor.dependency_count
+            dependency_map["last_count"] = dependency_map.get("count", 0)
             dependency_map["last_average_duration"] = result
-            dependency_map[
-                "last_duration"
-            ] = self._span_processor.dependency_duration
-            observer.observe(int(result), self._labels)
+            dependency_map["last_duration"] = dependency_map.get(
+                "duration", 0.0
+            )
+            observer.observe(result, self._labels)
         except ZeroDivisionError:
             # If interval_count is 0, exporter call made too close to previous
             # Return the previous result if this is the case
-            observer.observe(int(last_average_duration), self._labels)
+            observer.observe(last_average_duration, self._labels)
 
     def _track_failure_rate(self, observer: Observer) -> None:
         """ Track Failed Dependency rate
@@ -126,11 +155,11 @@ class DependencyMetrics:
         using the requests library within an elapsed time and dividing
         that value over the elapsed time.
         """
-        current_failed_count = self._span_processor.failed_dependency_count
+        current_failed_count = dependency_map.get("failed_count", 0)
         current_time = time.time()
         last_failed_count = dependency_map.get("last_failed_count", 0)
         last_time = dependency_map.get("last_time")
-        last_result = dependency_map.get("last_result", 0)
+        last_result = dependency_map.get("last_result", 0.0)
 
         try:
             # last_time is None the very first time this function is called

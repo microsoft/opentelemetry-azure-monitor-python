@@ -44,7 +44,7 @@ def throw(exc_type, *args, **kwargs):
 class TestLiveMetricsExporter(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls._instrumentation_key = "99c42f65-1656-4c41-afde-bd86b709a4a7"
+        cls._instrumentation_key = "12345678-1234-5678-abcd-12345678abcd"
         metrics.set_meter_provider(MeterProvider())
         cls._meter = metrics.get_meter(__name__)
         cls._test_metric = cls._meter.create_metric(
@@ -140,7 +140,7 @@ class TestLiveMetricsExporter(unittest.TestCase):
         self.assertIsInstance(envelope, LiveMetricEnvelope)
         self.assertEqual(
             envelope.instrumentation_key,
-            "99c42f65-1656-4c41-afde-bd86b709a4a7",
+            "12345678-1234-5678-abcd-12345678abcd",
         )
         self.assertEqual(envelope.documents, [])
         self.assertEqual(envelope.metrics[0].name, "testname")
