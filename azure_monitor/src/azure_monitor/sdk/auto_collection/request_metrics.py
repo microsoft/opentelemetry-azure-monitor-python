@@ -82,9 +82,7 @@ class RequestMetrics:
     """
 
     def __init__(
-        self,
-        meter: Meter,
-        labels: Dict[str, str],
+        self, meter: Meter, labels: Dict[str, str],
     ):
         self._meter = meter
         self._labels = labels
