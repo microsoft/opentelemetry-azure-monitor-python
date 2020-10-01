@@ -9,8 +9,6 @@ from typing import Dict
 from opentelemetry.metrics import Meter, Observer
 from opentelemetry.sdk.metrics import UpDownSumObserver
 
-from azure_monitor.sdk.auto_collection.utils import AutoCollectionType
-
 _requests_lock = threading.Lock()
 logger = logging.getLogger(__name__)
 requests_map = dict()
