@@ -37,6 +37,9 @@ class AzureMonitorMetricsExporter(BaseExporter, MetricsExporter):
     Args:
         options: :doc:`export.options` to allow configuration for the exporter
     """
+    def __init__(self, **options):
+        super().__init__()
+        self.add_telemetry_processor(standard_metrics_processor)
 
     def export(
         self, metric_records: Sequence[MetricRecord]
@@ -79,7 +82,10 @@ class AzureMonitorMetricsExporter(BaseExporter, MetricsExporter):
             value = metric_record.aggregator.checkpoint.last
         elif isinstance(metric, ValueRecorder):
             # mmsc
-            value = metric_record.aggregator.checkpoint.count
+            value = metric_record.aggregator.checkpoint.sum
+            _min = metric_record.aggregator.checkpoint.min
+            _max = metric_record.aggregator.checkpoint.max
+            count = metric_record.aggregator.checkpoint.count
         else:
             # sum or lv
             value = metric_record.aggregator.checkpoint
@@ -90,6 +96,9 @@ class AzureMonitorMetricsExporter(BaseExporter, MetricsExporter):
             ns=metric.description,
             name=metric.name,
             value=value,
+            min=_min,
+            max=_max,
+            count=count,
             kind=protocol.DataPointType.MEASUREMENT.value,
         )
 
@@ -99,3 +108,37 @@ class AzureMonitorMetricsExporter(BaseExporter, MetricsExporter):
         data = protocol.MetricData(metrics=[data_point], properties=properties)
         envelope.data = protocol.Data(base_data=data, base_type="MetricData")
         return envelope
+
+
+def standard_metrics_processor(envelope):
+    data = envelope.data.base_data
+    if len(data.metrics):
+        properties = {}
+        point = data.metrics[0]
+        if point.name == "http.client.duration":
+            point.name = "Dependency duration"
+            point.kind = protocol.DataPointType.AGGREGATION.value
+            properties["_MS.MetricId"] = "dependencies/duration"
+            properties["_MS.IsAutocollected"] = "True"
+            properties["cloud/roleInstance"] = utils.azure_monitor_context.get("ai.cloud.roleInstance")
+            properties["cloud/roleName"] = utils.azure_monitor_context.get("ai.cloud.role")
+            properties["Dependency.Success"] = "False"
+            if data.properties.get("http.status_code"):
+                try:
+                    code = int(data.properties.get("http.status_code"))
+                    if 200 <= code < 400:
+                        properties["Dependency.Success"] = "True"
+                except ValueError:
+                    pass
+            # TODO: Check other properties if url doesn't exist
+            properties["dependency/target"] = data.properties.get("http.url")
+            properties["Dependency.Type"] = "HTTP"
+            properties["dependency/resultCode"] = data.properties.get("http.status_code")
+            # Won't need this once Azure Monitor supports histograms
+            # We can't actually get the individual buckets because the bucket
+            # collection must happen on the SDK side
+            properties["dependency/performanceBucket"] = ""
+            # TODO: OT does not have this in semantic conventions for trace
+            properties["operation/synthetic"] = ""
+        # TODO: Add other std. metrics as implemented
+        data.properties = properties

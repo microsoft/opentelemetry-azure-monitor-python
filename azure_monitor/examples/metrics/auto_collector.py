@@ -14,7 +14,7 @@ tracer = trace.get_tracer_provider().get_tracer(__name__)
 metrics.set_meter_provider(MeterProvider())
 meter = metrics.get_meter(__name__)
 exporter = AzureMonitorMetricsExporter(
-    connection_string="InstrumentationKey=<INSTRUMENTATION KEY HERE>"
+    # connection_string="InstrumentationKey=<INSTRUMENTATION KEY HERE>"
 )
 
 testing_label_set = {"environment": "testing"}
