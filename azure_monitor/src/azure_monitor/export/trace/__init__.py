@@ -5,33 +5,43 @@ import logging
 from typing import Sequence
 from urllib.parse import urlparse
 
-from opentelemetry.sdk.trace.export import SpanExporter, SpanExportResult
+from opentelemetry.sdk.metrics import (
+    Counter,
+    SumObserver,
+    UpDownCounter,
+    UpDownSumObserver,
+    ValueObserver,
+    ValueRecorder,
+)
+from opentelemetry.sdk.metrics.export import (
+    MetricRecord,
+    MetricsExporter,
+    MetricsExportResult,
+)
 from opentelemetry.sdk.util import ns_to_iso_str
-from opentelemetry.trace import Span, SpanKind
-from opentelemetry.trace.status import StatusCanonicalCode
+from opentelemetry.util import time_ns
 
 from azure_monitor import protocol, utils
 from azure_monitor.export import (
     BaseExporter,
     ExportResult,
-    get_trace_export_result,
+    get_metrics_export_result,
 )
 
 logger = logging.getLogger(__name__)
 
 
-class AzureMonitorSpanExporter(BaseExporter, SpanExporter):
-    """Azure Monitor span exporter for OpenTelemetry.
+class AzureMonitorMetricsExporter(BaseExporter, MetricsExporter):
+    """Azure Monitor metrics exporter for OpenTelemetry.
 
     Args:
         options: :doc:`export.options` to allow configuration for the exporter
     """
-    def __init__(self, **options):
-        super().__init__(**options)
-        self.add_telemetry_processor(indicate_processed_by_metric_extractors)
 
-    def export(self, spans: Sequence[Span]) -> SpanExportResult:
-        envelopes = list(map(self._span_to_envelope, spans))
+    def export(
+        self, metric_records: Sequence[MetricRecord]
+    ) -> MetricsExportResult:
+        envelopes = list(map(self._metric_to_envelope, metric_records))
         envelopes = list(
             map(
                 lambda x: x.to_dict(),
@@ -45,126 +55,47 @@ class AzureMonitorSpanExporter(BaseExporter, SpanExporter):
             if result == ExportResult.SUCCESS:
                 # Try to send any cached events
                 self._transmit_from_storage()
-            return get_trace_export_result(result)
+            return get_metrics_export_result(result)
         except Exception:  # pylint: disable=broad-except
             logger.exception("Exception occurred while exporting the data.")
-            return get_trace_export_result(ExportResult.FAILED_NOT_RETRYABLE)
+            return get_metrics_export_result(ExportResult.FAILED_NOT_RETRYABLE)
 
-    # pylint: disable=too-many-statements
-    # pylint: disable=too-many-branches
-    def _span_to_envelope(self, span: Span) -> protocol.Envelope:
-        if not span:
+    def _metric_to_envelope(
+        self, metric_record: MetricRecord
+    ) -> protocol.Envelope:
+
+        if not metric_record:
             return None
-        envelope = convert_span_to_envelope(span)
-        envelope.ikey = self.options.instrumentation_key
+        envelope = protocol.Envelope(
+            ikey=self.options.instrumentation_key,
+            tags=dict(utils.azure_monitor_context),
+            time=ns_to_iso_str(metric_record.aggregator.last_update_timestamp),
+        )
+        envelope.name = "Microsoft.ApplicationInsights.Metric"
+        value = 0
+        metric = metric_record.instrument
+        if isinstance(metric, ValueObserver):
+            # mmscl
+            value = metric_record.aggregator.checkpoint.last
+        elif isinstance(metric, ValueRecorder):
+            # mmsc
+            value = metric_record.aggregator.checkpoint.count
+        else:
+            # sum or lv
+            value = metric_record.aggregator.checkpoint
+        if value is None:
+            logger.warning("Value is none. Default to 0.")
+            value = 0
+        data_point = protocol.DataPoint(
+            ns=metric.description,
+            name=metric.name,
+            value=value,
+            kind=protocol.DataPointType.MEASUREMENT.value,
+        )
+
+        properties = {}
+        for label_tuple in metric_record.labels:
+            properties[label_tuple[0]] = label_tuple[1]
+        data = protocol.MetricData(metrics=[data_point], properties=properties)
+        envelope.data = protocol.Data(base_data=data, base_type="MetricData")
         return envelope
-
-
-# pylint: disable=too-many-statements
-# pylint: disable=too-many-branches
-def convert_span_to_envelope(span: Span) -> protocol.Envelope:
-    if not span:
-        return None
-    envelope = protocol.Envelope(
-        ikey="",
-        tags=dict(utils.azure_monitor_context),
-        time=ns_to_iso_str(span.start_time),
-    )
-    envelope.tags["ai.operation.id"] = "{:032x}".format(span.context.trace_id)
-    parent = span.parent
-    if isinstance(parent, Span):
-        parent = parent.context
-    if parent:
-        envelope.tags["ai.operation.parentId"] = "{:016x}".format(
-            parent.span_id
-        )
-    if span.kind in (SpanKind.CONSUMER, SpanKind.SERVER):
-        envelope.name = "Microsoft.ApplicationInsights.Request"
-        data = protocol.Request(
-            id="{:016x}".format(span.context.span_id),
-            duration=utils.ns_to_duration(span.end_time - span.start_time),
-            response_code=str(span.status.canonical_code.value),
-            success=span.status.canonical_code
-            == StatusCanonicalCode.OK,  # Modify based off attributes or Status
-            properties={},
-        )
-        envelope.data = protocol.Data(base_data=data, base_type="RequestData")
-        if "http.method" in span.attributes:
-            data.name = span.attributes["http.method"]
-            if "http.route" in span.attributes:
-                data.name = data.name + " " + span.attributes["http.route"]
-                envelope.tags["ai.operation.name"] = data.name
-                data.properties["request.name"] = data.name
-            elif "http.path" in span.attributes:
-                data.properties["request.name"] = (
-                    data.name + " " + span.attributes["http.path"]
-                )
-        if "http.url" in span.attributes:
-            data.url = span.attributes["http.url"]
-            data.properties["request.url"] = span.attributes["http.url"]
-        if "http.status_code" in span.attributes:
-            status_code = span.attributes["http.status_code"]
-            data.response_code = str(status_code)
-            data.success = 200 <= status_code < 400
-    else:
-        envelope.name = "Microsoft.ApplicationInsights.RemoteDependency"
-        data = protocol.RemoteDependency(
-            name=span.name,
-            id="{:016x}".format(span.context.span_id),
-            result_code=str(span.status.canonical_code.value),
-            duration=utils.ns_to_duration(span.end_time - span.start_time),
-            success=span.status.canonical_code
-            == StatusCanonicalCode.OK,  # Modify based off attributes or Status
-            properties={},
-        )
-        envelope.data = protocol.Data(
-            base_data=data, base_type="RemoteDependencyData"
-        )
-        if span.kind in (SpanKind.CLIENT, SpanKind.PRODUCER):
-            if (
-                "component" in span.attributes
-                and span.attributes["component"] == "http"
-            ):
-                # TODO: check other component types (e.g. db)
-                data.type = "HTTP"
-            if "http.url" in span.attributes:
-                url = span.attributes["http.url"]
-                # data is the url
-                data.data = url
-                parse_url = urlparse(url)
-                # TODO: error handling, probably put scheme as well
-                # target matches authority (host:port)
-                data.target = parse_url.netloc
-                if "http.method" in span.attributes:
-                    # name is METHOD/path
-                    data.name = (
-                        span.attributes["http.method"] + "/" + parse_url.path
-                    )
-            if "http.status_code" in span.attributes:
-                status_code = span.attributes["http.status_code"]
-                data.result_code = str(status_code)
-                data.success = 200 <= status_code < 400
-        else:  # SpanKind.INTERNAL
-            data.type = "InProc"
-            data.success = True
-    for key in span.attributes:
-        # This removes redundant data from ApplicationInsights
-        if key.startswith("http."):
-            continue
-        data.properties[key] = span.attributes[key]
-    if span.links:
-        links = []
-        for link in span.links:
-            operation_id = "{:032x}".format(link.context.trace_id)
-            span_id = "{:016x}".format(link.context.span_id)
-            links.append({"operation_Id": operation_id, "id": span_id})
-        data.properties["_MS.links"] = json.dumps(links)
-    # TODO: tracestate, tags
-    return envelope
-
-def indicate_processed_by_metric_extractors(envelope):
-    name = "Requests"
-    if envelope.data.base_type == "RemoteDependencyData":
-        name = "Dependencies"
-    envelope.data.base_data.properties["_MS.ProcessedByMetricExtractors"] = \
-        "(Name:'" + name + "',Ver:'1.1')" 

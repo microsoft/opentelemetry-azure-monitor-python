@@ -2,9 +2,6 @@
 
 ## Unreleased
 
-- Add support for standard metrics (dependencies)
-  ([#115](https://github.com/microsoft/opentelemetry-azure-monitor-python/pull/115))
-
 ## 0.5b.0
 Released 2020-09-24
 
