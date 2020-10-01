@@ -117,7 +117,7 @@ class RequestMetrics:
         )
 
     def _track_request_duration(self, observer: Observer) -> None:
-        """ Track Request execution time
+        """Track Request execution time
 
         Calculated by getting the time it takes to make an incoming request
         and dividing over the amount of incoming requests over an elapsed time.
@@ -141,7 +141,7 @@ class RequestMetrics:
             observer.observe(last_average_duration, self._labels)
 
     def _track_request_rate(self, observer: Observer) -> None:
-        """ Track Request execution rate
+        """Track Request execution rate
 
         Calculated by obtaining by getting the number of incoming requests
         made to an HTTPServer within an elapsed time and dividing that value
@@ -171,7 +171,7 @@ class RequestMetrics:
             observer.observe(last_rate, self._labels)
 
     def _track_request_failed_rate(self, observer: Observer) -> None:
-        """ Track Request failed execution rate
+        """Track Request failed execution rate
 
         Calculated by obtaining by getting the number of failed incoming requests
         made to an HTTPServer within an elapsed time and dividing that value

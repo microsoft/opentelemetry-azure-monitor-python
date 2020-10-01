@@ -26,6 +26,7 @@ class AzureMonitorSpanExporter(BaseExporter, SpanExporter):
     Args:
         options: :doc:`export.options` to allow configuration for the exporter
     """
+
     def __init__(self, **options):
         super().__init__(**options)
         self.add_telemetry_processor(indicate_processed_by_metric_extractors)
@@ -162,9 +163,11 @@ def convert_span_to_envelope(span: Span) -> protocol.Envelope:
     # TODO: tracestate, tags
     return envelope
 
+
 def indicate_processed_by_metric_extractors(envelope):
     name = "Requests"
     if envelope.data.base_type == "RemoteDependencyData":
         name = "Dependencies"
-    envelope.data.base_data.properties["_MS.ProcessedByMetricExtractors"] = \
-        "(Name:'" + name + "',Ver:'1.1')" 
+    envelope.data.base_data.properties["_MS.ProcessedByMetricExtractors"] = (
+        "(Name:'" + name + "',Ver:'1.1')"
+    )

@@ -17,7 +17,7 @@ from opentelemetry.trace.status import Status, StatusCanonicalCode
 from azure_monitor.export import ExportResult
 from azure_monitor.export.trace import (
     AzureMonitorSpanExporter,
-    indicate_processed_by_metric_extractors
+    indicate_processed_by_metric_extractors,
 )
 from azure_monitor.options import ExporterOptions
 
@@ -73,7 +73,7 @@ class TestAzureExporter(unittest.TestCase):
             storage_max_size=50,
             storage_maintenance_period=100,
             storage_retention_period=200,
-            proxies={"asd":"123"},
+            proxies={"asd": "123"},
             timeout=5.0,
         )
         self.assertIsInstance(exporter.options, ExporterOptions)
@@ -84,22 +84,15 @@ class TestAzureExporter(unittest.TestCase):
         self.assertEqual(
             exporter.storage.path, os.path.join(TEST_FOLDER, self.id())
         )
+        self.assertEqual(exporter.storage.max_size, 50)
+        self.assertEqual(exporter.storage.maintenance_period, 100)
+        self.assertEqual(exporter.storage.retention_period, 200)
+        self.assertEqual(exporter.options.proxies, {"asd": "123"})
+        self.assertEqual(exporter.options.timeout, 5.0)
         self.assertEqual(
-            exporter.storage.max_size, 50
+            exporter._telemetry_processors[0],
+            indicate_processed_by_metric_extractors,
         )
-        self.assertEqual(
-            exporter.storage.maintenance_period, 100
-        )
-        self.assertEqual(
-            exporter.storage.retention_period, 200
-        )
-        self.assertEqual(
-            exporter.options.proxies, {"asd":"123"}
-        )
-        self.assertEqual(
-            exporter.options.timeout, 5.0
-        )
-        self.assertEqual(exporter._telemetry_processors[0], indicate_processed_by_metric_extractors)
 
     def test_export_empty(self):
         exporter = self._exporter
@@ -194,12 +187,20 @@ class TestAzureExporter(unittest.TestCase):
         envelope.data.base_type = "RemoteDependencyData"
         envelope.data.base_data.properties = {}
         indicate_processed_by_metric_extractors(envelope)
-        self.assertEqual(envelope.data.base_data.properties["_MS.ProcessedByMetricExtractors"],
-            "(Name:'Dependencies',Ver:'1.1')")
+        self.assertEqual(
+            envelope.data.base_data.properties[
+                "_MS.ProcessedByMetricExtractors"
+            ],
+            "(Name:'Dependencies',Ver:'1.1')",
+        )
         envelope.data.base_type = "RequestData"
         indicate_processed_by_metric_extractors(envelope)
-        self.assertEqual(envelope.data.base_data.properties["_MS.ProcessedByMetricExtractors"],
-            "(Name:'Requests',Ver:'1.1')")
+        self.assertEqual(
+            envelope.data.base_data.properties[
+                "_MS.ProcessedByMetricExtractors"
+            ],
+            "(Name:'Requests',Ver:'1.1')",
+        )
 
     def test_span_to_envelope_none(self):
         exporter = self._exporter
