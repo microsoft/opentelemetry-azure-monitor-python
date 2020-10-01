@@ -79,29 +79,26 @@ class RequestMetrics:
     Args:
         meter: OpenTelemetry Meter
         labels: Dictionary of labels
-        collection_type: Standard or Live Metrics
     """
 
     def __init__(
         self,
         meter: Meter,
         labels: Dict[str, str],
-        collection_type: AutoCollectionType,
     ):
         self._meter = meter
         self._labels = labels
         # Patch the HTTPServer handler to track request information
         HTTPServer.__init__ = server_patch
 
-        if collection_type == AutoCollectionType.LIVE_METRICS:
-            meter.register_observer(
-                callback=self._track_request_failed_rate,
-                name="\\ApplicationInsights\\Requests Failed/Sec",
-                description="Incoming Requests Failed Rate",
-                unit="rps",
-                value_type=float,
-                observer_type=UpDownSumObserver,
-            )
+        meter.register_observer(
+            callback=self._track_request_failed_rate,
+            name="\\ApplicationInsights\\Requests Failed/Sec",
+            description="Incoming Requests Failed Rate",
+            unit="rps",
+            value_type=float,
+            observer_type=UpDownSumObserver,
+        )
         meter.register_observer(
             callback=self._track_request_duration,
             name="\\ApplicationInsights\\Request Duration",
