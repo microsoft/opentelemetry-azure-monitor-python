@@ -42,7 +42,7 @@ class LiveMetricsAutoCollection:
         col_type = AutoCollectionType.LIVE_METRICS
         self._performance_metrics = PerformanceMetrics(meter, labels, col_type)
         self._dependency_metrics = DependencyMetrics(meter, labels)
-        self._request_metrics = RequestMetrics(meter, labels, col_type)
+        self._request_metrics = RequestMetrics(meter, labels)
         self._manager = LiveMetricsManager(
             meter, instrumentation_key, span_processor
         )

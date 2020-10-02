@@ -91,7 +91,7 @@ class DependencyMetrics:
         )
 
     def _track_dependency_rate(self, observer: Observer) -> None:
-        """ Track Dependency rate
+        """Track Dependency rate
 
         Calculated by obtaining the number of outgoing requests made
         using the requests library within an elapsed time and dividing
@@ -121,7 +121,7 @@ class DependencyMetrics:
             observer.observe(last_result, self._labels)
 
     def _track_dependency_duration(self, observer: Observer) -> None:
-        """ Track Dependency average duration
+        """Track Dependency average duration
 
         Calculated by getting the time it takes to make an outgoing request
         and dividing over the amount of outgoing requests over an elapsed time.
@@ -149,7 +149,7 @@ class DependencyMetrics:
             observer.observe(last_average_duration, self._labels)
 
     def _track_failure_rate(self, observer: Observer) -> None:
-        """ Track Failed Dependency rate
+        """Track Failed Dependency rate
 
         Calculated by obtaining the number of failed outgoing requests made
         using the requests library within an elapsed time and dividing

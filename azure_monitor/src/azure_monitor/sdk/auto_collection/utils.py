@@ -4,8 +4,7 @@ from enum import Enum
 
 
 class AutoCollectionType(Enum):
-    """Automatic collection of metrics type
-    """
+    """Automatic collection of metrics type"""
 
     PERF_COUNTER = 0
     LIVE_METRICS = 1
