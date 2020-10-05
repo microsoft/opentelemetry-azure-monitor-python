@@ -21,9 +21,19 @@ from opentelemetry.sdk.metrics.export.aggregate import (
 from opentelemetry.sdk.util import ns_to_iso_str
 
 from azure_monitor.export import ExportResult
-from azure_monitor.export.metrics import AzureMonitorMetricsExporter
+from azure_monitor.export.metrics import (
+    AzureMonitorMetricsExporter,
+    standard_metrics_processor,
+)
 from azure_monitor.options import ExporterOptions
-from azure_monitor.protocol import Data, DataPoint, Envelope, MetricData
+from azure_monitor.protocol import (
+    Data,
+    DataPoint,
+    DataPointType,
+    Envelope,
+    MetricData,
+)
+from azure_monitor.utils import azure_monitor_context
 
 TEST_FOLDER = os.path.abspath(".test")
 STORAGE_PATH = os.path.join(TEST_FOLDER)
@@ -154,6 +164,38 @@ class TestAzureMetricsExporter(unittest.TestCase):
         self.assertEqual(result, MetricsExportResult.FAILURE)
         self.assertEqual(logger_mock.exception.called, True)
 
+    def test_standard_metrics_processor(self):
+        envelope = mock.Mock()
+        point = mock.Mock()
+        point.name = "http.client.duration"
+        base_data = mock.Mock()
+        base_data.metrics = [point]
+        base_data.properties = {"http.status_code":"200", "http.url":"http://example.com"}
+        envelope.data.base_data = base_data
+        standard_metrics_processor(envelope)
+        self.assertEqual(point.name, "Dependency duration")
+        self.assertEqual(point.kind, DataPointType.AGGREGATION.value)
+        self.assertEqual(base_data.properties["_MS.MetricId"], "dependencies/duration")
+        self.assertEqual(base_data.properties["_MS.IsAutocollected"], "True")
+        role_instance = azure_monitor_context.get("ai.cloud.roleInstance")
+        role_name = azure_monitor_context.get("ai.cloud.role")
+        self.assertEqual(base_data.properties["cloud/roleInstance"], role_instance)
+        self.assertEqual(base_data.properties["cloud/roleName"], role_name)
+        self.assertEqual(base_data.properties["Dependency.Success"], "True")
+        self.assertEqual(base_data.properties["dependency/target"], "http://example.com")
+        self.assertEqual(base_data.properties["Dependency.Type"], "HTTP")
+        self.assertEqual(base_data.properties["dependency/resultCode"], "200")
+        self.assertEqual(base_data.properties["dependency/performanceBucket"], "")
+        self.assertEqual(base_data.properties["operation/synthetic"], "")
+        base_data.properties["http.status_code"] = "500"
+        point.name = "http.client.duration"
+        standard_metrics_processor(envelope)
+        self.assertEqual(base_data.properties["Dependency.Success"], "False")
+        base_data.properties["http.status_code"] = "asd"
+        point.name = "http.client.duration"
+        standard_metrics_processor(envelope)
+        self.assertEqual(base_data.properties["Dependency.Success"], "False")
+
     def test_metric_to_envelope_none(self):
         exporter = self._exporter
         self.assertIsNone(exporter._metric_to_envelope(None))
@@ -200,7 +242,6 @@ class TestAzureMetricsExporter(unittest.TestCase):
         aggregator.update(123)
         aggregator.take_checkpoint()
         record = MetricRecord(self._test_obs, self._test_labels, aggregator)
-        print(record.labels)
         exporter = self._exporter
         envelope = exporter._metric_to_envelope(record)
         self.assertIsInstance(envelope, Envelope)
@@ -259,7 +300,6 @@ class TestAzureMetricsExporter(unittest.TestCase):
         self.assertEqual(envelope.data.base_data.metrics[0].ns, "testdesc")
         self.assertEqual(envelope.data.base_data.metrics[0].name, "testname")
         self.assertEqual(envelope.data.base_data.metrics[0].value, 0)
-        print(envelope.data.base_data.properties)
         self.assertEqual(
             envelope.data.base_data.properties["environment"], "staging"
         )
@@ -273,7 +313,8 @@ class TestAzureMetricsExporter(unittest.TestCase):
 
     def test_value_recorder_to_envelope(self):
         aggregator = MinMaxSumCountAggregator()
-        aggregator.update(123)
+        aggregator.update(100)
+        aggregator.update(300)
         aggregator.take_checkpoint()
         record = MetricRecord(
             self._test_value_recorder, self._test_labels, aggregator
@@ -298,7 +339,10 @@ class TestAzureMetricsExporter(unittest.TestCase):
         self.assertIsInstance(envelope.data.base_data.metrics[0], DataPoint)
         self.assertEqual(envelope.data.base_data.metrics[0].ns, "testdesc")
         self.assertEqual(envelope.data.base_data.metrics[0].name, "testname")
-        self.assertEqual(envelope.data.base_data.metrics[0].value, 1)
+        self.assertEqual(envelope.data.base_data.metrics[0].value, 400)
+        self.assertEqual(envelope.data.base_data.metrics[0].min, 100)
+        self.assertEqual(envelope.data.base_data.metrics[0].max, 300)
+        self.assertEqual(envelope.data.base_data.metrics[0].count, 2)
         self.assertEqual(
             envelope.data.base_data.properties["environment"], "staging"
         )

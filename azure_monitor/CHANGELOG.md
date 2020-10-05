@@ -4,6 +4,8 @@
 
 - Remove request metrics from auto-collection
   ([#124](https://github.com/microsoft/opentelemetry-azure-monitor-python/pull/124))
+- Implement standard metrics for requests library
+  ([#124](https://github.com/microsoft/opentelemetry-azure-monitor-python/pull/124))
 
 ## 0.5b.0
 Released 2020-09-24
