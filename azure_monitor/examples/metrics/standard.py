@@ -1,8 +1,8 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
-import requests
 import time
 
+import requests
 from opentelemetry import metrics
 from opentelemetry.instrumentation.requests import RequestsInstrumentor
 from opentelemetry.sdk.metrics import MeterProvider
