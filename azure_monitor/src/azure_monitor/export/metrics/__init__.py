@@ -37,6 +37,7 @@ class AzureMonitorMetricsExporter(BaseExporter, MetricsExporter):
     Args:
         options: :doc:`export.options` to allow configuration for the exporter
     """
+
     def __init__(self, **options):
         super().__init__(**options)
         self.add_telemetry_processor(standard_metrics_processor)
@@ -123,8 +124,12 @@ def standard_metrics_processor(envelope):
             point.kind = protocol.DataPointType.AGGREGATION.value
             properties["_MS.MetricId"] = "dependencies/duration"
             properties["_MS.IsAutocollected"] = "True"
-            properties["cloud/roleInstance"] = utils.azure_monitor_context.get("ai.cloud.roleInstance")
-            properties["cloud/roleName"] = utils.azure_monitor_context.get("ai.cloud.role")
+            properties["cloud/roleInstance"] = utils.azure_monitor_context.get(
+                "ai.cloud.roleInstance"
+            )
+            properties["cloud/roleName"] = utils.azure_monitor_context.get(
+                "ai.cloud.role"
+            )
             properties["Dependency.Success"] = "False"
             if data.properties.get("http.status_code"):
                 try:
@@ -136,7 +141,9 @@ def standard_metrics_processor(envelope):
             # TODO: Check other properties if url doesn't exist
             properties["dependency/target"] = data.properties.get("http.url")
             properties["Dependency.Type"] = "HTTP"
-            properties["dependency/resultCode"] = data.properties.get("http.status_code")
+            properties["dependency/resultCode"] = data.properties.get(
+                "http.status_code"
+            )
             # Won't need this once Azure Monitor supports histograms
             # We can't actually get the individual buckets because the bucket
             # collection must happen on the SDK side
