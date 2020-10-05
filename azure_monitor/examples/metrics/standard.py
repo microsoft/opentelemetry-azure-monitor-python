@@ -1,5 +1,8 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
+# pylint: disable=import-error
+# pylint: disable=no-member
+# pylint: disable=no-name-in-module
 import time
 
 import requests

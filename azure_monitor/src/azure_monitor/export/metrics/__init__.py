@@ -116,7 +116,7 @@ class AzureMonitorMetricsExporter(BaseExporter, MetricsExporter):
 
 def standard_metrics_processor(envelope):
     data = envelope.data.base_data
-    if len(data.metrics):
+    if data.metrics:
         properties = {}
         point = data.metrics[0]
         if point.name == "http.client.duration":
