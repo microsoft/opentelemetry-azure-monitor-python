@@ -1,3 +1,5 @@
+> **This repository has been moved to the [Azure SDK for Python](https://github.com/Azure/azure-sdk-for-python/tree/master/sdk/monitor/azure-opentelemetry-exporter-azuremonitor) repository.** In order to improve discoverability and share common dependencies/tests, the OpenTelemetry Azure Monitor exporters for Python has moved to a common location containing all Azure SDKs.
+
 # OpenTelemetry Azure Monitor
 
 [![Gitter chat](https://img.shields.io/gitter/room/Microsoft/azure-monitor-python)](https://gitter.im/Microsoft/azure-monitor-python)
