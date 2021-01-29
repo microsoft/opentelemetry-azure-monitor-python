@@ -79,7 +79,7 @@ class PerformanceMetrics:
             )
 
     def _track_cpu(self, observer: Observer) -> None:
-        """ Track CPU time
+        """Track CPU time
 
         Processor time is defined as a float representing the current system
         wide CPU utilization minus idle CPU time as a percentage. Idle CPU
@@ -90,7 +90,7 @@ class PerformanceMetrics:
         observer.observe(100.0 - cpu_times_percent.idle, self._labels)
 
     def _track_memory(self, observer: Observer) -> None:
-        """ Track Memory
+        """Track Memory
 
         Available memory is defined as memory that can be given instantly to
         processes without the system going into swap.
@@ -98,7 +98,7 @@ class PerformanceMetrics:
         observer.observe(psutil.virtual_memory().available, self._labels)
 
     def _track_process_cpu(self, observer: Observer) -> None:
-        """ Track Process CPU time
+        """Track Process CPU time
 
         Returns a derived gauge for the CPU usage for the current process.
         Return values range from 0.0 to 100.0 inclusive.
@@ -113,7 +113,7 @@ class PerformanceMetrics:
             logger.warning("Error handling get process cpu usage.")
 
     def _track_process_memory(self, observer: Observer) -> None:
-        """ Track Memory
+        """Track Memory
 
          Available memory is defined as memory that can be given instantly to
         processes without the system going into swap.
@@ -124,7 +124,7 @@ class PerformanceMetrics:
             logger.warning("Error handling get process private bytes.")
 
     def _track_commited_memory(self, observer: Observer) -> None:
-        """ Track Commited Memory
+        """Track Commited Memory
 
         Available commited memory is defined as total memory minus available memory.
         """

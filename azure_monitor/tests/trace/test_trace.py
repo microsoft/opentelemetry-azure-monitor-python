@@ -15,7 +15,10 @@ from opentelemetry.trace import Link, SpanContext, SpanKind
 from opentelemetry.trace.status import Status, StatusCanonicalCode
 
 from azure_monitor.export import ExportResult
-from azure_monitor.export.trace import AzureMonitorSpanExporter
+from azure_monitor.export.trace import (
+    AzureMonitorSpanExporter,
+    indicate_processed_by_metric_extractors,
+)
 from azure_monitor.options import ExporterOptions
 
 TEST_FOLDER = os.path.abspath(".test")
@@ -67,6 +70,11 @@ class TestAzureExporter(unittest.TestCase):
         exporter = AzureMonitorSpanExporter(
             instrumentation_key="4321abcd-5678-4efa-8abc-1234567890ab",
             storage_path=os.path.join(TEST_FOLDER, self.id()),
+            storage_max_size=50,
+            storage_maintenance_period=100,
+            storage_retention_period=200,
+            proxies={"asd": "123"},
+            timeout=5.0,
         )
         self.assertIsInstance(exporter.options, ExporterOptions)
         self.assertEqual(
@@ -74,7 +82,16 @@ class TestAzureExporter(unittest.TestCase):
             "4321abcd-5678-4efa-8abc-1234567890ab",
         )
         self.assertEqual(
-            exporter.options.storage_path, os.path.join(TEST_FOLDER, self.id())
+            exporter.storage.path, os.path.join(TEST_FOLDER, self.id())
+        )
+        self.assertEqual(exporter.storage.max_size, 50)
+        self.assertEqual(exporter.storage.maintenance_period, 100)
+        self.assertEqual(exporter.storage.retention_period, 200)
+        self.assertEqual(exporter.options.proxies, {"asd": "123"})
+        self.assertEqual(exporter.options.timeout, 5.0)
+        self.assertEqual(
+            exporter._telemetry_processors[0],
+            indicate_processed_by_metric_extractors,
         )
 
     def test_export_empty(self):
@@ -121,6 +138,7 @@ class TestAzureExporter(unittest.TestCase):
             storage_mock = mock.Mock()
             exporter._transmit_from_storage = storage_mock
             exporter.export([test_span])
+            self.assertEqual(len(exporter._telemetry_processors), 1)
             self.assertEqual(storage_mock.call_count, 1)
             self.assertEqual(len(os.listdir(exporter.storage.path)), 0)
 
@@ -163,6 +181,26 @@ class TestAzureExporter(unittest.TestCase):
             transmit.return_value = ExportResult.FAILED_NOT_RETRYABLE
             result = exporter.export([test_span])
             self.assertEqual(result, SpanExportResult.FAILURE)
+
+    def test_indicate_processed_by_metric_extractors(self):
+        envelope = mock.Mock()
+        envelope.data.base_type = "RemoteDependencyData"
+        envelope.data.base_data.properties = {}
+        indicate_processed_by_metric_extractors(envelope)
+        self.assertEqual(
+            envelope.data.base_data.properties[
+                "_MS.ProcessedByMetricExtractors"
+            ],
+            "(Name:'Dependencies',Ver:'1.1')",
+        )
+        envelope.data.base_type = "RequestData"
+        indicate_processed_by_metric_extractors(envelope)
+        self.assertEqual(
+            envelope.data.base_data.properties[
+                "_MS.ProcessedByMetricExtractors"
+            ],
+            "(Name:'Requests',Ver:'1.1')",
+        )
 
     def test_span_to_envelope_none(self):
         exporter = self._exporter

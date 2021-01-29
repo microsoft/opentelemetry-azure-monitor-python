@@ -9,8 +9,6 @@ from typing import Dict
 from opentelemetry.metrics import Meter, Observer
 from opentelemetry.sdk.metrics import UpDownSumObserver
 
-from azure_monitor.sdk.auto_collection.utils import AutoCollectionType
-
 _requests_lock = threading.Lock()
 logger = logging.getLogger(__name__)
 requests_map = dict()
@@ -79,29 +77,24 @@ class RequestMetrics:
     Args:
         meter: OpenTelemetry Meter
         labels: Dictionary of labels
-        collection_type: Standard or Live Metrics
     """
 
     def __init__(
-        self,
-        meter: Meter,
-        labels: Dict[str, str],
-        collection_type: AutoCollectionType,
+        self, meter: Meter, labels: Dict[str, str],
     ):
         self._meter = meter
         self._labels = labels
         # Patch the HTTPServer handler to track request information
         HTTPServer.__init__ = server_patch
 
-        if collection_type == AutoCollectionType.LIVE_METRICS:
-            meter.register_observer(
-                callback=self._track_request_failed_rate,
-                name="\\ApplicationInsights\\Requests Failed/Sec",
-                description="Incoming Requests Failed Rate",
-                unit="rps",
-                value_type=float,
-                observer_type=UpDownSumObserver,
-            )
+        meter.register_observer(
+            callback=self._track_request_failed_rate,
+            name="\\ApplicationInsights\\Requests Failed/Sec",
+            description="Incoming Requests Failed Rate",
+            unit="rps",
+            value_type=float,
+            observer_type=UpDownSumObserver,
+        )
         meter.register_observer(
             callback=self._track_request_duration,
             name="\\ApplicationInsights\\Request Duration",
@@ -120,7 +113,7 @@ class RequestMetrics:
         )
 
     def _track_request_duration(self, observer: Observer) -> None:
-        """ Track Request execution time
+        """Track Request execution time
 
         Calculated by getting the time it takes to make an incoming request
         and dividing over the amount of incoming requests over an elapsed time.
@@ -144,7 +137,7 @@ class RequestMetrics:
             observer.observe(last_average_duration, self._labels)
 
     def _track_request_rate(self, observer: Observer) -> None:
-        """ Track Request execution rate
+        """Track Request execution rate
 
         Calculated by obtaining by getting the number of incoming requests
         made to an HTTPServer within an elapsed time and dividing that value
@@ -174,7 +167,7 @@ class RequestMetrics:
             observer.observe(last_rate, self._labels)
 
     def _track_request_failed_rate(self, observer: Observer) -> None:
-        """ Track Request failed execution rate
+        """Track Request failed execution rate
 
         Calculated by obtaining by getting the number of failed incoming requests
         made to an HTTPServer within an elapsed time and dividing that value

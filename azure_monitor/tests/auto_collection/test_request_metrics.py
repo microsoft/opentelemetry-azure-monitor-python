@@ -9,7 +9,6 @@ from opentelemetry import metrics
 from opentelemetry.sdk.metrics import MeterProvider, Observer
 
 from azure_monitor.sdk.auto_collection import request_metrics
-from azure_monitor.sdk.auto_collection.utils import AutoCollectionType
 
 ORIGINAL_CONS = HTTPServer.__init__
 
@@ -33,13 +32,11 @@ class TestRequestMetrics(unittest.TestCase):
     def test_constructor(self):
         mock_meter = mock.Mock()
         request_metrics_collector = request_metrics.RequestMetrics(
-            meter=mock_meter,
-            labels=self._test_labels,
-            collection_type=AutoCollectionType.PERF_COUNTER,
+            meter=mock_meter, labels=self._test_labels,
         )
         self.assertEqual(request_metrics_collector._meter, mock_meter)
         self.assertEqual(request_metrics_collector._labels, self._test_labels)
-        self.assertEqual(mock_meter.register_observer.call_count, 2)
+        self.assertEqual(mock_meter.register_observer.call_count, 3)
         create_metric_calls = mock_meter.register_observer.call_args_list
         create_metric_calls[0].assert_called_with(
             callback=request_metrics_collector._track_request_duration,
@@ -57,11 +54,17 @@ class TestRequestMetrics(unittest.TestCase):
             value_type=float,
         )
 
+        create_metric_calls[2].assert_called_with(
+            callback=request_metrics_collector._track_request_failed_rate,
+            name="\\ApplicationInsights\\Requests Failed/Sec",
+            description="Incoming Requests Failed Rate",
+            unit="rps",
+            value_type=float,
+        )
+
     def test_track_request_duration(self):
         request_metrics_collector = request_metrics.RequestMetrics(
-            meter=self._meter,
-            labels=self._test_labels,
-            collection_type=AutoCollectionType.PERF_COUNTER,
+            meter=self._meter, labels=self._test_labels,
         )
         request_metrics.requests_map["duration"] = 100
         request_metrics.requests_map["count"] = 10
@@ -80,9 +83,7 @@ class TestRequestMetrics(unittest.TestCase):
 
     def test_track_request_duration_error(self):
         request_metrics_collector = request_metrics.RequestMetrics(
-            meter=self._meter,
-            labels=self._test_labels,
-            collection_type=AutoCollectionType.PERF_COUNTER,
+            meter=self._meter, labels=self._test_labels,
         )
         request_metrics.requests_map["duration"] = 100
         request_metrics.requests_map["count"] = 10
@@ -102,9 +103,7 @@ class TestRequestMetrics(unittest.TestCase):
     @mock.patch("azure_monitor.sdk.auto_collection.request_metrics.time")
     def test_track_request_rate(self, time_mock):
         request_metrics_collector = request_metrics.RequestMetrics(
-            meter=self._meter,
-            labels=self._test_labels,
-            collection_type=AutoCollectionType.PERF_COUNTER,
+            meter=self._meter, labels=self._test_labels,
         )
         time_mock.time.return_value = 100
         request_metrics.requests_map["last_time"] = 98
@@ -125,9 +124,7 @@ class TestRequestMetrics(unittest.TestCase):
     def test_track_request_rate_time_none(self, time_mock):
         time_mock.time.return_value = 100
         request_metrics_collector = request_metrics.RequestMetrics(
-            meter=self._meter,
-            labels=self._test_labels,
-            collection_type=AutoCollectionType.PERF_COUNTER,
+            meter=self._meter, labels=self._test_labels,
         )
         request_metrics.requests_map["last_time"] = None
         obs = Observer(
@@ -145,9 +142,7 @@ class TestRequestMetrics(unittest.TestCase):
     @mock.patch("azure_monitor.sdk.auto_collection.request_metrics.time")
     def test_track_request_rate_error(self, time_mock):
         request_metrics_collector = request_metrics.RequestMetrics(
-            meter=self._meter,
-            labels=self._test_labels,
-            collection_type=AutoCollectionType.PERF_COUNTER,
+            meter=self._meter, labels=self._test_labels,
         )
         time_mock.time.return_value = 100
         request_metrics.requests_map["last_rate"] = 5.0
@@ -160,6 +155,47 @@ class TestRequestMetrics(unittest.TestCase):
             value_type=float,
         )
         request_metrics_collector._track_request_rate(obs)
+        self.assertEqual(
+            obs.aggregators[tuple(self._test_labels.items())].current, 5.0
+        )
+
+    @mock.patch("azure_monitor.sdk.auto_collection.request_metrics.time")
+    def test_track_request_rate_failed(self, time_mock):
+        request_metrics_collector = request_metrics.RequestMetrics(
+            meter=self._meter, labels=self._test_labels,
+        )
+        time_mock.time.return_value = 100
+        request_metrics.requests_map["last_failed_count"] = 5.0
+        request_metrics.requests_map["failed_count"] = 25.0
+        request_metrics.requests_map["last_time"] = 98
+        obs = Observer(
+            callback=request_metrics_collector._track_request_failed_rate,
+            name="\\ASP.NET Applications(??APP_W3SVC_PROC??)\\Requests/Sec",
+            description="Incoming Requests Average Execution Rate",
+            unit="rps",
+            value_type=float,
+        )
+        request_metrics_collector._track_request_failed_rate(obs)
+        self.assertEqual(
+            obs.aggregators[tuple(self._test_labels.items())].current, 10.0
+        )
+
+    @mock.patch("azure_monitor.sdk.auto_collection.request_metrics.time")
+    def test_track_request_rate_failed_error(self, time_mock):
+        request_metrics_collector = request_metrics.RequestMetrics(
+            meter=self._meter, labels=self._test_labels,
+        )
+        time_mock.time.return_value = 100
+        request_metrics.requests_map["last_rate"] = 5.0
+        request_metrics.requests_map["last_time"] = 100
+        obs = Observer(
+            callback=request_metrics_collector._track_request_failed_rate,
+            name="\\ASP.NET Applications(??APP_W3SVC_PROC??)\\Requests/Sec",
+            description="Incoming Requests Average Execution Rate",
+            unit="rps",
+            value_type=float,
+        )
+        request_metrics_collector._track_request_failed_rate(obs)
         self.assertEqual(
             obs.aggregators[tuple(self._test_labels.items())].current, 5.0
         )

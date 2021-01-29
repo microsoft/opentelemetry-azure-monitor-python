@@ -24,8 +24,7 @@ __all__ = [
 
 
 class AutoCollection:
-    """Starts auto collection of standard metrics, including performance,
-    dependency and request metrics.
+    """Starts auto collection of performance counters
 
     Args:
         meter: OpenTelemetry Meter
@@ -35,4 +34,3 @@ class AutoCollection:
     def __init__(self, meter: Meter, labels: Dict[str, str]):
         col_type = AutoCollectionType.PERF_COUNTER
         self._performance_metrics = PerformanceMetrics(meter, labels, col_type)
-        self._request_metrics = RequestMetrics(meter, labels, col_type)

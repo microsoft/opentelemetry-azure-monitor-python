@@ -1,3 +1,5 @@
+> **This repository has been moved to the [Azure SDK for Python](https://github.com/Azure/azure-sdk-for-python/tree/master/sdk/monitor/azure-opentelemetry-exporter-azuremonitor) repository.** In order to improve discoverability and share common dependencies/tests, the OpenTelemetry Azure Monitor exporters for Python has moved to a common location containing all Azure SDKs. Please submit all issues and inquiries in that repository.
+
 # OpenTelemetry Azure Monitor
 
 [![Gitter chat](https://img.shields.io/gitter/room/Microsoft/azure-monitor-python)](https://gitter.im/Microsoft/azure-monitor-python)
@@ -47,11 +49,11 @@ with tracer.start_as_current_span('hello'):
     print('Hello World!')
 ```
 
-#### Integrations
+#### Instrumentations
 
-OpenTelemetry also supports several [integrations](https://github.com/open-telemetry/opentelemetry-python/tree/master/ext) which allows to integrate with third party libraries.
+OpenTelemetry also supports several [instrumentations](https://github.com/open-telemetry/opentelemetry-python/tree/master/instrumentation) which allows to instrument with third party libraries.
 
-This example shows how to integrate with the [requests](https://2.python-requests.org/en/master/)_ library.
+This example shows how to instrument with the [requests](https://2.python-requests.org/en/master/)_ library.
 
 * Create an Azure Monitor resource and get the instrumentation key, more information can be found [here](https://docs.microsoft.com/azure/azure-monitor/app/create-new-resource).
 * Install the `requests` integration package using ``pip install opentelemetry-ext-http-requests``.
